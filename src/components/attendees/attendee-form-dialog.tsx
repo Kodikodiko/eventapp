@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -25,10 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
-import { AttendeeRole } from '@/lib/data';
+import { Attendee, AttendeeRole } from '@/lib/data';
 
 const roles: { id: AttendeeRole; label: string }[] = [
     { id: 'attendee', label: 'Attendee' },
@@ -46,15 +42,26 @@ const formSchema = z.object({
   createInvoice: z.boolean().default(false).optional(),
 });
 
-type AddAttendeeFormValues = z.infer<typeof formSchema>;
+export type AttendeeFormValues = z.infer<typeof formSchema>;
 
-export function AddAttendeeDialog() {
-  const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+type AttendeeFormDialogProps = {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (data: AttendeeFormValues) => void;
+    attendee?: Attendee;
+}
 
-  const form = useForm<AddAttendeeFormValues>({
+export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: AttendeeFormDialogProps) {
+  const isEditMode = !!attendee;
+
+  const form = useForm<AttendeeFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: isEditMode ? {
+        name: attendee.name,
+        email: attendee.email,
+        roles: attendee.roles,
+        createInvoice: false,
+    } : {
       name: '',
       email: '',
       roles: ['attendee'],
@@ -62,45 +69,38 @@ export function AddAttendeeDialog() {
     },
   });
 
-  function onSubmit(data: AddAttendeeFormValues) {
-    // In a real app, you would handle form submission here, e.g., by calling an API.
-    console.log(data);
-
-    toast({
-      title: "Attendee Added",
-      description: `${data.name} has been successfully added.`,
-    });
-    
-    if (data.createInvoice) {
-        toast({
-            title: "Invoice Created",
-            description: `An invoice has been created and sent to ${data.email}.`,
+  useEffect(() => {
+    if (open) {
+        form.reset(isEditMode ? {
+            name: attendee.name,
+            email: attendee.email,
+            roles: attendee.roles,
+            createInvoice: false,
+        } : {
+            name: '',
+            email: '',
+            roles: ['attendee'],
+            createInvoice: false,
         });
     }
+  }, [open, attendee, isEditMode, form]);
 
-    setOpen(false);
-    form.reset();
+  function handleFormSubmit(data: AttendeeFormValues) {
+    onSubmit(data);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1">
-          <PlusCircle className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Add Attendee
-          </span>
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Attendee</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Attendee' : 'Add New Attendee'}</DialogTitle>
           <DialogDescription>
-            Fill in the details to add a new attendee to the event.
+            {isEditMode ? 'Update the details for this attendee.' : 'Fill in the details to add a new attendee.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -154,7 +154,7 @@ export function AddAttendeeDialog() {
                                 checked={field.value?.includes(item.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...field.value, item.id])
+                                    ? field.onChange([...(field.value ?? []), item.id])
                                     : field.onChange(
                                         field.value?.filter(
                                           (value) => value !== item.id
@@ -175,30 +175,32 @@ export function AddAttendeeDialog() {
                 </FormItem>
               )}
             />
-             <FormField
-              control={form.control}
-              name="createInvoice"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Create and send invoice
-                    </FormLabel>
-                    <FormDescription>
-                      If checked, an invoice will be automatically generated and sent.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+            {!isEditMode && (
+                 <FormField
+                  control={form.control}
+                  name="createInvoice"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Create and send invoice
+                        </FormLabel>
+                        <FormDescription>
+                          If checked, an invoice will be automatically generated and sent.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+            )}
             <DialogFooter>
-              <Button type="submit">Add Attendee</Button>
+              <Button type="submit">{isEditMode ? 'Save Changes' : 'Add Attendee'}</Button>
             </DialogFooter>
           </form>
         </Form>

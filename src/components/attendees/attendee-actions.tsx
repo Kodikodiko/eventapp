@@ -27,21 +27,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, QrCode as QrCodeIcon, FileText, Trash2 } from 'lucide-react';
+import { MoreHorizontal, QrCode as QrCodeIcon, FileText, Trash2, Edit, UserCheck } from 'lucide-react';
 import { QrCode } from './qr-code';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AttendeeFormDialog, AttendeeFormValues } from './attendee-form-dialog';
 
 
-type DialogType = 'invoice' | 'qrcode' | null;
+type DialogType = 'invoice' | 'qrcode' | 'edit' | null;
 
 type AttendeeActionsProps = {
   attendee: Attendee;
   onUnregister: (id: string) => void;
+  onUpdate: (id: string, data: Partial<Attendee>) => void;
 };
 
 
-export function AttendeeActions({ attendee, onUnregister }: AttendeeActionsProps) {
+export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeActionsProps) {
   const [openDialog, setOpenDialog] = useState<DialogType>(null);
   const [isUnregisterAlertOpen, setIsUnregisterAlertOpen] = useState(false);
   const { toast } = useToast();
@@ -58,6 +60,22 @@ export function AttendeeActions({ attendee, onUnregister }: AttendeeActionsProps
     });
     setIsUnregisterAlertOpen(false);
   };
+  
+  const handleUpdate = (data: AttendeeFormValues) => {
+    onUpdate(attendee.id, { 
+        ...data,
+        roles: data.roles as any,
+    });
+    setOpenDialog(null);
+  };
+  
+  const handleConfirmRegistration = () => {
+    onUpdate(attendee.id, { status: 'Confirmed' });
+    toast({
+      title: 'Registration Confirmed',
+      description: `${attendee.name} is now confirmed for the event.`,
+    });
+  }
 
 
   return (
@@ -71,6 +89,16 @@ export function AttendeeActions({ attendee, onUnregister }: AttendeeActionsProps
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setOpenDialog('edit')}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Attendee
+          </DropdownMenuItem>
+          {attendee.status === 'Waitlisted' && (
+            <DropdownMenuItem onClick={handleConfirmRegistration}>
+                <UserCheck className="mr-2 h-4 w-4" />
+                Confirm Registration
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setOpenDialog('invoice')}>
               <FileText className="mr-2 h-4 w-4" />
               View Invoice
@@ -87,7 +115,16 @@ export function AttendeeActions({ attendee, onUnregister }: AttendeeActionsProps
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={openDialog !== null} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+      {openDialog === 'edit' && (
+        <AttendeeFormDialog 
+            open={true}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            attendee={attendee}
+            onSubmit={handleUpdate}
+        />
+      )}
+
+      <Dialog open={openDialog === 'invoice' || openDialog === 'qrcode'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
         <DialogContent>
           {openDialog === 'invoice' && (
             <>
