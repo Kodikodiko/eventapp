@@ -65,6 +65,13 @@ export default function EventPage() {
     setIsEditing(false);
   }
 
+  const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isEditing) {
+      e.preventDefault();
+      setIsEditing(true);
+    }
+  }
+
   return (
     <div className="space-y-8">
        <div>
@@ -83,11 +90,7 @@ export default function EventPage() {
                         </div>
                         <Button 
                             type={isEditing ? 'submit' : 'button'} 
-                            onClick={() => {
-                                if (!isEditing) {
-                                    setIsEditing(true);
-                                }
-                            }}
+                            onClick={handleEditClick}
                         >
                             {isEditing ? 'Save Changes' : 'Edit Event'}
                         </Button>
