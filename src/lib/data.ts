@@ -1,3 +1,5 @@
+export type AttendeeRole = 'attendee' | 'speaker' | 'orga' | 'sponsor';
+
 export type Attendee = {
   id: string;
   name: string;
@@ -5,14 +7,15 @@ export type Attendee = {
   status: 'Confirmed' | 'Waitlisted' | 'Cancelled';
   invoiceId: string;
   registrationDate: string;
+  roles: AttendeeRole[];
 };
 
 export const attendees: Attendee[] = [
-  { id: '1', name: 'John Doe', email: 'john.doe@example.com', status: 'Confirmed', invoiceId: 'INV001', registrationDate: '2023-10-01' },
-  { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', status: 'Confirmed', invoiceId: 'INV002', registrationDate: '2023-10-02' },
-  { id: '3', name: 'Sam Wilson', email: 'sam.wilson@example.com', status: 'Waitlisted', invoiceId: 'INV003', registrationDate: '2023-10-03' },
-  { id: '4', name: 'Alice Brown', email: 'alice.brown@example.com', status: 'Confirmed', invoiceId: 'INV004', registrationDate: '2023-10-04' },
-  { id: '5', name: 'Bob Johnson', email: 'bob.johnson@example.com', status: 'Cancelled', invoiceId: 'INV005', registrationDate: '2023-10-05' },
+  { id: '1', name: 'John Doe', email: 'john.doe@example.com', status: 'Confirmed', invoiceId: 'INV001', registrationDate: '2023-10-01', roles: ['attendee'] },
+  { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', status: 'Confirmed', invoiceId: 'INV002', registrationDate: '2023-10-02', roles: ['attendee', 'speaker'] },
+  { id: '3', name: 'Sam Wilson', email: 'sam.wilson@example.com', status: 'Waitlisted', invoiceId: 'INV003', registrationDate: '2023-10-03', roles: ['attendee'] },
+  { id: '4', name: 'Alice Brown', email: 'alice.brown@example.com', status: 'Confirmed', invoiceId: 'INV004', registrationDate: '2023-10-04', roles: ['sponsor'] },
+  { id: '5', name: 'Bob Johnson', email: 'bob.johnson@example.com', status: 'Cancelled', invoiceId: 'INV005', registrationDate: '2023-10-05', roles: ['orga'] },
 ];
 
 export type Speaker = {

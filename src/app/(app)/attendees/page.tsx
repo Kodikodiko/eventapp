@@ -14,10 +14,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { File, PlusCircle } from 'lucide-react';
+import { File } from 'lucide-react';
 import { attendees } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
+import { AddAttendeeDialog } from '@/components/attendees/add-attendee-dialog';
 
 export default function AttendeesPage() {
   return (
@@ -37,12 +38,7 @@ export default function AttendeesPage() {
                 Export
               </span>
             </Button>
-            <Button size="sm" className="h-8 gap-1">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Add Attendee
-              </span>
-            </Button>
+            <AddAttendeeDialog />
           </div>
         </div>
       </CardHeader>
@@ -51,7 +47,8 @@ export default function AttendeesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Roles</TableHead>
+              <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Registered</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
@@ -66,6 +63,13 @@ export default function AttendeesPage() {
                     <div className="hidden text-sm text-muted-foreground md:inline">{attendee.email}</div>
                 </TableCell>
                 <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {attendee.roles.map(role => (
+                      <Badge key={role} variant="secondary" className="capitalize">{role}</Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
                   <Badge
                     variant={
                       attendee.status === 'Confirmed'
