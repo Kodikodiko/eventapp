@@ -43,7 +43,7 @@ const roles: { id: AttendeeRole; label: string }[] = [
 const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  fullName: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   roles: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one role.",
@@ -67,13 +67,13 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
   const form = useForm<AttendeeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: isEditMode ? {
-        name: attendee.name,
+        fullName: attendee.fullName,
         email: attendee.email,
         roles: attendee.roles,
         status: attendee.status,
         createInvoice: false,
     } : {
-      name: '',
+      fullName: '',
       email: '',
       roles: ['attendee'],
       status: 'Confirmed',
@@ -84,13 +84,13 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
   useEffect(() => {
     if (open) {
         form.reset(isEditMode ? {
-            name: attendee.name,
+            fullName: attendee.fullName,
             email: attendee.email,
             roles: attendee.roles,
             status: attendee.status,
             createInvoice: false,
         } : {
-            name: '',
+            fullName: '',
             email: '',
             roles: ['attendee'],
             status: 'Confirmed',
@@ -117,7 +117,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="fullName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>

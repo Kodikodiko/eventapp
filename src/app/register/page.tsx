@@ -25,6 +25,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { EVENT_ID } from '@/lib/data';
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required." }),
@@ -39,6 +42,7 @@ type RegistrationFormValues = z.infer<typeof formSchema>;
 
 export default function RegisterPage() {
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(formSchema),
@@ -53,12 +57,27 @@ export default function RegisterPage() {
   });
 
   function onSubmit(data: RegistrationFormValues) {
-    console.log(data);
+    const attendeesCol = collection(firestore, `events/${EVENT_ID}/attendees`);
+    const newAttendee = {
+      fullName: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      pmiNumber: data.pmiNumber || '',
+      address: data.address || '',
+      phone: data.phone || '',
+      roles: ['attendee'],
+      status: 'Confirmed',
+      registrationDate: serverTimestamp(),
+      eventId: EVENT_ID,
+    };
+
+    addDocumentNonBlocking(attendeesCol, newAttendee);
+
     toast({
-      title: "Registration Successful!",
-      description: "Thank you for registering. Please check your email for confirmation.",
+      title: "Registration Submitted!",
+      description: "Thank you for registering. Please proceed to payment.",
     });
-    form.reset();
+    // We don't reset the form here, to allow for payment processing step.
+    // In a real app, you would navigate to a Stripe checkout page.
   }
 
   function handleVerifyPmi() {

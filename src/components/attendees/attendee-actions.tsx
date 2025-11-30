@@ -32,6 +32,7 @@ import { QrCode } from './qr-code';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AttendeeFormDialog, AttendeeFormValues } from './attendee-form-dialog';
+import { format } from 'date-fns';
 
 
 type DialogType = 'invoice' | 'qrcode' | 'edit' | null;
@@ -39,7 +40,7 @@ type DialogType = 'invoice' | 'qrcode' | 'edit' | null;
 type AttendeeActionsProps = {
   attendee: Attendee;
   onUnregister: (id: string) => void;
-  onUpdate: (id: string, data: Partial<Attendee>) => void;
+  onUpdate: (id: string, data: Partial<Omit<Attendee, 'id'>>) => void;
 };
 
 
@@ -56,7 +57,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
     onUnregister(attendee.id);
     toast({
         title: "Attendee Unregistered",
-        description: `${attendee.name} has been unregistered from the event.`,
+        description: `${attendee.fullName} has been unregistered from the event.`,
     });
     setIsUnregisterAlertOpen(false);
   };
@@ -73,9 +74,13 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
     onUpdate(attendee.id, { status: 'Confirmed' });
     toast({
       title: 'Registration Confirmed',
-      description: `${attendee.name} is now confirmed for the event.`,
+      description: `${attendee.fullName} is now confirmed for the event.`,
     });
   }
+
+  const registrationDate = typeof attendee.registrationDate === 'string'
+    ? new Date(attendee.registrationDate)
+    : attendee.registrationDate.toDate();
 
 
   return (
@@ -131,7 +136,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
               <DialogHeader>
                 <DialogTitle>Invoice {attendee.invoiceId}</DialogTitle>
                 <DialogDescription>
-                  For {attendee.name} - Registered on {attendee.registrationDate}
+                  For {attendee.fullName} - Registered on {format(registrationDate, 'PPP')}
                 </DialogDescription>
               </DialogHeader>
               <div>
@@ -144,7 +149,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
           {openDialog === 'qrcode' && (
             <>
               <DialogHeader>
-                <DialogTitle>QR Code for {attendee.name}</DialogTitle>
+                <DialogTitle>QR Code for {attendee.fullName}</DialogTitle>
                 <DialogDescription>
                   Scan this code for event check-in.
                 </DialogDescription>
@@ -162,7 +167,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will unregister {attendee.name} from the event. This cannot be undone.
+              This action will unregister {attendee.fullName} from the event. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

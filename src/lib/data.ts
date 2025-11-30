@@ -1,24 +1,22 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type AttendeeRole = 'attendee' | 'speaker' | 'orga' | 'sponsor';
 
 export type AttendeeStatus = 'Confirmed' | 'Waitlisted' | 'Cancelled';
 
 export type Attendee = {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
   status: AttendeeStatus;
-  invoiceId: string;
-  registrationDate: string;
   roles: AttendeeRole[];
+  registrationDate: Timestamp | string; // Support both for optimistic updates
+  invoiceId?: string;
+  eventId: string;
 };
 
-export const attendees: Attendee[] = [
-  { id: '1', name: 'John Doe', email: 'john.doe@example.com', status: 'Confirmed', invoiceId: 'INV001', registrationDate: '2023-10-01', roles: ['attendee'] },
-  { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', status: 'Confirmed', invoiceId: 'INV002', registrationDate: '2023-10-02', roles: ['attendee', 'speaker'] },
-  { id: '3', name: 'Sam Wilson', email: 'sam.wilson@example.com', status: 'Waitlisted', invoiceId: 'INV003', registrationDate: '2023-10-03', roles: ['attendee'] },
-  { id: '4', name: 'Alice Brown', email: 'alice.brown@example.com', status: 'Confirmed', invoiceId: 'INV004', registrationDate: '2023-10-04', roles: ['sponsor'] },
-  { id: '5', name: 'Bob Johnson', email: 'bob.johnson@example.com', status: 'Cancelled', invoiceId: 'INV005', registrationDate: '2023-10-05', roles: ['orga'] },
-];
+// This will be our single event for now.
+export const EVENT_ID = 'evt1';
 
 export type Speaker = {
     id: string;

@@ -3,6 +3,19 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import {
+  collection,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import {
+  addDocumentNonBlocking,
+  updateDocumentNonBlocking,
+  deleteDocumentNonBlocking,
+} from '@/firebase/non-blocking-updates';
+import { format } from 'date-fns';
+
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,7 +33,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { File, ListFilter, PlusCircle, ArrowUpDown, X } from 'lucide-react';
-import { attendees as initialAttendees, Attendee, AttendeeRole, AttendeeStatus } from '@/lib/data';
+import { Attendee, AttendeeRole, AttendeeStatus, EVENT_ID } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
 import { AttendeeFormDialog, AttendeeFormValues } from '@/components/attendees/attendee-form-dialog';
@@ -33,6 +46,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const roles: AttendeeRole[] = ['attendee', 'speaker', 'orga', 'sponsor'];
 const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
@@ -40,13 +54,16 @@ const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
 type SortKey = keyof Attendee | '';
 
 export default function AttendeesPage() {
-  const [attendees, setAttendees] = useState<Attendee[]>(initialAttendees);
   const [selectedRoles, setSelectedRoles] = useState<AttendeeRole[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<AttendeeStatus[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
+
+  const firestore = useFirestore();
+  const attendeesCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/attendees`), [firestore]);
+  const { data: attendees, isLoading } = useCollection<Attendee>(attendeesCol);
 
   const toggleRole = (role: AttendeeRole) => {
     setSelectedRoles((prev) =>
@@ -55,7 +72,7 @@ export default function AttendeesPage() {
         : [...prev, role]
     );
   };
-  
+
   const handleRoleBadgeClick = (role: AttendeeRole, e: React.MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
         toggleRole(role);
@@ -89,25 +106,22 @@ export default function AttendeesPage() {
   };
 
   const handleUnregister = (attendeeId: string) => {
-    setAttendees(attendees.filter(attendee => attendee.id !== attendeeId));
+    const docRef = doc(attendeesCol, attendeeId);
+    deleteDocumentNonBlocking(docRef);
   };
-  
+
   const handleAddAttendee = (data: AttendeeFormValues) => {
-    const newAttendee: Attendee = {
-      id: (attendees.length + 1).toString(),
-      name: data.name,
-      email: data.email,
-      roles: data.roles as AttendeeRole[],
-      status: data.status as AttendeeStatus,
-      registrationDate: new Date().toISOString().split('T')[0],
-      invoiceId: `INV${(attendees.length + 1).toString().padStart(3, '0')}`,
+    const newAttendee = {
+      ...data,
+      eventId: EVENT_ID,
+      registrationDate: serverTimestamp(),
     };
 
-    setAttendees(prev => [...prev, newAttendee]);
+    addDocumentNonBlocking(attendeesCol, newAttendee);
     
     toast({
       title: "Attendee Added",
-      description: `${data.name} has been successfully added.`,
+      description: `${data.fullName} has been successfully added.`,
     });
     
     if (data.createInvoice) {
@@ -121,13 +135,14 @@ export default function AttendeesPage() {
   };
 
   const handleUpdateAttendee = (id: string, data: Partial<Omit<Attendee, 'id'>>) => {
-    setAttendees(prev => prev.map(att => att.id === id ? { ...att, ...data } : att));
+    const docRef = doc(attendeesCol, id);
+    updateDocumentNonBlocking(docRef, data);
     toast({
         title: "Attendee Updated",
         description: "The attendee details have been successfully saved.",
     });
   }
-  
+
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -138,6 +153,7 @@ export default function AttendeesPage() {
   };
 
   const sortedAndFilteredAttendees = useMemo(() => {
+    if (!attendees) return [];
     let filtered = [...attendees];
 
     if (selectedRoles.length > 0) {
@@ -154,8 +170,15 @@ export default function AttendeesPage() {
 
     if (sortKey) {
       filtered.sort((a, b) => {
-        const aValue = a[sortKey];
-        const bValue = b[sortKey];
+        let aValue, bValue;
+        
+        if (sortKey === 'registrationDate') {
+            aValue = typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString();
+            bValue = typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString();
+        } else {
+            aValue = a[sortKey];
+            bValue = b[sortKey];
+        }
 
         if (aValue < bValue) {
           return sortDirection === 'asc' ? -1 : 1;
@@ -172,23 +195,18 @@ export default function AttendeesPage() {
 
   const handleExport = () => {
     const worksheetData = sortedAndFilteredAttendees.map(attendee => ({
-      Name: attendee.name,
+      Name: attendee.fullName,
       Email: attendee.email,
       Roles: attendee.roles.join(', '),
       Status: attendee.status,
-      'Registration Date': attendee.registrationDate,
+      'Registration Date': attendee.registrationDate ? (typeof attendee.registrationDate === 'string' ? attendee.registrationDate : format(attendee.registrationDate.toDate(), 'yyyy-MM-dd')) : '',
     }));
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendees');
     XLSX.writeFile(workbook, 'attendees.xlsx');
   };
-  
-  const getSortIndicator = (key: SortKey) => {
-    if (sortKey !== key) return null;
-    return sortDirection === 'asc' ? ' ▲' : ' ▼';
-  };
-  
+
   const clearFilters = () => {
     setSelectedRoles([]);
     setSelectedStatuses([]);
@@ -208,7 +226,7 @@ export default function AttendeesPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handleExport}>
+              <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handleExport} disabled={isLoading || !attendees || attendees.length === 0}>
                 <File className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   Export
@@ -217,7 +235,7 @@ export default function AttendeesPage() {
               <div className="flex gap-2 items-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant={areFiltersActive ? "secondary" : "outline"} size="sm" className="h-8 gap-1">
+                    <Button variant={areFiltersActive ? "secondary" : "outline"} size="sm" className="h-8 gap-1" disabled={isLoading}>
                       <ListFilter className="h-3.5 w-3.5" />
                       <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
                     </Button>
@@ -255,7 +273,7 @@ export default function AttendeesPage() {
                   </Button>
                 )}
               </div>
-              <Button size="sm" className="h-8 gap-1" onClick={() => setIsAddDialogOpen(true)}>
+              <Button size="sm" className="h-8 gap-1" onClick={() => setIsAddDialogOpen(true)} disabled={isLoading}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   Add Attendee
@@ -269,7 +287,7 @@ export default function AttendeesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('name')}>
+                    <Button variant="ghost" onClick={() => handleSort('fullName')}>
                         Name
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -293,62 +311,76 @@ export default function AttendeesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedAndFilteredAttendees.map((attendee) => (
-                <TableRow key={attendee.id}>
-                  <TableCell className="font-medium">
-                      <div className="font-medium">{attendee.name}</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">{attendee.email}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {attendee.roles.map(role => (
-                        <Badge 
-                          key={role} 
-                          variant={selectedRoles.includes(role) ? "default" : "secondary"} 
-                          className="capitalize cursor-pointer"
-                          onClick={(e) => handleRoleBadgeClick(role, e)}
-                        >
-                          {role}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge
-                      variant={
-                        attendee.status === 'Confirmed'
-                          ? 'secondary'
-                          : attendee.status === 'Waitlisted'
-                          ? 'outline'
-                          : 'destructive'
-                      }
-                      className="cursor-pointer"
-                      onClick={(e) => handleStatusBadgeClick(attendee.status, e)}
-                    >
-                      {attendee.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{attendee.registrationDate}</TableCell>
-                  <TableCell>
-                    <AttendeeActions 
-                      attendee={attendee} 
-                      onUnregister={handleUnregister}
-                      onUpdate={handleUpdateAttendee}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+                    </TableRow>
+                ))
+              ) : (
+                sortedAndFilteredAttendees.map((attendee) => (
+                  <TableRow key={attendee.id}>
+                    <TableCell className="font-medium">
+                        <div className="font-medium">{attendee.fullName}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline">{attendee.email}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {attendee.roles.map(role => (
+                          <Badge
+                            key={role}
+                            variant={selectedRoles.includes(role) ? "default" : "secondary"}
+                            className="capitalize cursor-pointer"
+                            onClick={(e) => handleRoleBadgeClick(role, e)}
+                          >
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Badge
+                        variant={
+                          attendee.status === 'Confirmed'
+                            ? 'secondary'
+                            : attendee.status === 'Waitlisted'
+                            ? 'outline'
+                            : 'destructive'
+                        }
+                        className="cursor-pointer"
+                        onClick={(e) => handleStatusBadgeClick(attendee.status, e)}
+                      >
+                        {attendee.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                        {attendee.registrationDate && format(typeof attendee.registrationDate === 'string' ? new Date(attendee.registrationDate) : attendee.registrationDate.toDate(), 'PPP')}
+                    </TableCell>
+                    <TableCell>
+                      <AttendeeActions
+                        attendee={attendee}
+                        onUnregister={handleUnregister}
+                        onUpdate={handleUpdateAttendee}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>{sortedAndFilteredAttendees.length}</strong> of <strong>{attendees.length}</strong> attendees.
+            {attendees && <>Showing <strong>{sortedAndFilteredAttendees.length}</strong> of <strong>{attendees.length}</strong> attendees.</>}
           </div>
         </CardFooter>
       </Card>
       
-      <AttendeeFormDialog 
+      <AttendeeFormDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSubmit={handleAddAttendee}
