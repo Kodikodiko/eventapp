@@ -36,6 +36,12 @@ import {
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 const roles: { id: AttendeeRole; label: string }[] = [
     { id: 'attendee', label: 'Attendee' },
@@ -116,9 +122,9 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
 
   function handleNextStep(e: React.MouseEvent) {
     e.preventDefault();
-    form.trigger().then(isValid => {
+    form.trigger(["attendees", "roles", "status"]).then(isValid => {
       if (isValid) {
-        if (watchCreateInvoice) {
+        if (watchCreateInvoice && !isEditMode) {
           setStep(2);
         } else {
           // If no invoice, just submit
@@ -288,6 +294,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
           )}
 
           <DialogFooter>
+             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="button" onClick={handleNextStep}>
               {watchCreateInvoice && !isEditMode ? 'Next: Review Invoice' : isEditMode ? 'Save Changes' : 'Add Attendees'}
             </Button>
