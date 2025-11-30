@@ -333,7 +333,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
 
         <div className="grid grid-cols-2 gap-4 rounded-lg border p-4">
             <div className="font-semibold">Total Price:</div>
-            <div className="text-right text-lg font-bold">€ {watchTotalPrice?.toFixed(2) ?? '0.00'}</div>
+            <div className="text-right text-lg font-bold">€ {parseFloat(watchTotalPrice as any)?.toFixed(2) ?? '0.00'}</div>
             <div className="col-span-2 text-xs text-muted-foreground">
                 An invoice will be generated for the total amount.
             </div>
