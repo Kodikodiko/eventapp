@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { File, ListFilter, PlusCircle, ArrowUpDown } from 'lucide-react';
+import { File, ListFilter, PlusCircle, ArrowUpDown, X } from 'lucide-react';
 import { attendees as initialAttendees, Attendee, AttendeeRole, AttendeeStatus } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
@@ -187,7 +187,13 @@ export default function AttendeesPage() {
     if (sortKey !== key) return null;
     return sortDirection === 'asc' ? ' ▲' : ' ▼';
   };
+  
+  const clearFilters = () => {
+    setSelectedRoles([]);
+    setSelectedStatuses([]);
+  };
 
+  const areFiltersActive = selectedRoles.length > 0 || selectedStatuses.length > 0;
 
   return (
     <>
@@ -200,46 +206,54 @@ export default function AttendeesPage() {
                 Manage your event attendees and view their registration status.
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handleExport}>
                 <File className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   Export
                 </span>
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1">
-                    <ListFilter className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
+              <div className="flex gap-2 items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={areFiltersActive ? "secondary" : "outline"} size="sm" className="h-8 gap-1">
+                      <ListFilter className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by Role</DropdownMenuLabel>
+                    {roles.map((role) => (
+                        <DropdownMenuCheckboxItem
+                            key={role}
+                            checked={selectedRoles.includes(role)}
+                            onCheckedChange={() => toggleRole(role)}
+                            className="capitalize"
+                        >
+                            {role}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                    {statuses.map((status) => (
+                        <DropdownMenuCheckboxItem
+                            key={status}
+                            checked={selectedStatuses.includes(status)}
+                            onCheckedChange={() => toggleStatus(status)}
+                            className="capitalize"
+                        >
+                            {status}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {areFiltersActive && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1 px-2">
+                    <X className="h-3.5 w-3.5" />
+                    <span className="sr-only sm:not-sr-only">Clear</span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Role</DropdownMenuLabel>
-                  {roles.map((role) => (
-                      <DropdownMenuCheckboxItem
-                          key={role}
-                          checked={selectedRoles.includes(role)}
-                          onCheckedChange={() => toggleRole(role)}
-                          className="capitalize"
-                      >
-                          {role}
-                      </DropdownMenuCheckboxItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                  {statuses.map((status) => (
-                      <DropdownMenuCheckboxItem
-                          key={status}
-                          checked={selectedStatuses.includes(status)}
-                          onCheckedChange={() => toggleStatus(status)}
-                          className="capitalize"
-                      >
-                          {status}
-                      </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                )}
+              </div>
               <Button size="sm" className="h-8 gap-1" onClick={() => setIsAddDialogOpen(true)}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
