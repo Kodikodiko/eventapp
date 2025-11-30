@@ -53,3 +53,27 @@ export const salesData = [
   { name: 'May', tickets: 600 },
   { name: 'Jun', tickets: 800 },
 ];
+
+export type Pricing = {
+  member: number;
+  normal: number;
+};
+
+export type EventDetails = {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  pricing: Pricing;
+};
+
+export const eventDetails: EventDetails = {
+  id: 'evt1',
+  name: 'Tech Conference 2024',
+  date: '2024-10-26',
+  location: 'Convention Center, NYC',
+  pricing: {
+    member: 99,
+    normal: 149,
+  },
+};

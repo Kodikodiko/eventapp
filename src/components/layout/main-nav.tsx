@@ -10,6 +10,7 @@ import {
   Mic,
   Settings,
   Users,
+  Ticket,
 } from 'lucide-react';
 import {
   SidebarContent,
@@ -27,6 +28,7 @@ const navItems = [
   { href: '/sponsors', icon: Award, label: 'Sponsors' },
   { href: '/schedule', icon: Calendar, label: 'Schedule' },
   { href: '/reporting', icon: BarChart2, label: 'Reporting' },
+  { href: '/event', icon: Ticket, label: 'Event' },
 ];
 
 export function MainNav() {
