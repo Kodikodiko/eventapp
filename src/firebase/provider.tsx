@@ -5,6 +5,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { initiateAnonymousSignIn } from './non-blocking-login';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -42,9 +43,16 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
 }
 
+// Options for useUser hook
+export interface UseUserOptions {
+  onNotAuthenticated?: 'signInAnonymously';
+}
+
+
 // Return type for useUser() - specific to user auth state
-export interface UserHookResult { // Renamed from UserAuthHookResult for consistency if desired, or keep as UserAuthHookResult
+export interface UserHookResult { 
   user: User | null;
+  auth: Auth | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
@@ -170,7 +178,15 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
  * This provides the User object, loading status, and any auth errors.
  * @returns {UserHookResult} Object with user, isUserLoading, userError.
  */
-export const useUser = (): UserHookResult => { // Renamed from useAuthUser
-  const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
-  return { user, isUserLoading, userError };
+export const useUser = (options?: UseUserOptions): UserHookResult => {
+  const { user, isUserLoading, userError, auth } = useFirebase();
+
+  useEffect(() => {
+    // If not loading, there's no user, and the option is set, sign in anonymously.
+    if (!isUserLoading && !user && auth && options?.onNotAuthenticated === 'signInAnonymously') {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user, auth, options?.onNotAuthenticated]);
+
+  return { user, auth, isUserLoading, userError };
 };

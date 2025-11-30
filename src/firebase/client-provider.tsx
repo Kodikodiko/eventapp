@@ -1,26 +1,38 @@
 'use client';
 
-import React, { useMemo, type ReactNode, useEffect } from 'react';
-import { FirebaseProvider, useAuth } from '@/firebase/provider';
+import React, { useMemo, type ReactNode } from 'react';
+import { FirebaseProvider, useUser } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from './non-blocking-login';
-import { Auth, onAuthStateChanged } from 'firebase/auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-function AuthHandler({ children, auth }: { children: ReactNode, auth: Auth }) {
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        initiateAnonymousSignIn(auth);
-      }
-    });
+/**
+ * This component handles the authentication flow. It ensures that an anonymous user
+ * is signed in if no other user is present. It also displays a loading screen
+ * while the authentication status is being determined, preventing race conditions
+ * where data is fetched before authentication is complete.
+ */
+function AuthHandler({ children }: { children: ReactNode }) {
+  const { user, isUserLoading, auth } = useUser({ onNotAuthenticated: 'signInAnonymously' });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, [auth]);
+  if (isUserLoading) {
+    // Show a full-page loading skeleton while Firebase determines the auth state.
+    // This is crucial to prevent child components from making authenticated requests
+    // before the user is known.
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="w-full max-w-md space-y-4 p-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }
@@ -38,7 +50,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
     >
-      <AuthHandler auth={firebaseServices.auth}>
+      <AuthHandler>
         {children}
       </AuthHandler>
     </FirebaseProvider>
