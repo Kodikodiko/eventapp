@@ -173,8 +173,8 @@ export default function AttendeesPage() {
         let aValue, bValue;
         
         if (sortKey === 'registrationDate') {
-            aValue = typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString();
-            bValue = typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString();
+            aValue = a.registrationDate ? (typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString()) : '';
+            bValue = b.registrationDate ? (typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString()) : '';
         } else {
             aValue = a[sortKey];
             bValue = b[sortKey];

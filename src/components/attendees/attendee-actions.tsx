@@ -78,9 +78,18 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
     });
   }
 
-  const registrationDate = typeof attendee.registrationDate === 'string'
-    ? new Date(attendee.registrationDate)
-    : attendee.registrationDate.toDate();
+  const getRegistrationDate = () => {
+    if (!attendee.registrationDate) {
+      return null;
+    }
+    if (typeof attendee.registrationDate === 'string') {
+      return new Date(attendee.registrationDate);
+    }
+    // It's a Firestore Timestamp
+    return attendee.registrationDate.toDate();
+  };
+
+  const registrationDate = getRegistrationDate();
 
 
   return (
@@ -136,7 +145,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
               <DialogHeader>
                 <DialogTitle>Invoice {attendee.invoiceId}</DialogTitle>
                 <DialogDescription>
-                  For {attendee.fullName} - Registered on {format(registrationDate, 'PPP')}
+                  For {attendee.fullName} - Registered on {registrationDate ? format(registrationDate, 'PPP') : '...'}
                 </DialogDescription>
               </DialogHeader>
               <div>
