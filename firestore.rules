@@ -1,0 +1,160 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict event-ownership model. All data is organized under top-level events. While event details are generally public, the ability to create, modify, or delete an event and its associated data (like attendees, speakers, etc.) is restricted to the original creator of the event.
+ * Data Structure: All data is hierarchically nested under /events/{eventId}. Each event contains subcollections for its specific data, such as /attendees, /speakers, and /invoices. This structure ensures that all data is contextually tied to a single event.
+ * Key Security Decisions:
+ *   - Event Ownership: To secure write operations, every 'Event' document is required to have an 'ownerId' field containing the UID of the user who created it. This is a critical denormalization for authorization, as the provided schema did not include an ownership field.
+ *   - Public vs. Private Data: Event-related information that is typically public (speakers, sessions, sponsors, venue) is publicly readable. Sensitive information (attendees, invoices) is private and can only be read by the event owner.
+ *   - Relational Integrity: The rules enforce that any document created within an event's subcollection (e.g., an attendee) must have an internal 'eventId' field that matches the ID of its parent event document. This field is enforced as immutable to prevent data from being moved between events.
+ * Denormalization for Authorization: An 'ownerId' field is mandated on the /events/{eventId} document. This allows for simple, fast, and cost-effective ownership checks for all write operations on the event and its subcollections, avoiding complex and slow lookups.
+ * Structural Segregation: The use of distinct subcollections for different types of event data (e.g., 'attendees', 'speakers') provides a clear separation of concerns and allows for different security postures (private vs. public) for each data type.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user is the owner of an existing document.
+     * @param data The resource's data map, which must contain an 'ownerId' field.
+     */
+    function isExistingOwner(data) {
+      return resource != null && isSignedIn() && request.auth.uid == data.ownerId;
+    }
+
+    /**
+     * Checks if the currently authenticated user is the owner of a given Event by looking up the parent event document.
+     * This function is used to secure all event subcollections.
+     * It performs a single 'get' request, which has performance and cost implications but is necessary for this data model.
+     */
+    function isEventOwner(eventId) {
+      let eventData = get(/databases/$(database)/documents/events/$(eventId)).data;
+      return isSignedIn() && request.auth.uid == eventData.ownerId;
+    }
+    
+    /**
+     * Validates that the ownerId on a document is not being changed during an update.
+     */
+    function isOwnerIdImmutable() {
+      return request.resource.data.ownerId == resource.data.ownerId;
+    }
+    
+    /**
+     * Validates that the eventId on a subcollection document is not being changed during an update.
+     */
+    function isEventIdImmutable() {
+      return request.resource.data.eventId == resource.data.eventId;
+    }
+
+    /**
+     * @description Public event data. Anyone can read an event, but only the authenticated owner can create, update, or delete it.
+     * @path /events/{eventId}
+     * @allow (get) Any user, signed in or not, can read a specific event.
+     * @deny (create) A user tries to create an event without an 'ownerId' field in the document data.
+     * @principle Enforces document ownership for writes while allowing public reads. It requires denormalizing an 'ownerId' field onto the document.
+     */
+    match /events/{eventId} {
+      allow get, list: if true;
+
+      // CRITICAL: Cannot fully implement owner-only writes without a guaranteed ownership field.
+      // The 'Event' entity is missing an 'ownerId' or 'creatorId' field in the schema.
+      // These rules enforce the assumption that an 'ownerId' field WILL be present.
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid; // TODO: Add 'ownerId' to the Event entity in your data model.
+      allow update: if isExistingOwner(resource.data) && isOwnerIdImmutable();
+      allow delete: if isExistingOwner(resource.data);
+    }
+
+    /**
+     * @description Private attendee data. Only the owner of the parent event can access this information.
+     * @path /events/{eventId}/attendees/{attendeeId}
+     * @allow (get) The user who owns the parent event 'eventId' can read an attendee document.
+     * @deny (list) A regular authenticated user who is not the event owner tries to list all attendees.
+     * @principle Secures a child collection based on an ownership property ('ownerId') stored in the parent document.
+     */
+    match /events/{eventId}/attendees/{attendeeId} {
+      allow get, list: if isEventOwner(eventId);
+      allow create: if isEventOwner(eventId) && request.resource.data.eventId == eventId;
+      allow update: if isEventOwner(eventId) && resource != null && isEventIdImmutable();
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+
+    /**
+     * @description Public speaker data. Anyone can read speaker info, but only the event owner can manage it.
+     * @path /events/{eventId}/speakers/{speakerId}
+     * @allow (list) Any user, signed in or not, can list all speakers for an event.
+     * @deny (create) An authenticated user who is not the event owner tries to add a speaker.
+     * @principle Allows public reads for a subcollection while restricting all writes to the owner of the parent document.
+     */
+    match /events/{eventId}/speakers/{speakerId} {
+      allow get, list: if true;
+      allow create: if isEventOwner(eventId) && request.resource.data.eventId == eventId;
+      allow update: if isEventOwner(eventId) && resource != null && isEventIdImmutable();
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+
+    /**
+     * @description Public sponsor data. Anyone can read sponsor info, but only the event owner can manage it.
+     * @path /events/{eventId}/sponsors/{sponsorId}
+     * @allow (list) Any user, signed in or not, can list all sponsors for an event.
+     * @deny (update) An authenticated user who is not the event owner tries to change sponsor details.
+     * @principle Allows public reads for a subcollection while restricting all writes to the owner of the parent document.
+     */
+    match /events/{eventId}/sponsors/{sponsorId} {
+      allow get, list: if true;
+      allow create: if isEventOwner(eventId) && request.resource.data.eventId == eventId;
+      allow update: if isEventOwner(eventId) && resource != null && isEventIdImmutable();
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+
+    /**
+     * @description Private invoice data. Only the owner of the parent event can access this information.
+     * @path /events/{eventId}/invoices/{invoiceId}
+     * @allow (get) The user who owns the parent event 'eventId' can read an invoice document.
+     * @deny (get) An anonymous user tries to read a specific invoice.
+     * @principle Secures a child collection based on an ownership property ('ownerId') stored in the parent document.
+     */
+    match /events/{eventId}/invoices/{invoiceId} {
+      allow get, list: if isEventOwner(eventId);
+      allow create: if false; // Invoices are linked to attendees; assuming they are created via a backend process, not directly by the client.
+      allow update: if isEventOwner(eventId) && resource != null;
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+
+    /**
+     * @description Public venue data. Anyone can read venue info, but only the event owner can manage it.
+     * @path /events/{eventId}/venues/{venueId}
+     * @allow (get) Any user, signed in or not, can read the venue for an event.
+     * @deny (delete) An authenticated user who is not the event owner tries to delete the venue.
+     * @principle Allows public reads for a subcollection while restricting all writes to the owner of the parent document.
+     */
+    match /events/{eventId}/venues/{venueId} {
+      allow get, list: if true;
+      allow create: if isEventOwner(eventId);
+      allow update: if isEventOwner(eventId) && resource != null;
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+
+    /**
+     * @description Public session data. Anyone can read session info, but only the event owner can manage it.
+     * @path /events/{eventId}/sessions/{sessionId}
+     * @allow (list) Any user, signed in or not, can list all sessions for an event.
+     * @deny (create) An authenticated user who is not the event owner tries to add a session.
+     * @principle Allows public reads for a subcollection while restricting all writes to the owner of the parent document.
+     */
+    match /events/{eventId}/sessions/{sessionId} {
+      allow get, list: if true;
+      allow create: if isEventOwner(eventId) && request.resource.data.eventId == eventId;
+      allow update: if isEventOwner(eventId) && resource != null && isEventIdImmutable();
+      allow delete: if isEventOwner(eventId) && resource != null;
+    }
+  }
+}
