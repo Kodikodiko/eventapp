@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "user-avatar",
+      "description": "User avatar for the header",
+      "imageUrl": "https://images.unsplash.com/photo-1639149888905-fb39731f2e6c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBhdmF0YXJ8ZW58MHx8fHwxNzY0NDM4Nzg4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person avatar"
+    },
+    {
+      "id": "1",
+      "description": "Avatar for attendee 1",
+      "imageUrl": "https://images.unsplash.com/photo-1599566150163-29194dcaad36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb258ZW58MHx8fHwxNzY0NDYwMjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person"
+    },
+    {
+      "id": "2",
+      "description": "Avatar for attendee 2",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb258ZW58MHx8fHwxNzY0NDYwMjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person"
+    },
+    {
+      "id": "3",
+      "description": "Avatar for attendee 3",
+      "imageUrl": "https://images.unsplash.com/photo-1599566150163-29194dcaad36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb258ZW58MHx8fHwxNzY0NDYwMjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person"
+    },
+    {
+      "id": "4",
+      "description": "Avatar for attendee 4",
+      "imageUrl": "https://images.unsplash.com/photo-1552058544-f2b08422138a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb258ZW58MHx8fHwxNzY0NDYwMjQ5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person"
+    },
+    {
+      "id": "5",
+      "description": "Avatar for attendee 5",
+      "imageUrl": "https://images.unsplash.com/photo-1521566652839-697aa473761a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29ufGVufDB8fHx8MTc2NDQ2MDI0OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person"
+    }
+  ]
 }
