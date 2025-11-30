@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -6,10 +7,10 @@ import {
   collection,
   doc,
   serverTimestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import {
-  addDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
@@ -98,7 +99,7 @@ export default function AttendeesPage() {
         toggleStatus(status);
     } else {
         if (selectedStatuses.length === 1 && selectedStatuses[0] === status) {
-            setSelectedStatuses([]);
+            setSelectedStatuses([status]);
         } else {
             setSelectedStatuses([status]);
         }
@@ -111,25 +112,43 @@ export default function AttendeesPage() {
   };
 
   const handleAddAttendee = (data: AttendeeFormValues) => {
-    const newAttendee = {
-      ...data,
-      eventId: EVENT_ID,
-      registrationDate: serverTimestamp(),
-    };
+    if (!firestore) return;
 
-    addDocumentNonBlocking(attendeesCol, newAttendee);
-    
-    toast({
-      title: "Attendee Added",
-      description: `${data.fullName} has been successfully added.`,
+    const batch = writeBatch(firestore);
+
+    data.attendees.forEach(attendee => {
+        const newDocRef = doc(attendeesCol); // Create a new document reference with a unique ID
+        const newAttendee = {
+            ...attendee,
+            roles: data.roles,
+            status: data.status as AttendeeStatus,
+            eventId: EVENT_ID,
+            registrationDate: serverTimestamp(),
+            price: data.totalPrice / data.attendees.length, // Distribute price evenly
+        };
+        batch.set(newDocRef, newAttendee);
     });
-    
-    if (data.createInvoice) {
+
+    batch.commit().then(() => {
         toast({
-            title: "Invoice Created",
-            description: `An invoice has been created and sent to ${data.email}.`,
+            title: "Attendees Added",
+            description: `${data.attendees.length} attendees have been successfully added.`,
         });
-    }
+
+        if (data.createInvoice) {
+            toast({
+                title: "Invoice Created",
+                description: `An invoice for ${data.attendees.length} attendees totaling €${data.totalPrice} has been created.`,
+            });
+        }
+    }).catch(error => {
+        console.error("Error writing batch: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not add attendees. Please try again.",
+        });
+    });
 
     setIsAddDialogOpen(false);
   };
@@ -176,8 +195,8 @@ export default function AttendeesPage() {
             aValue = a.registrationDate ? (typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString()) : '';
             bValue = b.registrationDate ? (typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString()) : '';
         } else {
-            aValue = a[sortKey];
-            bValue = b[sortKey];
+            aValue = a[sortKey as keyof Attendee];
+            bValue = b[sortKey as keyof Attendee];
         }
 
         if (aValue < bValue) {
@@ -388,3 +407,5 @@ export default function AttendeesPage() {
     </>
   );
 }
+
+    

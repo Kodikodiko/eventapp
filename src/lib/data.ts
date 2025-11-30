@@ -1,3 +1,4 @@
+
 import { Timestamp } from 'firebase/firestore';
 
 export type AttendeeRole = 'attendee' | 'speaker' | 'orga' | 'sponsor';
@@ -13,6 +14,7 @@ export type Attendee = {
   registrationDate: Timestamp | string | null;
   invoiceId?: string;
   eventId: string;
+  price?: number;
 };
 
 // This will be our single event for now.
@@ -27,6 +29,7 @@ export type Speaker = {
     company: string;
     proposalStatus: SpeakerProposalStatus;
     slidesStatus: SpeakerSlidesStatus;
+    eventId: string;
 };
 
 export type Sponsor = {
@@ -74,3 +77,5 @@ export const eventDetails: EventDetails = {
     normal: 149,
   },
 };
+
+    
