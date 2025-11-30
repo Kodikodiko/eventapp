@@ -14,6 +14,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -340,6 +341,11 @@ export default function AttendeesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter>
+          <div className="text-xs text-muted-foreground">
+            Showing <strong>{sortedAndFilteredAttendees.length}</strong> of <strong>{attendees.length}</strong> attendees.
+          </div>
+        </CardFooter>
       </Card>
       
       <AttendeeFormDialog 
