@@ -81,13 +81,14 @@ export default function EventPage() {
                             <CardTitle>General Information</CardTitle>
                             <CardDescription>Update the basic details of your event.</CardDescription>
                         </div>
-                        <Button type={isEditing ? 'submit' : 'button'} onClick={() => {
-                            if (isEditing) {
-                                form.handleSubmit(onSubmit)();
-                            } else {
-                                setIsEditing(true);
-                            }
-                        }}>
+                        <Button 
+                            type={isEditing ? 'submit' : 'button'} 
+                            onClick={() => {
+                                if (!isEditing) {
+                                    setIsEditing(true);
+                                }
+                            }}
+                        >
                             {isEditing ? 'Save Changes' : 'Edit Event'}
                         </Button>
                     </div>
