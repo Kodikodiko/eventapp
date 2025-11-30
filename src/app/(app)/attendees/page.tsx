@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import * as XLSX from 'xlsx';
 import {
   Table,
   TableBody,
@@ -50,6 +51,20 @@ export default function AttendeesPage() {
       )
     : attendees;
 
+  const handleExport = () => {
+    const worksheetData = filteredAttendees.map(attendee => ({
+      Name: attendee.name,
+      Email: attendee.email,
+      Roles: attendee.roles.join(', '),
+      Status: attendee.status,
+      'Registration Date': attendee.registrationDate,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendees');
+    XLSX.writeFile(workbook, 'attendees.xlsx');
+  };
+
 
   return (
     <Card>
@@ -62,7 +77,7 @@ export default function AttendeesPage() {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="h-8 gap-1">
+            <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handleExport}>
               <File className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Export
