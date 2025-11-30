@@ -10,7 +10,7 @@ export type Attendee = {
   email: string;
   status: AttendeeStatus;
   roles: AttendeeRole[];
-  registrationDate: Timestamp | string; // Support both for optimistic updates
+  registrationDate: Timestamp | string | null;
   invoiceId?: string;
   eventId: string;
 };
@@ -18,19 +18,16 @@ export type Attendee = {
 // This will be our single event for now.
 export const EVENT_ID = 'evt1';
 
+export type SpeakerProposalStatus = 'Pending' | 'Confirmed' | 'Rejected';
+export type SpeakerSlidesStatus = 'Missing' | 'Uploaded' | 'Review';
+
 export type Speaker = {
     id: string;
     name: string;
     company: string;
-    proposalStatus: 'Pending' | 'Confirmed' | 'Rejected';
-    slidesStatus: 'Missing' | 'Uploaded';
+    proposalStatus: SpeakerProposalStatus;
+    slidesStatus: SpeakerSlidesStatus;
 };
-
-export const speakers: Speaker[] = [
-    { id: 'spk1', name: 'Dr. Evelyn Reed', company: 'Innovate Inc.', proposalStatus: 'Confirmed', slidesStatus: 'Uploaded' },
-    { id: 'spk2', name: 'Marcus Chen', company: 'Tech Solutions', proposalStatus: 'Confirmed', slidesStatus: 'Missing' },
-    { id: 'spk3', name: 'Lena Petrova', company: 'Data Insights', proposalStatus: 'Pending', slidesStatus: 'Missing' },
-];
 
 export type Sponsor = {
     id: string;

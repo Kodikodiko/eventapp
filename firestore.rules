@@ -21,6 +21,10 @@ service cloud.firestore {
       match /attendees/{attendeeId} {
         allow read, list, create, update, delete: if isEventOwner(eventId);
       }
+
+      match /speakers/{speakerId} {
+        allow read, list, create, update, delete: if isEventOwner(eventId);
+      }
     }
   }
 }
