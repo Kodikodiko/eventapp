@@ -24,7 +24,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Attendee, AttendeeRole } from '@/lib/data';
+import { Attendee, AttendeeRole, AttendeeStatus } from '@/lib/data';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const roles: { id: AttendeeRole; label: string }[] = [
     { id: 'attendee', label: 'Attendee' },
@@ -33,12 +40,15 @@ const roles: { id: AttendeeRole; label: string }[] = [
     { id: 'sponsor', label: 'Sponsor' },
   ];
 
+const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
+
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   roles: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one role.",
   }),
+  status: z.string().min(1, { message: "Status is required." }),
   createInvoice: z.boolean().default(false).optional(),
 });
 
@@ -60,11 +70,13 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
         name: attendee.name,
         email: attendee.email,
         roles: attendee.roles,
+        status: attendee.status,
         createInvoice: false,
     } : {
       name: '',
       email: '',
       roles: ['attendee'],
+      status: 'Confirmed',
       createInvoice: false,
     },
   });
@@ -75,11 +87,13 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
             name: attendee.name,
             email: attendee.email,
             roles: attendee.roles,
+            status: attendee.status,
             createInvoice: false,
         } : {
             name: '',
             email: '',
             roles: ['attendee'],
+            status: 'Confirmed',
             createInvoice: false,
         });
     }
@@ -127,6 +141,30 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
                 </FormItem>
               )}
             />
+             {isEditMode && (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statuses.map(status => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="roles"

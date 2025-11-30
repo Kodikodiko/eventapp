@@ -1,10 +1,12 @@
 export type AttendeeRole = 'attendee' | 'speaker' | 'orga' | 'sponsor';
 
+export type AttendeeStatus = 'Confirmed' | 'Waitlisted' | 'Cancelled';
+
 export type Attendee = {
   id: string;
   name: string;
   email: string;
-  status: 'Confirmed' | 'Waitlisted' | 'Cancelled';
+  status: AttendeeStatus;
   invoiceId: string;
   registrationDate: string;
   roles: AttendeeRole[];
