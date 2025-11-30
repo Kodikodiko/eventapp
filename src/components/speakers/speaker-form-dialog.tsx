@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect } from 'react';
@@ -159,7 +160,7 @@ export function SpeakerFormDialog({ open, onOpenChange, onSubmit, speaker }: Spe
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
-                      </Trigger>
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {slidesStatuses.map(status => (
