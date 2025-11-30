@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -14,13 +17,40 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { File } from 'lucide-react';
-import { attendees } from '@/lib/data';
+import { File, ListFilter } from 'lucide-react';
+import { attendees, Attendee, AttendeeRole } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
 import { AddAttendeeDialog } from '@/components/attendees/add-attendee-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const roles: AttendeeRole[] = ['attendee', 'speaker', 'orga', 'sponsor'];
 
 export default function AttendeesPage() {
+  const [selectedRoles, setSelectedRoles] = useState<AttendeeRole[]>([]);
+
+  const toggleRole = (role: AttendeeRole) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role)
+        ? prev.filter((r) => r !== role)
+        : [...prev, role]
+    );
+  };
+
+  const filteredAttendees = selectedRoles.length
+    ? attendees.filter((attendee) =>
+        selectedRoles.every((role) => attendee.roles.includes(role))
+      )
+    : attendees;
+
+
   return (
     <Card>
       <CardHeader>
@@ -38,6 +68,28 @@ export default function AttendeesPage() {
                 Export
               </span>
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1">
+                  <ListFilter className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by Role</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {roles.map((role) => (
+                    <DropdownMenuCheckboxItem
+                        key={role}
+                        checked={selectedRoles.includes(role)}
+                        onCheckedChange={() => toggleRole(role)}
+                        className="capitalize"
+                    >
+                        {role}
+                    </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <AddAttendeeDialog />
           </div>
         </div>
@@ -56,7 +108,7 @@ export default function AttendeesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {attendees.map((attendee) => (
+            {filteredAttendees.map((attendee) => (
               <TableRow key={attendee.id}>
                 <TableCell className="font-medium">
                     <div className="font-medium">{attendee.name}</div>
