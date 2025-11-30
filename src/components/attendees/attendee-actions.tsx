@@ -10,6 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -17,14 +27,38 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, QrCode as QrCodeIcon, FileText } from 'lucide-react';
+import { MoreHorizontal, QrCode as QrCodeIcon, FileText, Trash2 } from 'lucide-react';
 import { QrCode } from './qr-code';
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
 
 type DialogType = 'invoice' | 'qrcode' | null;
 
-export function AttendeeActions({ attendee }: { attendee: Attendee }) {
-    const [openDialog, setOpenDialog] = useState<DialogType>(null);
+type AttendeeActionsProps = {
+  attendee: Attendee;
+  onUnregister: (id: string) => void;
+};
+
+
+export function AttendeeActions({ attendee, onUnregister }: AttendeeActionsProps) {
+  const [openDialog, setOpenDialog] = useState<DialogType>(null);
+  const [isUnregisterAlertOpen, setIsUnregisterAlertOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleUnregisterClick = () => {
+    setIsUnregisterAlertOpen(true);
+  }
+
+  const handleUnregisterConfirm = () => {
+    onUnregister(attendee.id);
+    toast({
+        title: "Attendee Unregistered",
+        description: `${attendee.name} has been unregistered from the event.`,
+    });
+    setIsUnregisterAlertOpen(false);
+  };
+
 
   return (
     <>
@@ -46,7 +80,10 @@ export function AttendeeActions({ attendee }: { attendee: Attendee }) {
               Show QR Code
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive">Unregister</DropdownMenuItem>
+          <DropdownMenuItem className="text-destructive" onClick={handleUnregisterClick}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Unregister
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -82,6 +119,26 @@ export function AttendeeActions({ attendee }: { attendee: Attendee }) {
           )}
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={isUnregisterAlertOpen} onOpenChange={setIsUnregisterAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will unregister {attendee.name} from the event. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnregisterConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Unregister
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { File, ListFilter } from 'lucide-react';
-import { attendees, Attendee, AttendeeRole } from '@/lib/data';
+import { attendees as initialAttendees, Attendee, AttendeeRole } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
 import { AddAttendeeDialog } from '@/components/attendees/add-attendee-dialog';
@@ -35,6 +35,7 @@ import {
 const roles: AttendeeRole[] = ['attendee', 'speaker', 'orga', 'sponsor'];
 
 export default function AttendeesPage() {
+  const [attendees, setAttendees] = useState<Attendee[]>(initialAttendees);
   const [selectedRoles, setSelectedRoles] = useState<AttendeeRole[]>([]);
 
   const toggleRole = (role: AttendeeRole) => {
@@ -44,6 +45,25 @@ export default function AttendeesPage() {
         : [...prev, role]
     );
   };
+  
+  const handleRoleBadgeClick = (role: AttendeeRole, e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+        // Add or remove role from selection
+        toggleRole(role);
+    } else {
+        // Set only this role as selected
+        if (selectedRoles.length === 1 && selectedRoles[0] === role) {
+            setSelectedRoles([]); // deselect if it's the only one selected
+        } else {
+            setSelectedRoles([role]);
+        }
+    }
+  };
+
+  const handleUnregister = (attendeeId: string) => {
+    setAttendees(attendees.filter(attendee => attendee.id !== attendeeId));
+  };
+
 
   const filteredAttendees = selectedRoles.length
     ? attendees.filter((attendee) =>
@@ -132,7 +152,14 @@ export default function AttendeesPage() {
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {attendee.roles.map(role => (
-                      <Badge key={role} variant="secondary" className="capitalize">{role}</Badge>
+                      <Badge 
+                        key={role} 
+                        variant={selectedRoles.includes(role) ? "default" : "secondary"} 
+                        className="capitalize cursor-pointer"
+                        onClick={(e) => handleRoleBadgeClick(role, e)}
+                      >
+                        {role}
+                      </Badge>
                     ))}
                   </div>
                 </TableCell>
@@ -151,7 +178,7 @@ export default function AttendeesPage() {
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{attendee.registrationDate}</TableCell>
                 <TableCell>
-                  <AttendeeActions attendee={attendee} />
+                  <AttendeeActions attendee={attendee} onUnregister={handleUnregister} />
                 </TableCell>
               </TableRow>
             ))}
