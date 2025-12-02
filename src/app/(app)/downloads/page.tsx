@@ -4,11 +4,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import costAnalysis from '!!raw-loader!../../../../COST_ANALYSIS.md';
-import deployment from '!!raw-loader!../../../../DEPLOYMENT.md';
-import homelabDeployment from '!!raw-loader!../../../../HOMELAB_DEPLOYMENT.md';
-import readme from '!!raw-loader!../../../../README.md';
-import specification from '!!raw-loader!../../../../SPECIFICATION.md';
+import costAnalysis from '../../../../COST_ANALYSIS.md?raw';
+import deployment from '../../../../DEPLOYMENT.md?raw';
+import homelabDeployment from '../../../../HOMELAB_DEPLOYMENT.md?raw';
+import readme from '../../../../README.md?raw';
+import specification from '../../../../SPECIFICATION.md?raw';
 
 const files = [
   { name: 'COST_ANALYSIS.md', content: costAnalysis },
