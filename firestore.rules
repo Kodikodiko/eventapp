@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -23,6 +24,14 @@ service cloud.firestore {
       }
 
       match /speakers/{speakerId} {
+        allow read, list, create, update, delete: if isEventOwner(eventId);
+      }
+
+      match /sponsorPackages/{packageId} {
+        allow read, list, create, update, delete: if isEventOwner(eventId);
+      }
+
+      match /sponsors/{sponsorId} {
         allow read, list, create, update, delete: if isEventOwner(eventId);
       }
     }

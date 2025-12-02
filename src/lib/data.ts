@@ -34,18 +34,40 @@ export type Speaker = {
     eventId: string;
 };
 
+export type SponsorPackage = {
+    id: string;
+    name: string;
+    price: number;
+    benefits: string[];
+    eventId: string;
+};
+
+export type SponsorContact = {
+    name: string;
+    email: string;
+    phone: string;
+}
+
+export type SponsorPaymentStatus = 'open' | 'billed' | 'paid' | 'overdue';
+
+export type SponsorPaymentDetails = {
+    amount: number;
+    billedAmount: number;
+    dueDate: Timestamp | string | null;
+    status: SponsorPaymentStatus;
+    discount: number;
+}
+
 export type Sponsor = {
     id: string;
     companyName: string;
-    package: 'Platinum' | 'Gold' | 'Silver';
-    contactName: string;
-    contactEmail: string;
+    packageId: string;
+    contacts: SponsorContact[];
+    billingAddress: string;
+    paymentDetails: SponsorPaymentDetails;
+    eventId: string;
 };
 
-export const sponsors: Sponsor[] = [
-    { id: 'spo1', companyName: 'Future Systems', package: 'Platinum', contactName: 'David Lee', contactEmail: 'david@future.systems' },
-    { id: 'spo2', companyName: 'Connectify', package: 'Gold', contactName: 'Maria Garcia', contactEmail: 'maria@connectify.com' },
-];
 
 export const salesData = [
   { name: 'Jan', tickets: 400 },

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Event": {
@@ -136,6 +137,79 @@
         "slidesStatus",
         "eventId"
       ]
+    },
+    "SponsorPackage": {
+      "title": "SponsorPackage",
+      "description": "Defines a sponsorship package for an event.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the package (e.g., Platinum, Gold)."
+        },
+        "price": {
+          "type": "number",
+          "description": "The cost of the sponsorship package."
+        },
+        "benefits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of benefits included in the package."
+        },
+        "eventId": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "price", "benefits", "eventId"]
+    },
+    "Sponsor": {
+      "title": "Sponsor",
+      "description": "Represents a sponsor for an event.",
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string"
+        },
+        "packageId": {
+          "type": "string",
+          "description": "Reference to the SponsorPackage."
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "email": {"type": "string", "format": "email"},
+              "phone": {"type": "string"}
+            },
+            "required": ["name", "email"]
+          }
+        },
+        "billingAddress": {
+          "type": "string"
+        },
+        "paymentDetails": {
+          "type": "object",
+          "properties": {
+            "amount": {"type": "number"},
+            "billedAmount": {"type": "number"},
+            "dueDate": {"type": "string", "format": "date-time"},
+            "status": {
+              "type": "string",
+              "enum": ["open", "billed", "paid", "overdue"]
+            },
+            "discount": {"type": "number"}
+          },
+          "required": ["amount", "status"]
+        },
+        "eventId": {
+          "type": "string"
+        }
+      },
+      "required": ["companyName", "packageId", "contacts", "billingAddress", "paymentDetails", "eventId"]
     }
   },
   "auth": {
@@ -157,6 +231,18 @@
           "$ref": "#/entities/Speaker"
         },
         "description": "Stores speaker information for a specific event."
+      },
+      "/events/{eventId}/sponsorPackages": {
+        "schema": {
+          "$ref": "#/entities/SponsorPackage"
+        },
+        "description": "Stores sponsorship packages for a specific event."
+      },
+      "/events/{eventId}/sponsors": {
+        "schema": {
+          "$ref": "#/entities/Sponsor"
+        },
+        "description": "Stores sponsors for a specific event."
       }
     }
   }
