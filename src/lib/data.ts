@@ -51,8 +51,8 @@ export type SponsorContact = {
 export type SponsorPaymentStatus = 'open' | 'billed' | 'paid' | 'overdue';
 
 export type SponsorPaymentDetails = {
-    amount: number;
-    billedAmount: number;
+    amount: number; // Package Price
+    billedAmount: number; // Actual amount received
     dueDate: Timestamp | string | null;
     status: SponsorPaymentStatus;
     discount: number;

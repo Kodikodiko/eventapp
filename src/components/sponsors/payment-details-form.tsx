@@ -40,6 +40,7 @@ const formSchema = z.object({
   discount: z.coerce.number().min(0, "Discount must be positive."),
   status: z.enum(paymentStatuses),
   dueDate: z.string().optional().nullable(),
+  billedAmount: z.coerce.number().min(0, "Amount must be positive."),
 });
 
 export type PaymentFormValues = z.infer<typeof formSchema>;
@@ -66,8 +67,11 @@ export function PaymentDetailsForm({ open, onOpenChange, onSubmit, paymentDetail
       discount: paymentDetails.discount,
       status: paymentDetails.status,
       dueDate: getFormattedDate(),
+      billedAmount: paymentDetails.billedAmount,
     },
   });
+
+  const watchStatus = form.watch('status');
 
   useEffect(() => {
     if (open) {
@@ -76,9 +80,20 @@ export function PaymentDetailsForm({ open, onOpenChange, onSubmit, paymentDetail
         discount: paymentDetails.discount,
         status: paymentDetails.status,
         dueDate: getFormattedDate(),
+        billedAmount: paymentDetails.billedAmount,
       });
     }
   }, [open, paymentDetails, form]);
+
+  useEffect(() => {
+    if (watchStatus === 'paid') {
+      const currentBilledAmount = form.getValues('billedAmount');
+      if (currentBilledAmount === 0) {
+        const totalDue = paymentDetails.amount - paymentDetails.discount;
+        form.setValue('billedAmount', totalDue);
+      }
+    }
+  }, [watchStatus, paymentDetails, form]);
 
   function handleFormSubmit(data: PaymentFormValues) {
     onSubmit(data);
@@ -97,45 +112,6 @@ export function PaymentDetailsForm({ open, onOpenChange, onSubmit, paymentDetail
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
              <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Package Price (€)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="discount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Discount (€)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="dueDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} value={field.value ?? ''}/>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
@@ -157,6 +133,61 @@ export function PaymentDetailsForm({ open, onOpenChange, onSubmit, paymentDetail
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Package Price (€)</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="discount"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Discount (€)</FormLabel>
+                    <FormControl>
+                        <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+             <FormField
+              control={form.control}
+              name="billedAmount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount Received (€)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} value={field.value ?? ''}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit">Save Changes</Button>

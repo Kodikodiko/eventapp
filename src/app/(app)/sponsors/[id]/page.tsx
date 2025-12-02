@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Edit, Mail, Phone, User } from 'lucide-react';
+import { ArrowLeft, Edit, Mail, Phone, User, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -65,13 +65,14 @@ export default function SponsorDetailPage() {
     }
   }
 
+  const totalDue = (sponsor?.paymentDetails.amount ?? 0) - (sponsor?.paymentDetails.discount ?? 0);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <div className="grid gap-6 md:grid-cols-2">
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-64 w-full" />
         </div>
@@ -112,54 +113,44 @@ export default function SponsorDetailPage() {
             </div>
           </div>
         </div>
+        
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle>Payment Details</CardTitle>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setIsPaymentFormOpen(true)}>
+                        <Edit className="h-4 w-4"/>
+                    </Button>
+                </div>
+                <CardDescription>Status of the sponsorship payment.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-3">
+                <div className="flex flex-col space-y-1.5 rounded-lg border p-4">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <Badge className="w-fit">
+                        <span className={`w-2 h-2 rounded-full mr-2 ${getStatusColor(sponsor.paymentDetails.status)}`} />
+                        {sponsor.paymentDetails.status}
+                    </Badge>
+                </div>
+                <div className="flex flex-col space-y-1.5 rounded-lg border p-4">
+                    <span className="text-sm text-muted-foreground">Total Due</span>
+                    <span className="text-2xl font-bold">€{totalDue.toLocaleString()}</span>
+                </div>
+                <div className="flex flex-col space-y-1.5 rounded-lg border p-4">
+                    <span className="text-sm text-muted-foreground">Amount Received</span>
+                    <span className="text-2xl font-bold text-green-600">€{sponsor.paymentDetails.billedAmount.toLocaleString()}</span>
+                </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Contacts</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {sponsor.contacts.map((contact, index) => (
-                        <div key={index} className="p-4 border rounded-lg">
-                            <p className="font-semibold flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground"/> {contact.name}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground"/> {contact.email}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground"/> {contact.phone}</p>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Payment Details</CardTitle>
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setIsPaymentFormOpen(true)}>
-                            <Edit className="h-4 w-4"/>
-                        </Button>
-                    </div>
-                    <CardDescription>Status of the sponsorship payment.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Status</span>
-                        <Badge>
-                            <span className={`w-2 h-2 rounded-full mr-2 ${getStatusColor(sponsor.paymentDetails.status)}`} />
-                            {sponsor.paymentDetails.status}
-                        </Badge>
-                    </div>
-                     <div className="flex justify-between items-center">
+                <div className="flex flex-col space-y-1 text-sm col-span-3 md:col-span-1">
+                    <div className="flex justify-between">
                         <span className="text-muted-foreground">Package Price</span>
-                        <span className="font-semibold">€{sponsor.paymentDetails.amount.toLocaleString()}</span>
+                        <span>€{sponsor.paymentDetails.amount.toLocaleString()}</span>
                     </div>
-                     <div className="flex justify-between items-center">
+                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Discount</span>
-                        <span className="font-semibold">€{sponsor.paymentDetails.discount.toLocaleString()}</span>
+                        <span>- €{sponsor.paymentDetails.discount.toLocaleString()}</span>
                     </div>
-                     <div className="flex justify-between items-center font-bold text-lg">
-                        <span>Total Due</span>
-                        <span>€{(sponsor.paymentDetails.amount - sponsor.paymentDetails.discount).toLocaleString()}</span>
-                    </div>
-                     <div className="flex justify-between items-center text-sm">
+                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Due Date</span>
                         <span>
                             {sponsor.paymentDetails.dueDate 
@@ -168,10 +159,26 @@ export default function SponsorDetailPage() {
                             }
                         </span>
                     </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Contacts</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {sponsor.contacts.map((contact, index) => (
+                        <div key={index} className="p-4 border rounded-lg">
+                            <p className="font-semibold flex items-center gap-2"><User className="h-4 w-4 text-muted-foreground"/> {contact.name}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-2"><Mail className="h-4 w-4 text-muted-foreground"/> {contact.email}</p>
+                            {contact.phone && <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1"><Phone className="h-4 w-4 text-muted-foreground"/> {contact.phone}</p>}
+                        </div>
+                    ))}
                 </CardContent>
             </Card>
-
-            <Card className="lg:col-span-3">
+            <Card>
                  <CardHeader>
                     <CardTitle>Billing Address</CardTitle>
                 </CardHeader>
