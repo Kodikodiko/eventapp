@@ -105,10 +105,10 @@ export default function SponsorDetailPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">{sponsor.companyName}</h1>
-              <p className="text-lg text-muted-foreground flex items-center gap-2">
+              <div className="text-lg text-muted-foreground flex items-center gap-2">
                 <Badge variant="outline">{sponsorPackage?.name ?? 'Loading...'}</Badge>
                 <span>Sponsor</span>
-              </p>
+              </div>
             </div>
           </div>
         </div>
