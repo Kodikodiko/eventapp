@@ -112,6 +112,19 @@ export default function SponsorsPage() {
     }
   };
 
+  const handlePackageBadgeClick = (packageId: string, e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+        toggleFilter('package', packageId);
+    } else {
+        if (selectedPackages.length === 1 && selectedPackages[0] === packageId) {
+            setSelectedPackages([]);
+        } else {
+            setSelectedPackages([packageId]);
+        }
+    }
+  };
+
+
   const handlePaymentStatusClick = (sponsor: Sponsor) => {
     const currentStatus = sponsor.paymentDetails.status;
     const nextStatus = statusCycle[currentStatus];
@@ -223,61 +236,19 @@ export default function SponsorsPage() {
 
   const isLoading = packagesLoading || sponsorsLoading;
 
+  const paymentStatusVariant = (status: SponsorPaymentStatus): "default" | "destructive" | "outline" | "secondary" | "paid" | "billed" | "overdue" => {
+    switch(status) {
+        case 'paid': return 'paid';
+        case 'overdue': return 'overdue';
+        case 'billed': return 'billed';
+        case 'open': return 'outline';
+        default: return 'outline';
+    }
+  }
+
   return (
     <>
       <div className="space-y-8">
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Sponsorship Packages</h1>
-              <p className="text-muted-foreground">Manage sponsor packages and deliverables.</p>
-            </div>
-            <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenPackageDialog()}>
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Add Package
-              </span>
-            </Button>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {isLoading ? (
-                Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-80 w-full" />)
-            ) : (
-                packages?.map((pkg) => (
-                <Card key={pkg.id} className="flex flex-col">
-                    <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                            <Star className="text-primary"/> {pkg.name}
-                        </CardTitle>
-                        <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenPackageDialog(pkg)}>
-                                <Edit className="h-4 w-4" />
-                            </Button>
-                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeletePackage(pkg.id)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="flex items-baseline gap-1 pt-2">
-                        <span className="text-3xl font-bold tracking-tight">€{pkg.price.toLocaleString()}</span>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 p-6 pt-0">
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                        {pkg.benefits.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-primary" /> {feature}
-                        </li>
-                        ))}
-                    </ul>
-                    </CardContent>
-                </Card>
-                ))
-            )}
-          </div>
-        </div>
-        
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -379,7 +350,13 @@ export default function SponsorsPage() {
                             </Link>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{getPackageName(sponsor.packageId)}</Badge>
+                          <Badge 
+                            variant="outline"
+                            className="cursor-pointer"
+                            onClick={(e) => handlePackageBadgeClick(sponsor.packageId, e)}
+                          >
+                            {getPackageName(sponsor.packageId)}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                             <div>{sponsor.contacts[0]?.name}</div>
@@ -387,7 +364,7 @@ export default function SponsorsPage() {
                         </TableCell>
                         <TableCell>
                             <Badge 
-                              variant={sponsor.paymentDetails.status === 'paid' ? 'secondary' : 'default'}
+                              variant={paymentStatusVariant(sponsor.paymentDetails.status)}
                               className="cursor-pointer capitalize"
                               onClick={() => handlePaymentStatusClick(sponsor)}
                             >
@@ -410,6 +387,62 @@ export default function SponsorsPage() {
               {sponsors && <>Showing <strong>{sortedAndFilteredSponsors.length}</strong> of <strong>{sponsors.length}</strong> sponsors.</>}
             </div>
           </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Sponsorship Packages</CardTitle>
+                        <CardDescription>Manage sponsor packages and deliverables.</CardDescription>
+                    </div>
+                    <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenPackageDialog()}>
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            Add Package
+                        </span>
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Package</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Benefits</TableHead>
+                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({length: 3}).map((_, i) => <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>)
+                        ) : (
+                            packages?.map((pkg) => (
+                                <TableRow key={pkg.id}>
+                                    <TableCell className="font-semibold">{pkg.name}</TableCell>
+                                    <TableCell>€{pkg.price.toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <ul className="list-disc list-inside text-sm text-muted-foreground">
+                                            {pkg.benefits.map((benefit, i) => <li key={i}>{benefit}</li>)}
+                                        </ul>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenPackageDialog(pkg)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeletePackage(pkg.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
         </Card>
       </div>
 
