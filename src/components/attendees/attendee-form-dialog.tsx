@@ -55,6 +55,8 @@ const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
 const attendeeSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
   email: z.string().email("Invalid email address."),
+  company: z.string().optional(),
+  pmiNumber: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -84,7 +86,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
   const form = useForm<AttendeeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      attendees: isEditMode ? [{ fullName: attendee.fullName, email: attendee.email }] : [{ fullName: '', email: '' }],
+      attendees: isEditMode ? [{ fullName: attendee.fullName, email: attendee.email, company: attendee.company, pmiNumber: attendee.pmiNumber }] : [{ fullName: '', email: '', company: '', pmiNumber: '' }],
       roles: isEditMode ? attendee.roles : ['attendee'],
       status: isEditMode ? attendee.status : 'Confirmed',
       createInvoice: false,
@@ -106,11 +108,11 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
     if (open) {
       // Reset form when dialog opens
       form.reset(isEditMode ? {
-          attendees: [{fullName: attendee.fullName, email: attendee.email }],
+          attendees: [{fullName: attendee.fullName, email: attendee.email, company: attendee.company, pmiNumber: attendee.pmiNumber }],
           roles: attendee.roles,
           status: attendee.status,
       } : {
-          attendees: [{ fullName: '', email: '' }],
+          attendees: [{ fullName: '', email: '', company: '', pmiNumber: '' }],
           roles: ['attendee'],
           status: 'Confirmed',
           createInvoice: false,
@@ -149,10 +151,10 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
       </DialogHeader>
       <Form {...form}>
         <form className="space-y-4">
-          <ScrollArea className="h-64 pr-6">
+          <ScrollArea className="h-72 pr-6">
             <div className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-md relative">
+                <div key={field.id} className="p-4 border rounded-md relative space-y-2">
                   <FormField
                     control={form.control}
                     name={`attendees.${index}.fullName`}
@@ -170,10 +172,36 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
                     control={form.control}
                     name={`attendees.${index}.email`}
                     render={({ field }) => (
-                      <FormItem className="mt-2">
+                      <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <Input placeholder="john.doe@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`attendees.${index}.company`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Optional" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name={`attendees.${index}.pmiNumber`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PMI Member Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Optional" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -188,7 +216,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
               ))}
             </div>
             {!isEditMode && (
-              <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ fullName: '', email: '' })}>
+              <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ fullName: '', email: '', company: '', pmiNumber: '' })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Attendee
               </Button>
             )}
@@ -349,11 +377,9 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl">
         {step === 1 ? renderStep1() : renderStep2()}
       </DialogContent>
     </Dialog>
   );
 }
-
-    

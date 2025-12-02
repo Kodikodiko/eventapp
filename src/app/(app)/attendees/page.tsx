@@ -63,7 +63,7 @@ export default function AttendeesPage() {
   const { toast } = useToast();
 
   const firestore = useFirestore();
-  const attendeesCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/attendees`), [firestore]);
+  const attendeesCol = useMemoFirebase(() => firestore ? collection(firestore, `events/${EVENT_ID}/attendees`) : null, [firestore]);
   const { data: attendees, isLoading } = useCollection<Attendee>(attendeesCol);
 
   const toggleRole = (role: AttendeeRole) => {
@@ -107,6 +107,7 @@ export default function AttendeesPage() {
   };
 
   const handleUnregister = (attendeeId: string) => {
+    if (!attendeesCol) return;
     const docRef = doc(attendeesCol, attendeeId);
     deleteDocumentNonBlocking(docRef);
   };
@@ -117,14 +118,14 @@ export default function AttendeesPage() {
     const batch = writeBatch(firestore);
 
     data.attendees.forEach(attendee => {
-        const newDocRef = doc(attendeesCol); // Create a new document reference with a unique ID
+        const newDocRef = doc(collection(firestore, `events/${EVENT_ID}/attendees`));
         const newAttendee = {
             ...attendee,
             roles: data.roles,
             status: data.status as AttendeeStatus,
             eventId: EVENT_ID,
             registrationDate: serverTimestamp(),
-            price: data.totalPrice / data.attendees.length, // Distribute price evenly
+            price: data.totalPrice ? data.totalPrice / data.attendees.length : 0, // Distribute price evenly
         };
         batch.set(newDocRef, newAttendee);
     });
@@ -153,9 +154,19 @@ export default function AttendeesPage() {
     setIsAddDialogOpen(false);
   };
 
-  const handleUpdateAttendee = (id: string, data: Partial<Omit<Attendee, 'id'>>) => {
+  const handleUpdateAttendee = (id: string, data: Partial<Omit<Attendee, 'id' | 'attendees'>>) => {
+    if (!attendeesCol) return;
     const docRef = doc(attendeesCol, id);
-    updateDocumentNonBlocking(docRef, data);
+
+    // `data` from the form includes the `attendees` array, which we don't want to save directly.
+    // The actual attendee data is in the first element of that array.
+    const { attendees: attendeeData, ...restData } = data as any;
+    const updateData = {
+        ...restData,
+        ...attendeeData[0]
+    };
+    
+    updateDocumentNonBlocking(docRef, updateData);
     toast({
         title: "Attendee Updated",
         description: "The attendee details have been successfully saved.",
@@ -216,6 +227,8 @@ export default function AttendeesPage() {
     const worksheetData = sortedAndFilteredAttendees.map(attendee => ({
       Name: attendee.fullName,
       Email: attendee.email,
+      Company: attendee.company,
+      'PMI Number': attendee.pmiNumber,
       Roles: attendee.roles.join(', '),
       Status: attendee.status,
       'Registration Date': attendee.registrationDate ? (typeof attendee.registrationDate === 'string' ? attendee.registrationDate : format(attendee.registrationDate.toDate(), 'yyyy-MM-dd')) : '',
@@ -345,7 +358,8 @@ export default function AttendeesPage() {
                   <TableRow key={attendee.id}>
                     <TableCell className="font-medium">
                         <div className="font-medium">{attendee.fullName}</div>
-                        <div className="hidden text-sm text-muted-foreground md:inline">{attendee.email}</div>
+                        <div className="text-sm text-muted-foreground">{attendee.email}</div>
+                        {attendee.company && <div className="hidden text-xs text-muted-foreground md:inline">{attendee.company}</div>}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -407,5 +421,3 @@ export default function AttendeesPage() {
     </>
   );
 }
-
-    

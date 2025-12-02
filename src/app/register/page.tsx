@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -30,12 +31,10 @@ import { collection, serverTimestamp } from 'firebase/firestore';
 import { EVENT_ID } from '@/lib/data';
 
 const formSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required." }),
-  lastName: z.string().min(1, { message: "Last name is required." }),
-  pmiNumber: z.string().optional(),
-  address: z.string().optional(),
+  fullName: z.string().min(1, { message: "Full name is required." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().optional(),
+  company: z.string().optional(),
+  pmiNumber: z.string().optional(),
 });
 
 type RegistrationFormValues = z.infer<typeof formSchema>;
@@ -47,23 +46,18 @@ export default function RegisterPage() {
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      pmiNumber: '',
-      address: '',
+      fullName: '',
       email: '',
-      phone: '',
+      company: '',
+      pmiNumber: '',
     },
   });
 
   function onSubmit(data: RegistrationFormValues) {
+    if (!firestore) return;
     const attendeesCol = collection(firestore, `events/${EVENT_ID}/attendees`);
     const newAttendee = {
-      fullName: `${data.firstName} ${data.lastName}`,
-      email: data.email,
-      pmiNumber: data.pmiNumber || '',
-      address: data.address || '',
-      phone: data.phone || '',
+      ...data,
       roles: ['attendee'],
       status: 'Confirmed',
       registrationDate: serverTimestamp(),
@@ -76,7 +70,6 @@ export default function RegisterPage() {
       title: "Registration Submitted!",
       description: "Thank you for registering. Please proceed to payment.",
     });
-    // We don't reset the form here, to allow for payment processing step.
     // In a real app, you would navigate to a Stripe checkout page.
   }
 
@@ -122,35 +115,20 @@ export default function RegisterPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
               <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
@@ -158,6 +136,19 @@ export default function RegisterPage() {
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <Input placeholder="john.doe@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Optional" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -185,32 +176,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123 Main St, Anytown, USA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Optional" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
                 <CardFooter className="flex flex-col gap-4 p-0 pt-6">
                     <Button type="submit" className="w-full" size="lg">Proceed to Payment</Button>
                     <p className="text-center text-xs text-muted-foreground">

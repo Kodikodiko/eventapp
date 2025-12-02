@@ -51,6 +51,14 @@
           "format": "email",
           "description": "The email address of the attendee."
         },
+        "company": {
+          "type": "string",
+          "description": "The company the attendee works for."
+        },
+        "pmiNumber": {
+          "type": "string",
+          "description": "The PMI member number of the attendee."
+        },
         "roles": {
           "type": "array",
           "items": {
