@@ -9,31 +9,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isEventOwner(eventId) {
-      // In a real app, you would check if the user has ownership of the event.
-      // For now, we will allow any signed-in user to act as an owner for any event.
-      // This rule should be secured before production.
-      return isSignedIn();
-    }
-    
-    match /events/{eventId} {
-      allow read, write: if isEventOwner(eventId);
-
-      match /attendees/{attendeeId} {
-        allow read, list, create, update, delete: if isEventOwner(eventId);
-      }
-
-      match /speakers/{speakerId} {
-        allow read, list, create, update, delete: if isEventOwner(eventId);
-      }
-
-      match /sponsorPackages/{packageId} {
-        allow read, list, create, update, delete: if isEventOwner(eventId);
-      }
-
-      match /sponsors/{sponsorId} {
-        allow read, list, create, update, delete: if isEventOwner(eventId);
-      }
+    // Allow any signed-in user to read and write to the entire events path and all subcollections.
+    // This is a permissive rule for development and should be secured for production.
+    match /events/{eventId}/{document=**} {
+      allow read, write: if isSignedIn();
     }
   }
 }
