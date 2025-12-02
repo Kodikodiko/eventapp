@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, PlusCircle, Star, Edit, Trash2 } from 'lucide-react';
+import { Check, PlusCircle, Star, Edit, Trash2, ListFilter, ArrowUpDown, X } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -32,22 +32,48 @@ import {
 import {
   Sponsor,
   SponsorPackage,
+  SponsorPaymentStatus,
   EVENT_ID,
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { PackageFormDialog, PackageFormValues } from '@/components/sponsors/package-form';
 import { SponsorFormDialog, SponsorFormValues } from '@/components/sponsors/sponsor-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+
+const paymentStatuses: SponsorPaymentStatus[] = ['open', 'billed', 'paid', 'overdue'];
+const statusCycle: Record<SponsorPaymentStatus, SponsorPaymentStatus> = {
+  open: 'billed',
+  billed: 'paid',
+  paid: 'overdue',
+  overdue: 'open',
+};
+
+type SortKey = 'companyName' | 'packageId' | 'paymentStatus' | '';
 
 export default function SponsorsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  // State for dialogs
+  // Dialog states
   const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
   const [isSponsorDialogOpen, setIsSponsorDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<SponsorPackage | undefined>(undefined);
   const [editingSponsor, setEditingSponsor] = useState<Sponsor | undefined>(undefined);
+
+  // Sorting and filtering states
+  const [sortKey, setSortKey] = useState<SortKey>('companyName');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedPackages, setSelectedPackages] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<SponsorPaymentStatus[]>([]);
 
   // Firestore collections
   const packagesCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/sponsorPackages`), [firestore]);
@@ -56,7 +82,6 @@ export default function SponsorsPage() {
   const { data: packages, isLoading: packagesLoading } = useCollection<SponsorPackage>(packagesCol);
   const { data: sponsors, isLoading: sponsorsLoading } = useCollection<Sponsor>(sponsorsCol);
 
-  // Seed default packages if collection is empty
   useEffect(() => {
     if (packages?.length === 0 && !packagesLoading) {
       const defaultPackages: Omit<SponsorPackage, 'id'>[] = [
@@ -67,6 +92,79 @@ export default function SponsorsPage() {
       defaultPackages.forEach(pkg => addDocumentNonBlocking(packagesCol, pkg));
     }
   }, [packages, packagesLoading, packagesCol]);
+
+  const getPackageName = (packageId: string) => packages?.find(p => p.id === packageId)?.name ?? 'N/A';
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  const toggleFilter = (type: 'package' | 'status', value: string) => {
+    if (type === 'package') {
+      setSelectedPackages(prev => prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value]);
+    } else {
+      setSelectedStatuses(prev => prev.includes(value as SponsorPaymentStatus) ? prev.filter(s => s !== value) : [...prev, value as SponsorPaymentStatus]);
+    }
+  };
+
+  const handlePaymentStatusClick = (sponsor: Sponsor) => {
+    const currentStatus = sponsor.paymentDetails.status;
+    const nextStatus = statusCycle[currentStatus];
+    const sponsorRef = doc(sponsorsCol, sponsor.id);
+    updateDocumentNonBlocking(sponsorRef, { 'paymentDetails.status': nextStatus });
+    toast({
+      title: 'Status Updated',
+      description: `${sponsor.companyName}'s status changed to ${nextStatus}.`
+    });
+  };
+
+  const clearFilters = () => {
+    setSelectedPackages([]);
+    setSelectedStatuses([]);
+  };
+
+  const areFiltersActive = selectedPackages.length > 0 || selectedStatuses.length > 0;
+
+  const sortedAndFilteredSponsors = useMemo(() => {
+    if (!sponsors) return [];
+    let filtered = [...sponsors];
+
+    if (selectedPackages.length > 0) {
+      filtered = filtered.filter(sponsor => selectedPackages.includes(sponsor.packageId));
+    }
+
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(sponsor => selectedStatuses.includes(sponsor.paymentDetails.status));
+    }
+
+    if (sortKey) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        if (sortKey === 'packageId') {
+          aValue = getPackageName(a.packageId);
+          bValue = getPackageName(b.packageId);
+        } else if (sortKey === 'paymentStatus') {
+          aValue = a.paymentDetails.status;
+          bValue = b.paymentDetails.status;
+        } else {
+          aValue = a[sortKey as 'companyName'];
+          bValue = b[sortKey as 'companyName'];
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [sponsors, selectedPackages, selectedStatuses, sortKey, sortDirection, packages]);
+
 
   const handleOpenPackageDialog = (pkg?: SponsorPackage) => {
     setEditingPackage(pkg);
@@ -90,17 +188,14 @@ export default function SponsorsPage() {
   };
   
   const handleSponsorSubmit = (data: SponsorFormValues) => {
-    const sponsorData = {
-        ...data,
-        eventId: EVENT_ID,
-    };
+    const sponsorData = { ...data, eventId: EVENT_ID };
     if (editingSponsor) {
         updateDocumentNonBlocking(doc(sponsorsCol, editingSponsor.id), sponsorData);
         toast({ title: "Sponsor Updated" });
     } else {
         addDocumentNonBlocking(sponsorsCol, {
             ...sponsorData,
-            paymentDetails: { // Add default payment details for new sponsors
+            paymentDetails: {
                 amount: packages?.find(p => p.id === data.packageId)?.price ?? 0,
                 billedAmount: 0,
                 dueDate: null,
@@ -114,7 +209,6 @@ export default function SponsorsPage() {
   };
 
   const handleDeletePackage = (packageId: string) => {
-    // Check if any sponsor is using this package
     if (sponsors?.some(s => s.packageId === packageId)) {
         toast({
             variant: "destructive",
@@ -126,10 +220,6 @@ export default function SponsorsPage() {
     deleteDocumentNonBlocking(doc(packagesCol, packageId));
     toast({ title: "Package Deleted" });
   };
-  
-  const getPackageName = (packageId: string) => {
-    return packages?.find(p => p.id === packageId)?.name ?? 'N/A';
-  }
 
   const isLoading = packagesLoading || sponsorsLoading;
 
@@ -197,22 +287,77 @@ export default function SponsorsPage() {
                   A list of companies sponsoring this event.
                 </CardDescription>
               </div>
-              <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenSponsorDialog()}>
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Add Sponsor
-                </span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={areFiltersActive ? "secondary" : "outline"} size="sm" className="h-8 gap-1" disabled={isLoading}>
+                      <ListFilter className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Filter by Package</DropdownMenuLabel>
+                    {packages?.map((pkg) => (
+                      <DropdownMenuCheckboxItem
+                        key={pkg.id}
+                        checked={selectedPackages.includes(pkg.id)}
+                        onCheckedChange={() => toggleFilter('package', pkg.id)}
+                      >
+                        {pkg.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                    {paymentStatuses.map((status) => (
+                      <DropdownMenuCheckboxItem
+                        key={status}
+                        checked={selectedStatuses.includes(status)}
+                        onCheckedChange={() => toggleFilter('status', status)}
+                        className="capitalize"
+                      >
+                        {status}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {areFiltersActive && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1 px-2">
+                    <X className="h-3.5 w-3.5" />
+                    <span className="sr-only sm:not-sr-only">Clear</span>
+                  </Button>
+                )}
+                <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenSponsorDialog()}>
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                    Add Sponsor
+                  </span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Package</TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('companyName')}>
+                        Company
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('packageId')}>
+                        Package
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
                   <TableHead>Primary Contact</TableHead>
-                  <TableHead>Payment Status</TableHead>
+                  <TableHead>
+                     <Button variant="ghost" onClick={() => handleSort('paymentStatus')}>
+                        Payment Status
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -226,22 +371,26 @@ export default function SponsorsPage() {
                         </TableRow>
                     ))
                 ) : (
-                    sponsors?.map((sponsor) => (
-                    <TableRow key={sponsor.id} className="cursor-pointer hover:bg-muted/50">
+                    sortedAndFilteredSponsors.map((sponsor) => (
+                    <TableRow key={sponsor.id}>
                         <TableCell className="font-medium">
                             <Link href={`/sponsors/${sponsor.id}`} className="hover:underline">
                                 {sponsor.companyName}
                             </Link>
                         </TableCell>
                         <TableCell>
-                        <Badge variant="outline">{getPackageName(sponsor.packageId)}</Badge>
+                          <Badge variant="outline">{getPackageName(sponsor.packageId)}</Badge>
                         </TableCell>
                         <TableCell>
                             <div>{sponsor.contacts[0]?.name}</div>
                             <div className="text-sm text-muted-foreground">{sponsor.contacts[0]?.email}</div>
                         </TableCell>
                         <TableCell>
-                            <Badge variant={sponsor.paymentDetails.status === 'paid' ? 'secondary' : 'default'}>
+                            <Badge 
+                              variant={sponsor.paymentDetails.status === 'paid' ? 'secondary' : 'default'}
+                              className="cursor-pointer capitalize"
+                              onClick={() => handlePaymentStatusClick(sponsor)}
+                            >
                                 {sponsor.paymentDetails.status}
                             </Badge>
                         </TableCell>
@@ -250,10 +399,17 @@ export default function SponsorsPage() {
                 )}
               </TableBody>
             </Table>
-             {!isLoading && sponsors?.length === 0 && (
-              <div className="text-center p-8 text-muted-foreground">No sponsors added yet.</div>
+             {!isLoading && sortedAndFilteredSponsors.length === 0 && (
+              <div className="text-center p-8 text-muted-foreground">
+                {sponsors && sponsors.length > 0 ? 'No sponsors match the current filters.' : 'No sponsors added yet.'}
+              </div>
             )}
           </CardContent>
+           <CardFooter>
+            <div className="text-xs text-muted-foreground">
+              {sponsors && <>Showing <strong>{sortedAndFilteredSponsors.length}</strong> of <strong>{sponsors.length}</strong> sponsors.</>}
+            </div>
+          </CardFooter>
         </Card>
       </div>
 

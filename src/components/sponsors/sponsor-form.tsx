@@ -86,7 +86,7 @@ export function SponsorFormDialog({ open, onOpenChange, onSubmit, sponsor, packa
     if (open) {
       form.reset(defaultValues);
     }
-  }, [open, sponsor, packages, form]);
+  }, [open, sponsor, packages]);
 
   function handleFormSubmit(data: SponsorFormValues) {
     onSubmit(data);
@@ -130,7 +130,7 @@ export function SponsorFormDialog({ open, onOpenChange, onSubmit, sponsor, packa
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {packages.map(p => (
+                      {(packages ?? []).map(p => (
                         <SelectItem key={p.id} value={p.id}>{p.name} (€{p.price.toLocaleString()})</SelectItem>
                       ))}
                     </SelectContent>
