@@ -11,6 +11,7 @@ import {
   Settings,
   Users,
   Ticket,
+  DownloadCloud,
 } from 'lucide-react';
 import {
   SidebarContent,
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/sponsors', icon: Award, label: 'Sponsors' },
   { href: '/schedule', icon: Calendar, label: 'Schedule' },
   { href: '/reporting', icon: BarChart2, label: 'Reporting' },
+  { href: '/downloads', icon: DownloadCloud, label: 'Downloads' },
   { href: '/event', icon: Ticket, label: 'Event' },
 ];
 
