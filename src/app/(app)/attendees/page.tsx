@@ -68,6 +68,56 @@ export default function AttendeesPage() {
   const firestore = useFirestore();
   const attendeesCol = useMemoFirebase(() => firestore ? collection(firestore, `events/${EVENT_ID}/attendees`) : null, [firestore]);
   const { data: attendees, isLoading } = useCollection<Attendee>(attendeesCol);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedAndFilteredAttendees = useMemo(() => {
+    if (!attendees) return [];
+    let filtered = [...attendees];
+
+    if (selectedRoles.length > 0) {
+      filtered = filtered.filter((attendee) =>
+        selectedRoles.every((role) => attendee.roles.includes(role))
+      );
+    }
+
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter((attendee) =>
+        selectedStatuses.includes(attendee.status)
+      );
+    }
+
+    if (sortKey) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        if (sortKey === 'registrationDate') {
+            aValue = a.registrationDate ? (typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString()) : '';
+            bValue = b.registrationDate ? (typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString()) : '';
+        } else {
+            aValue = a[sortKey as keyof Attendee];
+            bValue = b[sortKey as keyof Attendee];
+        }
+
+        if (aValue < bValue) {
+          return sortDirection === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [attendees, selectedRoles, selectedStatuses, sortKey, sortDirection]);
   
   const handleSelectAttendee = (attendee: Attendee, isSelected: boolean) => {
     setSelectedAttendees(prev =>
@@ -195,56 +245,6 @@ export default function AttendeesPage() {
         description: "The attendee details have been successfully saved.",
     });
   }
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDirection('asc');
-    }
-  };
-
-  const sortedAndFilteredAttendees = useMemo(() => {
-    if (!attendees) return [];
-    let filtered = [...attendees];
-
-    if (selectedRoles.length > 0) {
-      filtered = filtered.filter((attendee) =>
-        selectedRoles.every((role) => attendee.roles.includes(role))
-      );
-    }
-
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((attendee) =>
-        selectedStatuses.includes(attendee.status)
-      );
-    }
-
-    if (sortKey) {
-      filtered.sort((a, b) => {
-        let aValue, bValue;
-        
-        if (sortKey === 'registrationDate') {
-            aValue = a.registrationDate ? (typeof a.registrationDate === 'string' ? a.registrationDate : a.registrationDate?.toDate().toISOString()) : '';
-            bValue = b.registrationDate ? (typeof b.registrationDate === 'string' ? b.registrationDate : b.registrationDate?.toDate().toISOString()) : '';
-        } else {
-            aValue = a[sortKey as keyof Attendee];
-            bValue = b[sortKey as keyof Attendee];
-        }
-
-        if (aValue < bValue) {
-          return sortDirection === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortDirection === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [attendees, selectedRoles, selectedStatuses, sortKey, sortDirection]);
 
   const handleExport = () => {
     const worksheetData = sortedAndFilteredAttendees.map(attendee => ({
