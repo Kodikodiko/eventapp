@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -25,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { eventDetails, type EventDetails } from '@/lib/data';
 import { DollarSign } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -71,6 +73,8 @@ export default function EventPage() {
       setIsEditing(true);
     }
   }
+  
+  const displayDate = form.watch('date');
 
   return (
     <div className="space-y-8">
@@ -117,7 +121,12 @@ export default function EventPage() {
                             <FormItem>
                             <FormLabel>Event Date</FormLabel>
                             <FormControl>
-                                <Input type="date" {...field} disabled={!isEditing} />
+                                 <Input 
+                                    type={isEditing ? 'date' : 'text'} 
+                                    {...field} 
+                                    disabled={!isEditing}
+                                    value={isEditing ? field.value : format(parseISO(field.value), 'dd.MM.yyyy')}
+                                 />
                             </FormControl>
                             <FormMessage />
                             </FormItem>

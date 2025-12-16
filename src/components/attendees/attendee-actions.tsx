@@ -1,3 +1,4 @@
+
 "use client"
 
 import type { Attendee } from '@/lib/data';
@@ -145,7 +146,7 @@ export function AttendeeActions({ attendee, onUnregister, onUpdate }: AttendeeAc
               <DialogHeader>
                 <DialogTitle>Invoice {attendee.invoiceId}</DialogTitle>
                 <DialogDescription>
-                  For {attendee.fullName} - Registered on {registrationDate ? format(registrationDate, 'PPP') : '...'}
+                  For {attendee.fullName} - Registered on {registrationDate ? format(registrationDate, 'dd.MM.yyyy') : '...'}
                 </DialogDescription>
               </DialogHeader>
               <div>

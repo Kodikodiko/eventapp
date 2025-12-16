@@ -238,7 +238,7 @@ export default function AttendeesPage() {
       'PMI Number': attendee.pmiNumber,
       Roles: attendee.roles.join(', '),
       Status: attendee.status,
-      'Registration Date': attendee.registrationDate ? (typeof attendee.registrationDate === 'string' ? attendee.registrationDate : format(attendee.registrationDate.toDate(), 'yyyy-MM-dd')) : '',
+      'Registration Date': attendee.registrationDate ? (typeof attendee.registrationDate === 'string' ? attendee.registrationDate : format(attendee.registrationDate.toDate(), 'dd.MM.yyyy')) : '',
       'Amount Paid': attendee.price ? `€${attendee.price.toFixed(2)}` : '',
     }));
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -423,7 +423,7 @@ export default function AttendeesPage() {
                        {attendee.price != null && attendee.price > 0 ? `€${attendee.price.toFixed(2)}` : ''}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                        {attendee.registrationDate && format(typeof attendee.registrationDate === 'string' ? new Date(attendee.registrationDate) : attendee.registrationDate.toDate(), 'PPP')}
+                        {attendee.registrationDate && format(typeof attendee.registrationDate === 'string' ? new Date(attendee.registrationDate) : attendee.registrationDate.toDate(), 'dd.MM.yyyy')}
                     </TableCell>
                     <TableCell>
                       <AttendeeActions
@@ -453,5 +453,3 @@ export default function AttendeesPage() {
     </>
   );
 }
-
-    

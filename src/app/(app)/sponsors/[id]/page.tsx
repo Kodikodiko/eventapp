@@ -154,7 +154,7 @@ export default function SponsorDetailPage() {
                         <span className="text-muted-foreground">Due Date</span>
                         <span>
                             {sponsor.paymentDetails.dueDate 
-                                ? format(typeof sponsor.paymentDetails.dueDate === 'string' ? new Date(sponsor.paymentDetails.dueDate) : sponsor.paymentDetails.dueDate.toDate(), 'PPP')
+                                ? format(typeof sponsor.paymentDetails.dueDate === 'string' ? new Date(sponsor.paymentDetails.dueDate) : sponsor.paymentDetails.dueDate.toDate(), 'dd.MM.yyyy')
                                 : 'N/A'
                             }
                         </span>
