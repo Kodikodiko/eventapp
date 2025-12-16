@@ -166,6 +166,13 @@ export default function AttendeesPage() {
         ...attendeeData[0]
     };
     
+    // Firestore does not allow `undefined` values. We need to clean the object.
+    Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+            delete updateData[key];
+        }
+    });
+
     updateDocumentNonBlocking(docRef, updateData);
     toast({
         title: "Attendee Updated",
