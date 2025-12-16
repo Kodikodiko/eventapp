@@ -119,6 +119,9 @@ export default function AttendeesPage() {
     return filtered;
   }, [attendees, selectedRoles, selectedStatuses, sortKey, sortDirection]);
   
+  const isAllSelected = sortedAndFilteredAttendees && selectedAttendees.length > 0 && selectedAttendees.length === sortedAndFilteredAttendees.length;
+  const isSomeSelected = sortedAndFilteredAttendees && selectedAttendees.length > 0 && selectedAttendees.length < sortedAndFilteredAttendees.length;
+
   const handleSelectAttendee = (attendee: Attendee, isSelected: boolean) => {
     setSelectedAttendees(prev =>
       isSelected
@@ -128,11 +131,8 @@ export default function AttendeesPage() {
   };
 
   const handleSelectAll = (isSelected: boolean) => {
-    setSelectedAttendees(isSelected ? sortedAndFilteredAttendees : []);
+    setSelectedAttendees(isSelected && sortedAndFilteredAttendees ? sortedAndFilteredAttendees : []);
   };
-  
-  const isAllSelected = selectedAttendees.length > 0 && selectedAttendees.length === sortedAndFilteredAttendees.length;
-  const isSomeSelected = selectedAttendees.length > 0 && selectedAttendees.length < sortedAndFilteredAttendees.length;
 
 
   const toggleRole = (role: AttendeeRole) => {
@@ -387,7 +387,7 @@ export default function AttendeesPage() {
               <TableRow>
                 <TableHead padding="checkbox">
                     <Checkbox
-                        checked={isAllSelected}
+                        checked={!!isAllSelected}
                         onCheckedChange={(value) => handleSelectAll(!!value)}
                         aria-label="Select all"
                         data-state={isSomeSelected ? "indeterminate" : (isAllSelected ? "checked" : "unchecked")}
@@ -405,6 +405,7 @@ export default function AttendeesPage() {
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 </TableHead>
+                <TableHead>PMI Number</TableHead>
                  <TableHead>
                     Email
                 </TableHead>
@@ -438,6 +439,7 @@ export default function AttendeesPage() {
                         <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-20" /></TableCell>
@@ -461,6 +463,9 @@ export default function AttendeesPage() {
                     </TableCell>
                      <TableCell className="text-muted-foreground">
                         {attendee.company}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                        {attendee.pmiNumber}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                         {attendee.email}
