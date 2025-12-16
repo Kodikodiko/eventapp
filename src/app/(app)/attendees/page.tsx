@@ -58,7 +58,7 @@ export default function AttendeesPage() {
   const [selectedRoles, setSelectedRoles] = useState<AttendeeRole[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<AttendeeStatus[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>('');
+  const [sortKey, setSortKey] = useState<SortKey>('fullName');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
@@ -239,6 +239,7 @@ export default function AttendeesPage() {
       Roles: attendee.roles.join(', '),
       Status: attendee.status,
       'Registration Date': attendee.registrationDate ? (typeof attendee.registrationDate === 'string' ? attendee.registrationDate : format(attendee.registrationDate.toDate(), 'yyyy-MM-dd')) : '',
+      'Amount Paid': attendee.price ? `€${attendee.price.toFixed(2)}` : '',
     }));
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
@@ -326,20 +327,34 @@ export default function AttendeesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                    <Button variant="ghost" onClick={() => handleSort('fullName')}>
+                    <Button variant="ghost" onClick={() => handleSort('fullName')} className="-ml-4">
                         Name
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 </TableHead>
-                <TableHead>Roles</TableHead>
-                <TableHead className="hidden md:table-cell">
-                    <Button variant="ghost" onClick={() => handleSort('status')}>
+                 <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('company')} className="-ml-4">
+                        Company
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </TableHead>
+                 <TableHead>
+                    Email
+                </TableHead>
+                <TableHead>
+                    Roles
+                </TableHead>
+                <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('status')} className="-ml-4">
                         Status
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 </TableHead>
-                <TableHead className="hidden md:table-cell">
-                    <Button variant="ghost" onClick={() => handleSort('registrationDate')}>
+                <TableHead className="text-right">
+                    Amount Paid
+                </TableHead>
+                <TableHead>
+                    <Button variant="ghost" onClick={() => handleSort('registrationDate')} className="-ml-4">
                         Registered
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -353,10 +368,13 @@ export default function AttendeesPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
                     </TableRow>
                 ))
@@ -364,9 +382,13 @@ export default function AttendeesPage() {
                 sortedAndFilteredAttendees.map((attendee) => (
                   <TableRow key={attendee.id}>
                     <TableCell className="font-medium">
-                        <div className="font-medium">{attendee.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{attendee.email}</div>
-                        {attendee.company && <div className="hidden text-xs text-muted-foreground md:inline">{attendee.company}</div>}
+                        {attendee.fullName}
+                    </TableCell>
+                     <TableCell className="text-muted-foreground">
+                        {attendee.company}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                        {attendee.email}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -382,7 +404,7 @@ export default function AttendeesPage() {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell>
                       <Badge
                         variant={
                           attendee.status === 'Confirmed'
@@ -397,7 +419,10 @@ export default function AttendeesPage() {
                         {attendee.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                     <TableCell className="text-right font-mono text-sm">
+                       {attendee.price != null && attendee.price > 0 ? `€${attendee.price.toFixed(2)}` : ''}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                         {attendee.registrationDate && format(typeof attendee.registrationDate === 'string' ? new Date(attendee.registrationDate) : attendee.registrationDate.toDate(), 'PPP')}
                     </TableCell>
                     <TableCell>
@@ -428,3 +453,5 @@ export default function AttendeesPage() {
     </>
   );
 }
+
+    
