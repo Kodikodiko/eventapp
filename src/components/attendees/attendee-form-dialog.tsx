@@ -86,9 +86,9 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
   const form = useForm<AttendeeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      attendees: isEditMode ? [{ fullName: attendee.fullName, email: attendee.email, company: attendee.company, pmiNumber: attendee.pmiNumber }] : [{ fullName: '', email: '', company: '', pmiNumber: '' }],
-      roles: isEditMode ? attendee.roles : ['attendee'],
-      status: isEditMode ? attendee.status : 'Confirmed',
+      attendees: [{ fullName: '', email: '', company: '', pmiNumber: '' }],
+      roles: ['attendee'],
+      status: 'Confirmed',
       createInvoice: false,
       totalPrice: 0,
     },
@@ -108,7 +108,12 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
     if (open) {
       // Reset form when dialog opens
       form.reset(isEditMode ? {
-          attendees: [{fullName: attendee.fullName, email: attendee.email, company: attendee.company, pmiNumber: attendee.pmiNumber }],
+          attendees: [{
+              fullName: attendee.fullName, 
+              email: attendee.email, 
+              company: attendee.company || '', 
+              pmiNumber: attendee.pmiNumber || '' 
+            }],
           roles: attendee.roles,
           status: attendee.status,
       } : {
@@ -383,3 +388,5 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
     </Dialog>
   );
 }
+
+    
