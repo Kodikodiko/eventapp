@@ -33,7 +33,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { File, ListFilter, PlusCircle, ArrowUpDown, X } from 'lucide-react';
+import { File, ListFilter, PlusCircle, ArrowUpDown, X, Printer } from 'lucide-react';
 import { Attendee, AttendeeRole, AttendeeStatus, EVENT_ID } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { AttendeeActions } from '@/components/attendees/attendee-actions';
@@ -48,6 +48,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { InvoiceView } from '@/components/attendees/invoice-view';
 
 const roles: AttendeeRole[] = ['attendee', 'speaker', 'orga', 'sponsor'];
 const statuses: AttendeeStatus[] = ['Confirmed', 'Waitlisted', 'Cancelled'];
@@ -58,13 +60,30 @@ export default function AttendeesPage() {
   const [selectedRoles, setSelectedRoles] = useState<AttendeeRole[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<AttendeeStatus[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>('fullName');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortKey, setSortKey] = useState<SortKey>('registrationDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedAttendees, setSelectedAttendees] = useState<Attendee[]>([]);
   const { toast } = useToast();
 
   const firestore = useFirestore();
   const attendeesCol = useMemoFirebase(() => firestore ? collection(firestore, `events/${EVENT_ID}/attendees`) : null, [firestore]);
   const { data: attendees, isLoading } = useCollection<Attendee>(attendeesCol);
+  
+  const handleSelectAttendee = (attendee: Attendee, isSelected: boolean) => {
+    setSelectedAttendees(prev =>
+      isSelected
+        ? [...prev, attendee]
+        : prev.filter(a => a.id !== attendee.id)
+    );
+  };
+
+  const handleSelectAll = (isSelected: boolean) => {
+    setSelectedAttendees(isSelected ? sortedAndFilteredAttendees : []);
+  };
+  
+  const isAllSelected = selectedAttendees.length > 0 && selectedAttendees.length === sortedAndFilteredAttendees.length;
+  const isSomeSelected = selectedAttendees.length > 0 && selectedAttendees.length < sortedAndFilteredAttendees.length;
+
 
   const toggleRole = (role: AttendeeRole) => {
     setSelectedRoles((prev) =>
@@ -158,15 +177,12 @@ export default function AttendeesPage() {
     if (!attendeesCol) return;
     const docRef = doc(attendeesCol, id);
 
-    // `data` from the form includes the `attendees` array, which we don't want to save directly.
-    // The actual attendee data is in the first element of that array.
     const { attendees: attendeeData, ...restData } = data as any;
     const updateData = {
         ...restData,
         ...attendeeData[0]
     };
     
-    // Firestore does not allow `undefined` values. We need to clean the object.
     Object.keys(updateData).forEach(key => {
         if (updateData[key] === undefined) {
             delete updateData[key];
@@ -252,6 +268,41 @@ export default function AttendeesPage() {
     setSelectedStatuses([]);
   };
 
+  const handlePrint = () => {
+    const printableContent = InvoiceView({ attendees: selectedAttendees });
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print Invoices</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @media print {
+                body { -webkit-print-color-adjust: exact; }
+                .no-print { display: none; }
+              }
+              .invoice-card {
+                page-break-inside: avoid;
+              }
+            </style>
+          </head>
+          <body class="bg-gray-100 p-8">
+            ${printableContent}
+            <script>
+              setTimeout(() => {
+                window.print();
+                window.close();
+              }, 500);
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+
   const areFiltersActive = selectedRoles.length > 0 || selectedStatuses.length > 0;
 
   return (
@@ -266,6 +317,14 @@ export default function AttendeesPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              {selectedAttendees.length > 0 && (
+                 <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handlePrint}>
+                    <Printer className="h-3.5 w-3.5" />
+                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Print Invoices ({selectedAttendees.length})
+                    </span>
+                 </Button>
+              )}
               <Button size="sm" variant="outline" className="h-8 gap-1" onClick={handleExport} disabled={isLoading || !attendees || attendees.length === 0}>
                 <File className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -326,6 +385,14 @@ export default function AttendeesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead padding="checkbox">
+                    <Checkbox
+                        checked={isAllSelected}
+                        onCheckedChange={(value) => handleSelectAll(!!value)}
+                        aria-label="Select all"
+                        data-state={isSomeSelected ? "indeterminate" : (isAllSelected ? "checked" : "unchecked")}
+                    />
+                </TableHead>
                 <TableHead>
                     <Button variant="ghost" onClick={() => handleSort('fullName')} className="-ml-4">
                         Name
@@ -368,6 +435,7 @@ export default function AttendeesPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-4" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-40" /></TableCell>
@@ -380,7 +448,14 @@ export default function AttendeesPage() {
                 ))
               ) : (
                 sortedAndFilteredAttendees.map((attendee) => (
-                  <TableRow key={attendee.id}>
+                  <TableRow key={attendee.id} data-state={selectedAttendees.some(a => a.id === attendee.id) ? "selected" : ""}>
+                    <TableCell padding="checkbox">
+                        <Checkbox
+                            checked={selectedAttendees.some(a => a.id === attendee.id)}
+                            onCheckedChange={(value) => handleSelectAttendee(attendee, !!value)}
+                            aria-label={`Select attendee ${attendee.fullName}`}
+                        />
+                    </TableCell>
                     <TableCell className="font-medium">
                         {attendee.fullName}
                     </TableCell>
