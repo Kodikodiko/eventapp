@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { eventDetails, type EventDetails } from '@/lib/data';
-import { DollarSign } from 'lucide-react';
+import { eventDetails as initialEventDetails, type EventDetails } from '@/lib/data';
 import { format, parseISO } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -45,6 +44,7 @@ type EventFormValues = z.infer<typeof formSchema>;
 export default function EventPage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [eventDetails, setEventDetails] = useState<EventDetails>(initialEventDetails);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(formSchema),
@@ -61,8 +61,8 @@ export default function EventPage() {
   });
 
   function onSubmit(data: EventFormValues) {
-    // In a real app, you would save this data.
-    console.log(data);
+    // Update the state with the new data
+    setEventDetails({ ...eventDetails, ...data });
     toast({
       title: "Event Updated",
       description: "The event details have been successfully saved.",
@@ -73,6 +73,7 @@ export default function EventPage() {
   const handleEditClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isEditing) {
       e.preventDefault();
+      form.reset(eventDetails); // Ensure form has the latest state before editing
       setIsEditing(true);
     }
   }
@@ -218,5 +219,3 @@ export default function EventPage() {
     </div>
   );
 }
-
-    

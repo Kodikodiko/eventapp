@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
@@ -101,7 +100,7 @@ export default function RegisterPage() {
             description: "Thank you for registering. You will now be redirected to the dashboard.",
         });
         // In a real app, you would navigate to a Stripe checkout page or a thank you page.
-        // For now, redirect to dashboard for easy verification.
+        // For now, redirect to attendees list for easy verification.
         setTimeout(() => {
             router.push('/attendees');
         }, 2000);
@@ -271,5 +270,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
-    
