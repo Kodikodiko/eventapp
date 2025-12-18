@@ -17,6 +17,7 @@ export type Attendee = {
   price?: number;
   company?: string;
   pmiNumber?: string;
+  billingAddress?: string;
 };
 
 // This will be our single event for now.

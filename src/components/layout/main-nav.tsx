@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -12,6 +13,7 @@ import {
   Users,
   Ticket,
   DownloadCloud,
+  ClipboardPen,
 } from 'lucide-react';
 import {
   SidebarContent,
@@ -20,6 +22,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 
 const navItems = [
@@ -60,6 +63,21 @@ export function MainNav() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+        </SidebarMenu>
+        <SidebarSeparator/>
+         <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith("/register")}
+                    tooltip={{children: "Public Registration"}}
+                >
+                    <Link href="/register">
+                        <ClipboardPen/>
+                        <span>Public Registration</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

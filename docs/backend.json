@@ -86,6 +86,10 @@
         },
         "eventId": {
           "type": "string"
+        },
+        "billingAddress": {
+            "type": "string",
+            "description": "The billing address of the attendee."
         }
       },
       "required": [

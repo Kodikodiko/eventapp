@@ -42,6 +42,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Textarea } from '../ui/textarea';
 
 const roles: { id: AttendeeRole; label: string }[] = [
     { id: 'attendee', label: 'Attendee' },
@@ -57,6 +58,7 @@ const attendeeSchema = z.object({
   email: z.string().email("Invalid email address."),
   company: z.string().optional(),
   pmiNumber: z.string().optional(),
+  billingAddress: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -86,7 +88,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
   const form = useForm<AttendeeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      attendees: [{ fullName: '', email: '', company: '', pmiNumber: '' }],
+      attendees: [{ fullName: '', email: '', company: '', pmiNumber: '', billingAddress: '' }],
       roles: ['attendee'],
       status: 'Confirmed',
       createInvoice: false,
@@ -112,12 +114,13 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
               fullName: attendee.fullName, 
               email: attendee.email, 
               company: attendee.company || '', 
-              pmiNumber: attendee.pmiNumber || '' 
+              pmiNumber: attendee.pmiNumber || '',
+              billingAddress: attendee.billingAddress || '',
             }],
           roles: attendee.roles,
           status: attendee.status,
       } : {
-          attendees: [{ fullName: '', email: '', company: '', pmiNumber: '' }],
+          attendees: [{ fullName: '', email: '', company: '', pmiNumber: '', billingAddress: '' }],
           roles: ['attendee'],
           status: 'Confirmed',
           createInvoice: false,
@@ -193,7 +196,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
                       <FormItem>
                         <FormLabel>Company</FormLabel>
                         <FormControl>
-                          <Input placeholder="Optional" {...field} />
+                          <Input placeholder="Optional" {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -206,7 +209,20 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
                       <FormItem>
                         <FormLabel>PMI Member Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="Optional" {...field} />
+                          <Input placeholder="Optional" {...field} value={field.value ?? ''}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`attendees.${index}.billingAddress`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Billing Address</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Optional" {...field} value={field.value ?? ''}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -221,7 +237,7 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
               ))}
             </div>
             {!isEditMode && (
-              <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ fullName: '', email: '', company: '', pmiNumber: '' })}>
+              <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => append({ fullName: '', email: '', company: '', pmiNumber: '', billingAddress: '' })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Attendee
               </Button>
             )}
@@ -388,5 +404,3 @@ export function AttendeeFormDialog({ open, onOpenChange, onSubmit, attendee }: A
     </Dialog>
   );
 }
-
-    

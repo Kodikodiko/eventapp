@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -29,12 +28,16 @@ import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { EVENT_ID } from '@/lib/data';
+import { Textarea } from '@/components/ui/textarea';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  fullName: z.string().min(1, { message: "Full name is required." }),
+  firstName: z.string().min(1, { message: "First name is required." }),
+  lastName: z.string().min(1, { message: "Last name is required." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   company: z.string().optional(),
   pmiNumber: z.string().optional(),
+  billingAddress: z.string().optional(),
 });
 
 type RegistrationFormValues = z.infer<typeof formSchema>;
@@ -42,59 +45,62 @@ type RegistrationFormValues = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const router = useRouter();
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       company: '',
       pmiNumber: '',
+      billingAddress: '',
     },
   });
 
   function onSubmit(data: RegistrationFormValues) {
-    if (!firestore) return;
+    if (!firestore) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not connect to the database. Please try again.",
+        });
+        return;
+    };
     const attendeesCol = collection(firestore, `events/${EVENT_ID}/attendees`);
     const newAttendee = {
-      ...data,
+      fullName: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      company: data.company,
+      pmiNumber: data.pmiNumber,
+      billingAddress: data.billingAddress,
       roles: ['attendee'],
-      status: 'Confirmed',
+      status: 'Confirmed', // Or 'Waitlisted' depending on logic
       registrationDate: serverTimestamp(),
       eventId: EVENT_ID,
+      price: 149, // Placeholder price
     };
 
-    addDocumentNonBlocking(attendeesCol, newAttendee);
-
-    toast({
-      title: "Registration Submitted!",
-      description: "Thank you for registering. Please proceed to payment.",
-    });
-    // In a real app, you would navigate to a Stripe checkout page.
-  }
-
-  function handleVerifyPmi() {
-    const pmiNumber = form.getValues('pmiNumber');
-    if (pmiNumber) {
-      // In a real app, you would call an API to verify the number.
-      toast({
-        title: "Verifying PMI Number...",
-        description: `Checking number: ${pmiNumber}`,
-      });
-      // Simulate API call
-      setTimeout(() => {
+    addDocumentNonBlocking(attendeesCol, newAttendee).then(() => {
         toast({
-          title: "PMI Membership Verified!",
-          description: "The member discount will be applied at checkout.",
+            title: "Registration Submitted!",
+            description: "Thank you for registering. You will now be redirected to the dashboard.",
         });
-      }, 1500);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "No PMI Number",
-        description: "Please enter a PMI number to verify.",
-      });
-    }
+        // In a real app, you would navigate to a Stripe checkout page or a thank you page.
+        // For now, redirect to dashboard for easy verification.
+        setTimeout(() => {
+            router.push('/attendees');
+        }, 2000);
+    }).catch(e => {
+        console.error("Error adding attendee: ", e);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem with your registration.",
+        });
+    });
+
   }
 
   return (
@@ -115,19 +121,35 @@ export default function RegisterPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                        <Input placeholder="John" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              </div>
+
                <FormField
                 control={form.control}
                 name="email"
@@ -146,9 +168,9 @@ export default function RegisterPage() {
                 name="company"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company</FormLabel>
+                    <FormLabel>Company (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Optional" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -159,16 +181,10 @@ export default function RegisterPage() {
                 name="pmiNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>PMI Member Number</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input placeholder="Optional" {...field} />
-                      </FormControl>
-                      <Button type="button" variant="outline" onClick={handleVerifyPmi}>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Verify
-                      </Button>
-                    </div>
+                    <FormLabel>PMI Member Number (Optional)</FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
                     <FormDescription>
                       Enter your PMI number to qualify for a member discount.
                     </FormDescription>
@@ -176,13 +192,28 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="billingAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billing Address (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="123 Main St, Anytown, USA 12345" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <CardFooter className="flex flex-col gap-4 p-0 pt-6">
-                    <Button type="submit" className="w-full" size="lg">Proceed to Payment</Button>
+                <CardContent className="flex flex-col gap-4 p-0 pt-6">
+                    <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? 'Registering...' : 'Register and Book Ticket'}
+                    </Button>
                     <p className="text-center text-xs text-muted-foreground">
                         By registering, you agree to our Terms of Service.
                     </p>
-                </CardFooter>
+                </CardContent>
             </form>
           </Form>
         </CardContent>
