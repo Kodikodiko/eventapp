@@ -4,6 +4,7 @@ import path from 'path';
 import { DownloadsClientPage } from './client-page';
 
 const fileNames = [
+  'CHANGELOG.txt',
   'COST_ANALYSIS.md',
   'DEPLOYMENT.md',
   'HOMELAB_DEPLOYMENT.md',

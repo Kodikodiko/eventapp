@@ -12,7 +12,7 @@ import {
   Settings,
   Users,
   Ticket,
-  DownloadCloud,
+  Download,
   ClipboardPen,
 } from 'lucide-react';
 import {
@@ -32,7 +32,7 @@ const navItems = [
   { href: '/sponsors', icon: Award, label: 'Sponsors' },
   { href: '/schedule', icon: Calendar, label: 'Schedule' },
   { href: '/reporting', icon: BarChart2, label: 'Reporting' },
-  { href: '/downloads', icon: DownloadCloud, label: 'Downloads' },
+  { href: '/downloads', icon: Download, label: 'Downloads' },
   { href: '/event', icon: Ticket, label: 'Event' },
 ];
 

@@ -17,7 +17,8 @@ type DownloadsClientPageProps = {
 export function DownloadsClientPage({ files }: DownloadsClientPageProps) {
 
   const handleDownload = (content: string, fileName: string) => {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+    const fileType = fileName.endsWith('.txt') ? 'text/plain' : 'text/markdown';
+    const blob = new Blob([content], { type: `${fileType};charset=utf-8;` });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
@@ -32,13 +33,13 @@ export function DownloadsClientPage({ files }: DownloadsClientPageProps) {
     <div className="space-y-8">
        <div>
         <h1 className="text-2xl font-bold tracking-tight">Downloads</h1>
-        <p className="text-muted-foreground">Download project documentation and specification files.</p>
+        <p className="text-muted-foreground">Download project documentation, specifications, and changelogs.</p>
       </div>
       <Card>
         <CardHeader>
-            <CardTitle>Markdown Documents</CardTitle>
+            <CardTitle>Project Documents</CardTitle>
             <CardDescription>
-                Here are all the markdown files available in your project.
+                Here are all the documentation files available in your project.
             </CardDescription>
         </CardHeader>
         <CardContent>
