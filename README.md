@@ -124,3 +124,48 @@ We define clear data structures using TypeScript to ensure consistency across th
       pmiNumber?: string;
     };
     ```
+---
+
+### **Frontend Deep Dive & Customization**
+
+This section explains how the frontend is constructed and provides a practical example of how to customize its appearance.
+
+#### **1. How is the Frontend Created?**
+
+The application's frontend is built using a modern, component-based architecture:
+
+*   **Core Framework**: It uses **Next.js** with **React** and **TypeScript**, providing the foundation for the user interface.
+*   **UI Components**: The UI elements you see (like tables, buttons, badges, and cards) come from **ShadCN UI**. This is not a typical component library. Instead, each component is a separate file that has been added to your project under `src/components/ui/`. This is a major advantage because it gives you full control to modify the code for any component directly.
+*   **Styling**: All styling is handled by **Tailwind CSS**. This is a "utility-first" CSS framework, which means we build styles by combining small, single-purpose classes directly in the JSX code (e.g., `p-4`, `flex`, `font-bold`).
+*   **Theming & Colors**: The entire color scheme is managed through CSS variables. In `src/app/globals.css`, you will find variables like `--primary`, `--secondary`, `--destructive`, and `--accent`. These variables define the application's color palette, and the Tailwind configuration is set up to use them, ensuring a consistent look and feel.
+
+#### **2. Example: How to Change the "Attendee" Tag Color to Light Green**
+
+The tag you see is a `<Badge>` component. To change its color specifically for the "attendee" role, you would follow these steps:
+
+1.  **Locate the Component**: The attendee table is rendered in `src/app/(app)/attendees/page.tsx`. Inside this file, you would find the code that loops through `attendee.roles` and renders a `<Badge>` for each one.
+2.  **Define a New Style Variant**: To add a new "light green" color, you edit the badge's style definitions located in `src/components/ui/badge.tsx`. You would add a new variant (e.g., `"attendee-green"`) to the `badgeVariants` object. This new variant would define the background and text color using Tailwind CSS classes.
+
+    *   **Example (in `src/components/ui/badge.tsx`):**
+        ```tsx
+        const badgeVariants = cva(
+          /* ... */,
+          {
+            variants: {
+              variant: {
+                default: /* ... */,
+                secondary: /* ... */,
+                // ... other variants
+                // Add your new variant here:
+                "attendee-green": "border-transparent bg-green-100 text-green-800",
+              },
+            },
+            // ...
+          }
+        )
+        ```
+
+3.  **Apply the New Variant Conditionally**: Back in `src/app/(app)/attendees/page.tsx`, you would modify the `<Badge>` component to conditionally apply your new variant.
+
+    *   **Example (in `src/app/(app)/attendees/page.tsx`):**
+        You would change the `variant` prop of the Badge based on the `role`. Currently, it might look something like `variant={selectedRoles.includes(role) ? "default" : "secondary"}`. You would update it to check if the role is 'attendee' and apply your new `"attendee-green"` variant if it is.
