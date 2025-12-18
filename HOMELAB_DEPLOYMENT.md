@@ -1,16 +1,16 @@
 # Self-Hosting Guide for Home Labs (TrueNAS SCALE + Ubuntu VM)
 
-This guide provides a detailed walkthrough for deploying the EventFlow application, including a database and a reverse proxy, in a home lab environment using TrueNAS SCALE and an Ubuntu VM.
+This guide provides a detailed walkthrough for deploying the EventFlow application in a home lab environment, connecting it to an existing PostgreSQL database running on TrueNAS SCALE, and setting up a reverse proxy.
 
 ## Overview of Components
 
 1.  **Host (TrueNAS SCALE):**
-    *   Runs the Ubuntu Server VM.
+    *   Runs the Ubuntu Server VM for the application.
+    *   Runs your existing **PostgreSQL Docker container** (as a TrueNAS App).
     *   Runs a Docker container for the Reverse Proxy (e.g., Nginx Proxy Manager).
 
 2.  **Guest VM (Ubuntu 24.04):**
     *   **Node.js:** To run the Next.js application.
-    *   **PostgreSQL Database:** To store all application data (attendees, events, etc.). We will use Docker to run this.
     *   **PM2:** A process manager to keep your Next.js application running continuously.
     *   **Git:** To download your application code.
 
@@ -18,15 +18,15 @@ This guide provides a detailed walkthrough for deploying the EventFlow applicati
 
 ## Step 1: Prepare the Ubuntu 24.04 VM
 
-On your freshly installed Ubuntu Server 24.04 VM, you need to install the necessary software. Connect to your VM via SSH.
+On your freshly installed Ubuntu Server 24.04 VM, you need to install the software required to run the Node.js application. Connect to your VM via SSH.
 
-### 1.1 Install Git, Docker, and Build Tools
+### 1.1 Install Git and Build Tools
 ```bash
 # Update package lists
 sudo apt update && sudo apt upgrade -y
 
-# Install git, Docker, and other essentials
-sudo apt install -y git docker.io docker-compose build-essential
+# Install git and other essentials
+sudo apt install -y git build-essential
 ```
 ### 1.2 Install Node.js using NVM
 
@@ -60,35 +60,17 @@ npm install -g pm2
 
 ---
 
-## Step 2: Set up the Database (on Ubuntu VM)
+## Step 2: Prepare the Database Connection
 
-We will use Docker to run a PostgreSQL database.
+This guide assumes you already have a PostgreSQL database running as a container/App on your TrueNAS SCALE machine.
 
-### 2.1 Create a `docker-compose.yml` file
-Create a file named `docker-compose.yml` in your home directory on the Ubuntu VM (`~/docker-compose.yml`):
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:16
-    container_name: eventflow-db
-    restart: always
-    environment:
-      POSTGRES_USER: your_db_user      # Replace with your desired username
-      POSTGRES_PASSWORD: your_strong_password # Replace with a strong password
-      POSTGRES_DB: eventflow_prod
-    volumes:
-      - ./postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-```
+You will need the following information:
+*   **TrueNAS IP Address:** The IP address of your TrueNAS server (e.g., `192.168.1.10`).
+*   **PostgreSQL Port:** The external port your PostgreSQL container is mapped to on TrueNAS (e.g., `5432`).
+*   **Database Name:** The name of the database you want to use (e.g., `eventflow_prod`).
+*   **Database User & Password:** The credentials to access your database.
 
-### 2.2 Start the Database
-From the directory containing the `docker-compose.yml` file, run:
-```bash
-sudo docker-compose up -d
-```
-Your PostgreSQL database is now running.
+Ensure your database is configured to accept connections from your Ubuntu VM's IP address.
 
 ---
 
@@ -109,11 +91,15 @@ cd <your-project-folder>
 npm install
 
 # IMPORTANT: Configure Database Connection
-# You will need to create a .env.local file in your project root
-# and add the database connection string.
+# Create a .env.local file in your project root with the correct connection string.
+# Replace the placeholders with your actual database details.
+echo "DATABASE_URL=\"postgresql://<DB_USER>:<DB_PASSWORD>@<TRUENAS_IP>:<DB_PORT>/<DB_NAME>\"" > .env.local
+
+# Example:
+# echo "DATABASE_URL=\"postgresql://eventflow_user:password123@192.168.1.10:5432/eventflow_prod\"" > .env.local
+
 # NOTE: The application code currently uses mock data and MUST be updated
 # to connect to this database. This is a future development step.
-echo "DATABASE_URL=\"postgresql://your_db_user:your_strong_password@localhost:5432/eventflow_prod\"" > .env.local
 
 # Create the production build
 npm run build
@@ -141,7 +127,7 @@ The final step is to direct traffic from your home network to the Ubuntu VM. We'
 
 ### 4.1 Install Nginx Proxy Manager on TrueNAS
 1.  Go to the "Apps" section in TrueNAS SCALE.
-2.  Search for `nginx-proxy-manager` and install it.
+2.  Search for `nginx-proxy-manager` and install it (if you haven't already).
 3.  During installation, ensure the web UI ports (e.g., 80, 443, 81) are configured correctly and don't conflict with other TrueNAS services.
 
 ### 4.2 Configure the Proxy Host
@@ -151,7 +137,7 @@ The final step is to direct traffic from your home network to the Ubuntu VM. We'
 4.  **Details Tab:**
     *   **Domain Names:** Enter the domain you want to use (e.g., `eventflow.yourdomain.com`).
     *   **Scheme:** `http`
-    *   **Forward Hostname / IP:** Enter the IP address of your Ubuntu VM.
+    *   **Forward Hostname / IP:** Enter the IP address of your **Ubuntu VM**.
     *   **Forward Port:** `3000` (the port your Next.js app is running on).
     *   Enable `Block Common Exploits`.
 5.  **SSL Tab:**
