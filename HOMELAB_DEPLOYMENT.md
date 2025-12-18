@@ -128,6 +128,7 @@ pm2 start npm --name "eventflow-app" -- start
 pm2 save
 
 # Enable the startup script for PM2
+# This will output a command you need to copy and run to register pm2 as a startup service.
 pm2 startup
 ```
 Your application is now running on the Ubuntu VM on port 3000.
