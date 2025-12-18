@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { eventDetails, type EventDetails } from '@/lib/data';
 import { DollarSign } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -36,6 +37,7 @@ const formSchema = z.object({
     member: z.coerce.number().positive(),
     normal: z.coerce.number().positive(),
   }),
+  termsOfService: z.string().min(10, { message: "Terms of Service cannot be empty." }),
 });
 
 type EventFormValues = z.infer<typeof formSchema>;
@@ -54,6 +56,7 @@ export default function EventPage() {
         member: eventDetails.pricing.member,
         normal: eventDetails.pricing.normal,
       },
+      termsOfService: eventDetails.termsOfService,
     },
   });
 
@@ -89,8 +92,8 @@ export default function EventPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>General Information</CardTitle>
-                            <CardDescription>Update the basic details of your event.</CardDescription>
+                            <CardTitle>Event Information</CardTitle>
+                            <CardDescription>Update the core details of your event.</CardDescription>
                         </div>
                         <Button 
                             type={isEditing ? 'submit' : 'button'} 
@@ -189,8 +192,31 @@ export default function EventPage() {
                 </CardContent>
             </Card>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle>Terms of Service</CardTitle>
+                    <CardDescription>Define the terms and conditions for event registration.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <FormField
+                        control={form.control}
+                        name="termsOfService"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Textarea {...field} rows={8} disabled={!isEditing} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </CardContent>
+            </Card>
+
         </form>
       </Form>
     </div>
   );
 }
+
+    

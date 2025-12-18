@@ -90,6 +90,7 @@ export type EventDetails = {
   date: string;
   location: string;
   pricing: Pricing;
+  termsOfService: string;
 };
 
 export const eventDetails: EventDetails = {
@@ -101,6 +102,13 @@ export const eventDetails: EventDetails = {
     member: 99,
     normal: 149,
   },
+  termsOfService: `1. Acceptance of Terms: By registering for this event, you agree to be bound by these Terms of Service.
+2. Registration: All information provided during registration must be accurate and complete.
+3. Payment: Full payment is required to confirm your registration. Prices are as listed and are inclusive of any applicable taxes.
+4. Cancellation Policy: Cancellations made 30 days or more before the event will receive a full refund. No refunds will be issued for cancellations made within 30 days of the event.
+5. Code of Conduct: All attendees are expected to behave professionally and respectfully. Harassment or disruptive behavior will not be tolerated and may result in removal from the event without a refund.
+6. Liability: The event organizers are not liable for any personal injury, loss, or damage to personal property.
+7. Photography and Videography: By attending, you consent to being photographed or recorded. These materials may be used for promotional purposes.`,
 };
 
     
