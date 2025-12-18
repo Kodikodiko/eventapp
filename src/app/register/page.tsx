@@ -26,10 +26,11 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
-import { EVENT_ID, eventDetails } from '@/lib/data';
+import { EVENT_ID, eventDetails as defaultEventDetails, EventDetails } from '@/lib/data';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useEffect, useState } from 'react';
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required." }),
@@ -50,6 +51,18 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const router = useRouter();
+  const [eventDetails, setEventDetails] = useState<EventDetails>(defaultEventDetails);
+
+  useEffect(() => {
+    try {
+      const savedDetails = localStorage.getItem('eventDetails');
+      if (savedDetails) {
+        setEventDetails(JSON.parse(savedDetails));
+      }
+    } catch (error) {
+      console.error("Failed to load event details from localStorage", error);
+    }
+  }, []);
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(formSchema),

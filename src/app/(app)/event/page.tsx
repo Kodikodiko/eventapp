@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { eventDetails as initialEventDetails, type EventDetails } from '@/lib/data';
+import { eventDetails as defaultEventDetails, type EventDetails } from '@/lib/data';
 import { format, parseISO } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -44,11 +44,22 @@ type EventFormValues = z.infer<typeof formSchema>;
 export default function EventPage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [eventDetails, setEventDetails] = useState<EventDetails>(initialEventDetails);
+  const [eventDetails, setEventDetails] = useState<EventDetails>(defaultEventDetails);
+
+  useEffect(() => {
+    try {
+      const savedDetails = localStorage.getItem('eventDetails');
+      if (savedDetails) {
+        setEventDetails(JSON.parse(savedDetails));
+      }
+    } catch (error) {
+      console.error("Failed to load event details from localStorage", error);
+    }
+  }, []);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    values: { // Use `values` to keep form in sync with state changes
       name: eventDetails.name,
       date: eventDetails.date,
       location: eventDetails.location,
@@ -59,14 +70,32 @@ export default function EventPage() {
       termsOfService: eventDetails.termsOfService,
     },
   });
+  
+  useEffect(() => {
+    // This effect keeps the form synchronized with the state, which is loaded from localStorage.
+    form.reset(eventDetails);
+  }, [eventDetails, form]);
+
 
   function onSubmit(data: EventFormValues) {
-    // Update the state with the new data
-    setEventDetails({ ...eventDetails, ...data });
-    toast({
-      title: "Event Updated",
-      description: "The event details have been successfully saved.",
-    });
+    const updatedDetails = { ...eventDetails, ...data };
+    setEventDetails(updatedDetails);
+    
+    try {
+      localStorage.setItem('eventDetails', JSON.stringify(updatedDetails));
+      toast({
+        title: "Event Updated",
+        description: "The event details have been successfully saved.",
+      });
+    } catch (error) {
+      console.error("Failed to save event details to localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "Could not save event details.",
+      });
+    }
+    
     setIsEditing(false);
   }
 
