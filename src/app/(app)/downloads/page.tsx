@@ -10,6 +10,7 @@ const fileNames = [
   'HOMELAB_DEPLOYMENT.md',
   'README.md',
   'SPECIFICATION.md',
+  'STRIPE_INTEGRATION.md',
 ];
 
 async function getFileContent() {
