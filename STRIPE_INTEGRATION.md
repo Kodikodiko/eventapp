@@ -18,6 +18,35 @@ To integrate Stripe for payment processing, we need a pair of API keys from the 
 
 ---
 
+## Developer Action Items: Handling the Keys
+
+Once you receive the API keys from the CFO, they must be stored as environment variables. This keeps them secure and separate from the application code.
+
+**For Local Development & Testing:**
+
+1.  In the root directory of your project, create a new file named `.env.local`. **This file should never be committed to your code repository (e.g., Git).**
+
+2.  Open the `.env.local` file and add the keys you received from the CFO, using the following specific names:
+
+    ```
+    # .env.local
+
+    # For the Frontend (safe to be public in the browser)
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+
+    # For the Backend (must be kept secret on the server)
+    STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+    ```
+
+    *   The `NEXT_PUBLIC_` prefix on the publishable key is a Next.js convention that exposes the variable to the browser (the frontend).
+    *   The secret key has no prefix and will only be available on the server-side, keeping it secure.
+
+**For Production Deployment:**
+
+When you deploy your application to a hosting provider (like Vercel or Firebase App Hosting), you will **not** use the `.env.local` file. Instead, you will configure these same environment variables in your hosting provider's web dashboard. This ensures your keys remain secure in the live environment.
+
+---
+
 ## Detailed Integration Workflow
 
 Integrating Stripe involves a secure workflow that ensures customer payment details are never handled by our application directly, significantly reducing our PCI compliance scope. The process relies on creating a server-side Checkout Session, redirecting the user to a secure Stripe-hosted payment page, and using Webhooks to confirm payment before creating the attendee record.
