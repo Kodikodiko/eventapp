@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -60,7 +60,7 @@ type SessionFormDialogProps = {
 export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: SessionFormDialogProps) {
   const isEditMode = !!session;
 
-  const defaultValues = isEditMode ? {
+  const defaultValues = useMemo(() => isEditMode ? {
         title: session.title,
         speaker: session.speaker,
         from: session.from,
@@ -73,10 +73,10 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
       speaker: '',
       from: '09:00',
       to: '10:00',
-      tag: 'talk',
+      tag: 'talk' as SessionTag,
       location: '',
       stream: 1,
-    };
+    }, [session, isEditMode]);
 
   const form = useForm<SessionFormValues>({
     resolver: zodResolver(formSchema),
@@ -87,7 +87,7 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
     if (open) {
         form.reset(defaultValues);
     }
-  }, [open, session, isEditMode, form, defaultValues]);
+  }, [open, defaultValues, form]);
 
   function handleFormSubmit(data: SessionFormValues) {
     onSubmit(data);
