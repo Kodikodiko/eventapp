@@ -61,7 +61,9 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const scheduleCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/schedule`), [firestore]);
-  const { data: sessions, isLoading } = useCollection<Session>(scheduleCol);
+  const { data: serverSessions, isLoading } = useCollection<Session>(scheduleCol);
+  
+  const sessions = useMemo(() => serverSessions, [serverSessions]);
 
   useEffect(() => {
     // One-time creation of default schedule if collection is empty and not loading
@@ -145,17 +147,6 @@ export default function SchedulePage() {
     }
   };
 
-  const getStreamColor = (stream: number, isFullWidth: boolean) => {
-    if (isFullWidth) return 'bg-rose-400';
-    switch (stream) {
-      case 1: return 'bg-yellow-400';
-      case 2: return 'bg-sky-400';
-      case 3: return 'bg-orange-400';
-      case 4: return 'bg-fuchsia-400';
-      default: return 'bg-gray-400';
-    }
-  };
-
   return (
     <>
       <div className="space-y-8">
@@ -225,7 +216,6 @@ export default function SchedulePage() {
                             }}
                         >
                             <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
-                            <div className={cn("absolute top-2 right-2 h-2.5 w-2.5 rounded-full", getStreamColor(session.stream, isFullWidth))} />
                             <CardHeader>
                                 <CardTitle className="text-base pr-4">{session.title}</CardTitle>
                                 <CardDescription className="pt-1">
