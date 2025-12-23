@@ -136,16 +136,16 @@ export default function SchedulePage() {
     }
   }
 
-  const getStreamColorClass = (session: Session, isFullWidth: boolean) => {
+  const getStreamGradientClass = (session: Session, isFullWidth: boolean) => {
     if (isFullWidth && session.tag === 'general') {
-        return 'border-t-purple-300';
+        return 'from-purple-400';
     }
     switch(session.stream) {
-      case 1: return 'border-t-sky-400';
-      case 2: return 'border-t-emerald-400';
-      case 3: return 'border-t-amber-400';
-      case 4: return 'border-t-rose-400';
-      default: return 'border-t-gray-400';
+      case 1: return 'from-sky-400';
+      case 2: return 'from-fuchsia-400';
+      case 3: return 'from-amber-400';
+      case 4: return 'from-rose-400';
+      default: return 'from-gray-400';
     }
   }
 
@@ -212,25 +212,25 @@ export default function SchedulePage() {
                         <Card 
                             key={session.id} 
                             className={cn(
-                                'relative transition-all hover:shadow-md flex flex-col border-t-4',
-                                getStreamColorClass(session, isFullWidth)
+                                'relative transition-all hover:shadow-md flex flex-col overflow-hidden',
                             )}
                             style={{
                                 gridColumn: isFullWidth ? '1 / -1' : 'span 1',
                             }}
                         >
+                            <div className={cn('absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b to-transparent', getStreamGradientClass(session, isFullWidth))} />
                             <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
-                            <CardHeader>
+                            <CardHeader className="pl-5">
                                 <CardTitle className="text-base">{session.title}</CardTitle>
                                 <CardDescription className="pt-1">
                                     <Badge className={getTagColor(session.tag)}>{session.tag}</Badge>
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow">
+                            <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow pl-5">
                                 <div className="flex items-center gap-2"><Clock className="h-4 w-4"/><span>{session.from} - {session.to}</span></div>
                                 {session.speaker && <div className="flex items-center gap-2"><User className="h-4 w-4"/><span>{session.speaker}</span></div>}
                             </CardContent>
-                            <CardFooter className="flex justify-between items-center">
+                            <CardFooter className="flex justify-between items-center pl-5">
                                 <div className="flex items-center gap-2 text-sm font-medium"><MapPin className="h-4 w-4"/><span>{session.location}</span></div>
                                 <div className="flex items-center gap-1">
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenForm(session)}>
@@ -281,5 +281,3 @@ export default function SchedulePage() {
     </>
   );
 }
-
-    
