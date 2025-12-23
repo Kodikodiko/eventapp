@@ -15,11 +15,11 @@ const getTagStyles = (tag: Session['tag']) => {
 
 const getStreamColor = (session: Session, isFullWidth: boolean) => {
     if (isFullWidth) {
-        return '#f43f5e'; // rose-400
+        return '#f43f5e'; // rose-500
     }
     switch (session.stream) {
         case 1: return '#38bdf8'; // sky-400
-        case 2: return '#34d399'; // emerald-400
+        case 2: return '#eab308'; // yellow-500
         case 3: return '#fbbf24'; // amber-400
         case 4: return '#a855f7'; // fuchsia-500
         default: return '#9ca3af'; // gray-400
@@ -216,3 +216,5 @@ export function printSchedule(sessions: Session[]) {
     }, 500); // Wait for styles to apply
   }
 }
+
+    
