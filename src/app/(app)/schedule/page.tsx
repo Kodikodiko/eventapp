@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, User, PlusCircle, Edit, Trash2, Printer } from 'lucide-react';
 import { Session, EVENT_ID } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, addDoc } from 'firebase/firestore';
 import {
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
@@ -36,7 +35,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { printSchedule } from '@/components/schedule/print-schedule';
 import { cn } from '@/lib/utils';
-import { addDoc } from 'firebase/firestore';
 
 // Group sessions by their start time
 const groupSessionsByTime = (sessions: Session[]) => {
@@ -79,7 +77,9 @@ export default function SchedulePage() {
         { title: 'Cybersecurity Today', speaker: 'Sam Wilson', from: '14:00', to: '14:45', location: 'Room 102', tag: 'talk', stream: 2, eventId: EVENT_ID },
       ];
       defaultSchedule.forEach(session => {
-        addDoc(scheduleCol, session).catch(e => console.error("Error adding default session:", e));
+        if (scheduleCol) {
+            addDoc(scheduleCol, session).catch(e => console.error("Error adding default session:", e));
+        }
       });
     }
   }, [sessions, isLoading, scheduleCol]);
@@ -95,7 +95,8 @@ export default function SchedulePage() {
     setIsFormOpen(true);
   };
   
-  const handleSessionSubmit = (data: SessionFormValues) => {
+  const handleSessionSubmit = async (data: SessionFormValues) => {
+    if (!scheduleCol) return;
     const sessionData: Omit<Session, 'id'> = { ...data, eventId: EVENT_ID };
 
     if (!sessionData.speaker) {
@@ -106,14 +107,13 @@ export default function SchedulePage() {
         updateDocumentNonBlocking(doc(scheduleCol, editingSession.id), sessionData);
         toast({ title: "Session Updated" });
     } else {
-        addDoc(scheduleCol, sessionData)
-            .then(() => {
-                toast({ title: "Session Added" });
-            })
-            .catch((error) => {
-                console.error("Error adding session: ", error);
-                toast({ variant: "destructive", title: "Error", description: "Could not add session."});
-            });
+        try {
+            await addDoc(scheduleCol, sessionData);
+            toast({ title: "Session Added" });
+        } catch (error) {
+            console.error("Error adding session: ", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not add session."});
+        }
     }
     setIsFormOpen(false);
     setEditingSession(undefined);
@@ -130,7 +130,7 @@ export default function SchedulePage() {
   };
 
   const handleDeleteConfirm = () => {
-    if (sessionToDelete) {
+    if (sessionToDelete && scheduleCol) {
         deleteDocumentNonBlocking(doc(scheduleCol, sessionToDelete.id));
         toast({ title: "Session Deleted", description: `"${sessionToDelete.title}" has been removed.` });
         setSessionToDelete(null);
