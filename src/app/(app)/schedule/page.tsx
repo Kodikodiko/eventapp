@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -91,10 +92,10 @@ export default function SchedulePage() {
   };
   
   const handleSessionSubmit = (data: SessionFormValues) => {
-    const sessionData: Partial<Session> = { ...data, eventId: EVENT_ID };
+    const sessionData: Omit<Session, 'id'> = { ...data, eventId: EVENT_ID };
 
     if (!sessionData.speaker) {
-        delete sessionData.speaker;
+        delete (sessionData as Partial<Session>).speaker;
     }
     
     if (editingSession) {
@@ -133,7 +134,18 @@ export default function SchedulePage() {
         case 'general': return 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300';
         default: return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
+
+  const getStreamColor = (stream: number, isFullWidth: boolean) => {
+    if (isFullWidth) return 'bg-rose-400';
+    switch (stream) {
+      case 1: return 'bg-yellow-400';
+      case 2: return 'bg-sky-400';
+      case 3: return 'bg-orange-400';
+      case 4: return 'bg-fuchsia-400';
+      default: return 'bg-gray-400';
+    }
+  };
 
   return (
     <>
@@ -204,8 +216,9 @@ export default function SchedulePage() {
                             }}
                         >
                             <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
+                            <div className={cn("absolute top-2 right-2 h-2.5 w-2.5 rounded-full", getStreamColor(session.stream, isFullWidth))} />
                             <CardHeader>
-                                <CardTitle className="text-base">{session.title}</CardTitle>
+                                <CardTitle className="text-base pr-4">{session.title}</CardTitle>
                                 <CardDescription className="pt-1">
                                     <Badge className={getTagColor(session.tag)}>{session.tag}</Badge>
                                 </CardDescription>

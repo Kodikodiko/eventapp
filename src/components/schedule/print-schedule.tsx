@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Session } from '@/lib/data';
@@ -12,6 +13,17 @@ const getTagStyles = (tag: Session['tag']) => {
     default: return 'background-color: #f3f4f6; color: #374151;'; // gray-100, gray-800
   }
 };
+
+const getStreamDotColor = (stream: number, isFullWidth: boolean) => {
+    if (isFullWidth) return '#f87171'; // rose-400
+    switch (stream) {
+      case 1: return '#fbbf24'; // yellow-400
+      case 2: return '#38bdf8'; // sky-400
+      case 3: return '#fb923c'; // orange-400
+      case 4: return '#d946ef'; // fuchsia-400
+      default: return '#9ca3af'; // gray-400
+    }
+  };
 
 const generateHtml = (sessions: Session[]): string => {
   // Group sessions by time
@@ -38,6 +50,7 @@ const generateHtml = (sessions: Session[]): string => {
     timeSlots.forEach(session => {
         scheduleHtml += `
             <div class="session-card" style="grid-column: ${isFullWidth ? 'span 4' : `span 1`};">
+            <div class="stream-dot" style="background-color: ${getStreamDotColor(session.stream, isFullWidth)};"></div>
             <div class="session-content">
                 <div class="session-header">
                 <h3 class="session-title">${session.title}</h3>
@@ -130,6 +143,14 @@ const generateHtml = (sessions: Session[]): string => {
           display: flex;
           position: relative;
         }
+        .stream-dot {
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          width: 0.625rem;
+          height: 0.625rem;
+          border-radius: 9999px;
+        }
         .session-content {
             padding: 1rem;
             width: 100%;
@@ -145,6 +166,7 @@ const generateHtml = (sessions: Session[]): string => {
           font-weight: 600;
           margin: 0;
           color: #374151;
+          padding-right: 1rem; /* Space for the dot */
         }
         .session-tag {
           font-size: 0.65rem;
