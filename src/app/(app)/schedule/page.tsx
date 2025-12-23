@@ -141,8 +141,8 @@ export default function SchedulePage() {
         return 'from-rose-400';
     }
     switch(session.stream) {
-      case 1: return 'from-sky-400';
-      case 2: return 'from-yellow-500';
+      case 1: return 'from-yellow-500';
+      case 2: return 'from-sky-400';
       case 3: return 'from-amber-400';
       case 4: return 'from-fuchsia-400';
       default: return 'from-gray-400';
