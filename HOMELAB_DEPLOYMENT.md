@@ -14,6 +14,29 @@ This guide provides a detailed walkthrough for deploying the EventFlow applicati
     *   **PM2:** A process manager to keep your Next.js application running continuously.
     *   **Git:** To download your application code.
 
+### Component Diagram
+
+This diagram illustrates how the different parts of the system interact.
+
+```mermaid
+graph TD
+    subgraph "Home Network"
+        subgraph "TrueNAS SCALE Host"
+            A[Ubuntu Server VM]
+            B[PostgreSQL Container]
+            C[Nginx Proxy Manager Container]
+        end
+    end
+
+    subgraph A [Ubuntu Server VM]
+        D[PM2 Process Manager] --> E[Next.js App (EventFlow)]
+    end
+
+    User[End User's Browser] -- "HTTPS (e.g., eventflow.yourdomain.com)" --> C
+    C -- "Forwards traffic to port 3000" --> E
+    E -- "Database Connection (port 5432)" --> B
+```
+
 ---
 
 ## Step 1: Prepare the Ubuntu 24.04 VM
