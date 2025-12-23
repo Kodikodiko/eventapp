@@ -214,6 +214,25 @@
         }
       },
       "required": ["companyName", "packageId", "contacts", "billingAddress", "paymentDetails", "eventId"]
+    },
+    "Session": {
+        "title": "Session",
+        "description": "Represents a single session, talk, or event in the schedule.",
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "speaker": {"type": "string"},
+            "from": {"type": "string", "format": "time"},
+            "to": {"type": "string", "format": "time"},
+            "tag": {
+                "type": "string",
+                "enum": ["break", "talk", "workshop", "general"]
+            },
+            "location": {"type": "string"},
+            "stream": {"type": "number"},
+            "eventId": {"type": "string"}
+        },
+        "required": ["title", "from", "to", "tag", "location", "stream", "eventId"]
     }
   },
   "auth": {
@@ -247,6 +266,12 @@
           "$ref": "#/entities/Sponsor"
         },
         "description": "Stores sponsors for a specific event."
+      },
+      "/events/{eventId}/schedule": {
+        "schema": {
+            "$ref": "#/entities/Session"
+        },
+        "description": "Stores the event schedule sessions."
       }
     }
   }

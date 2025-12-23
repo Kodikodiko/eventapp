@@ -28,6 +28,12 @@ Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der Eve
     *   Eine neue "Downloads"-Seite wurde erstellt, um den Zugriff auf Projektdokumentationsdateien zu ermöglichen.
     *   Ein Link zu dieser Seite wurde der Hauptnavigation hinzugefügt.
 
+## Strategische & Technische Entscheidungen
+
+1.  **Aufschub der permanenten Dokumentenspeicherung:**
+    *   Die Implementierung der permanenten Speicherung von Sprecher-Dokumenten (z.B. Präsentationen) über einen Dienst wie Firebase Storage wird vorerst zurückgestellt.
+    *   **Grund:** Um unvorhergesehene Kosten im Zusammenhang mit der Datenspeicherung und dem Datenverkehr zu vermeiden. Die Funktionalität wird für eine zukünftige Version in Betracht gezogen, wenn die Nutzungsmetriken besser eingeschätzt werden können.
+
 ## Fehlerbehebungen (Bugfixes)
 
 1.  **Fehler bei der Formular-Initialisierung behoben:** Ein Fehler ("uncontrolled to controlled input") im Formular zum Hinzufügen/Bearbeiten von Teilnehmern wurde korrigiert.

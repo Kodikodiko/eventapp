@@ -70,6 +70,19 @@ export type Sponsor = {
     eventId: string;
 };
 
+export type SessionTag = 'break' | 'talk' | 'workshop' | 'general';
+
+export type Session = {
+  id: string;
+  title: string;
+  speaker?: string;
+  from: string; // "HH:mm" format
+  to: string; // "HH:mm" format
+  tag: SessionTag;
+  location: string;
+  stream: number; // 1-4
+  eventId: string;
+}
 
 export const salesData = [
   { name: 'Jan', tickets: 400 },

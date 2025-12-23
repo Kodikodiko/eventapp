@@ -105,8 +105,13 @@ The EventFlow ecosystem consists of two primary components:
 
 ---
 
-## 6. Future Requirements (To Be Implemented)
+## 6. Future & Deferred Requirements
 
-### 6.1 Role Administration
+### 6.1 Speaker Document Storage (Deferred)
+- **Description:** A feature for speakers to upload presentation files (e.g., PDF, PPTX) and for admins to manage and download these files. This includes version control for uploaded documents.
+- **Status:** **Deferred**.
+- **Reason:** To avoid incurring cloud storage and data transfer costs during the initial development and rollout phase. The functionality will be re-evaluated for a future version once usage patterns and cost implications can be better estimated.
+
+### 6.2 Role Administration
 - A dedicated administration area for managing attendee roles.
 - This area would allow for creating, editing, and deleting the available roles (e.g., "Attendee", "Speaker").
