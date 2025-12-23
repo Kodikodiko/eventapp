@@ -135,20 +135,6 @@ export default function SchedulePage() {
     }
   }
 
-  const getStreamGradientClass = (session: Session, isFullWidth: boolean) => {
-    if (isFullWidth) {
-        return 'from-rose-400';
-    }
-    switch(session.stream) {
-      case 1: return 'from-yellow-500';
-      case 2: return 'from-sky-400';
-      case 3: return 'from-amber-400';
-      case 4: return 'from-fuchsia-400';
-      default: return 'from-gray-400';
-    }
-  }
-
-
   return (
     <>
       <div className="space-y-8">
@@ -211,13 +197,12 @@ export default function SchedulePage() {
                         <Card 
                             key={session.id} 
                             className={cn(
-                                'relative transition-all hover:shadow-md flex flex-col overflow-hidden',
+                                'relative transition-all hover:shadow-md flex flex-col',
                             )}
                             style={{
                                 gridColumn: isFullWidth ? '1 / -1' : 'span 1',
                             }}
                         >
-                            <div className={cn('absolute left-0 top-0 right-0 h-1 bg-gradient-to-r to-transparent', getStreamGradientClass(session, isFullWidth))} />
                             <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
                             <CardHeader>
                                 <CardTitle className="text-base">{session.title}</CardTitle>
