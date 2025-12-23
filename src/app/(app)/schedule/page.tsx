@@ -18,7 +18,6 @@ import { Session, EVENT_ID } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import {
-  addDocumentNonBlocking,
   updateDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
@@ -37,6 +36,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { printSchedule } from '@/components/schedule/print-schedule';
 import { cn } from '@/lib/utils';
+import { addDoc } from 'firebase/firestore';
 
 // Group sessions by their start time
 const groupSessionsByTime = (sessions: Session[]) => {
@@ -61,11 +61,18 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const scheduleCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/schedule`), [firestore]);
-  const { data: sessions, isLoading } = useCollection<Session>(scheduleCol);
+  const { data: serverSessions, isLoading } = useCollection<Session>(scheduleCol);
+  const [localSessions, setLocalSessions] = useState<Session[] | null>(null);
+
+  useEffect(() => {
+    if (serverSessions) {
+      setLocalSessions(serverSessions);
+    }
+  }, [serverSessions]);
 
   useEffect(() => {
     // One-time creation of default schedule if collection is empty
-    if (sessions && sessions.length === 0 && !isLoading) {
+    if (serverSessions && serverSessions.length === 0 && !isLoading) {
       const defaultSchedule: Omit<Session, 'id'>[] = [
         { title: 'Registration & Breakfast', from: '09:00', to: '10:00', location: 'Main Hall', tag: 'general', stream: 1, eventId: EVENT_ID },
         { title: 'Opening Keynote', speaker: 'Dr. Evelyn Reed', from: '10:00', to: '10:45', location: 'Auditorium A', tag: 'general', stream: 1, eventId: EVENT_ID },
@@ -76,9 +83,13 @@ export default function SchedulePage() {
         { title: 'Advanced State Management', speaker: 'Jane Smith', from: '14:00', to: '14:45', location: 'Room 101', tag: 'talk', stream: 1, eventId: EVENT_ID },
         { title: 'Cybersecurity Today', speaker: 'Sam Wilson', from: '14:00', to: '14:45', location: 'Room 102', tag: 'talk', stream: 2, eventId: EVENT_ID },
       ];
-      defaultSchedule.forEach(session => addDocumentNonBlocking(scheduleCol, session));
+      defaultSchedule.forEach(session => {
+        addDoc(scheduleCol, session).catch(e => console.error("Error adding default session:", e));
+      });
     }
-  }, [sessions, isLoading, scheduleCol]);
+  }, [serverSessions, isLoading, scheduleCol]);
+
+  const sessions = localSessions;
 
   const groupedSessions = useMemo(() => {
     if (!sessions) return {};
@@ -91,7 +102,7 @@ export default function SchedulePage() {
     setIsFormOpen(true);
   };
   
-  const handleSessionSubmit = (data: SessionFormValues) => {
+  const handleSessionSubmit = async (data: SessionFormValues) => {
     const sessionData: Omit<Session, 'id'> = { ...data, eventId: EVENT_ID };
 
     // Firestore does not support `undefined` values.
@@ -100,11 +111,20 @@ export default function SchedulePage() {
     }
     
     if (editingSession) {
+        const updatedSession = { ...sessionData, id: editingSession.id };
+        setLocalSessions(prev => prev ? prev.map(s => s.id === editingSession.id ? updatedSession : s) : [updatedSession]);
         updateDocumentNonBlocking(doc(scheduleCol, editingSession.id), sessionData);
         toast({ title: "Session Updated" });
     } else {
-        addDocumentNonBlocking(scheduleCol, sessionData);
-        toast({ title: "Session Added" });
+        try {
+            const docRef = await addDoc(scheduleCol, sessionData);
+            const newSession = { ...sessionData, id: docRef.id };
+            setLocalSessions(prev => prev ? [...prev, newSession] : [newSession]);
+            toast({ title: "Session Added" });
+        } catch (error) {
+            console.error("Error adding session: ", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not add session."});
+        }
     }
     setIsFormOpen(false);
   };
@@ -121,6 +141,7 @@ export default function SchedulePage() {
 
   const handleDeleteConfirm = () => {
     if (sessionToDelete) {
+        setLocalSessions(prev => prev ? prev.filter(s => s.id !== sessionToDelete.id) : null);
         deleteDocumentNonBlocking(doc(scheduleCol, sessionToDelete.id));
         toast({ title: "Session Deleted", description: `"${sessionToDelete.title}" has been removed.` });
         setSessionToDelete(null);
