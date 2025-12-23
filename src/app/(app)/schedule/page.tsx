@@ -93,7 +93,6 @@ export default function SchedulePage() {
   const handleSessionSubmit = (data: SessionFormValues) => {
     const sessionData: Partial<Session> = { ...data, eventId: EVENT_ID };
 
-    // Remove undefined fields to prevent Firestore errors
     if (!sessionData.speaker) {
         delete sessionData.speaker;
     }
@@ -281,6 +280,8 @@ export default function SchedulePage() {
     </>
   );
 }
+
+    
 
     
 
