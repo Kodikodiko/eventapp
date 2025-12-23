@@ -138,13 +138,13 @@ export default function SchedulePage() {
 
   const getStreamGradientClass = (session: Session, isFullWidth: boolean) => {
     if (isFullWidth && session.tag === 'general') {
-        return 'from-purple-400';
+        return 'from-rose-400';
     }
     switch(session.stream) {
       case 1: return 'from-sky-400';
       case 2: return 'from-emerald-400';
       case 3: return 'from-amber-400';
-      case 4: return 'from-rose-400';
+      case 4: return 'from-fuchsia-400';
       default: return 'from-gray-400';
     }
   }
