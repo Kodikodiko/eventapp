@@ -28,12 +28,14 @@ graph TD
         end
     end
 
-    subgraph "Ubuntu VM Details"
+    subgraph A[Ubuntu VM]
+      subgraph "Application"
         D[PM2 Process Manager] --> E[Next.js App (EventFlow)]
+      end
     end
-
+    
     User[End User's Browser] -- "HTTPS (e.g., eventflow.yourdomain.com)" --> C
-    C -- "Forwards traffic to port 3000" --> E
+    C -- "Forwards traffic to port 3000" --> A
     E -- "Database Connection (port 5432)" --> B
 ```
 
