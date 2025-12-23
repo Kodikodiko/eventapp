@@ -64,7 +64,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 # Load nvm into your current shell session
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$N_DIR/bash_completion"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # Install and use the latest LTS version of Node.js (v20.x is recommended)
 nvm install --lts
@@ -171,3 +171,59 @@ The final step is to direct traffic from your home network to the Ubuntu VM. We'
 6.  Click **Save**.
 
 Your reverse proxy is now configured. When you access `https://eventflow.yourdomain.com`, the request will be securely forwarded to your Next.js application running inside the Ubuntu VM.
+
+---
+
+## Step 5: Version Control with Git & GitHub
+
+Putting your project under version control with Git and hosting it on GitHub is essential for tracking changes, collaborating, and deploying your application.
+
+### 5.1 Initialize a Git Repository
+
+First, navigate to your project's root directory in your local terminal (on the machine where you have the source code, not the Ubuntu VM). Initialize a new Git repository. The `-b main` flag sets the default branch name to `main`, which is the current standard.
+
+```bash
+git init -b main
+```
+
+A `.gitignore` file has already been created for you. This is a critical file that tells Git to ignore certain files and folders, such as the `node_modules` directory, build outputs, and local environment files (`.env.local`) that contain secret keys. **This prevents you from accidentally committing sensitive information to your repository.**
+
+### 5.2 Add and Commit Your Files
+
+Next, add all the files in your project to Git's staging area and create your first "commit". A commit is a snapshot of your code at a specific point in time.
+
+```bash
+# Add all files to the staging area
+git add .
+
+# Create your first commit with a descriptive message
+git commit -m "Initial commit of EventFlow application"
+```
+
+### 5.3 Create a New Repository on GitHub
+
+1.  Navigate to [GitHub.com](https://github.com) in your web browser and log in.
+2.  Click the **+** icon in the top-right corner and select **"New repository"**.
+3.  Give your repository a name (e.g., `eventflow-app`).
+4.  Choose whether to make the repository **Public** or **Private**.
+5.  **Crucially, leave the "Initialize this repository with:" options (Add a README file, Add .gitignore, Choose a license) unchecked.** You have already created these files locally.
+6.  Click the **"Create repository"** button.
+
+### 5.4 Link Your Local Repository and Push to GitHub
+
+After creating the repository, GitHub will display a page with instructions. You will follow the steps under the "...or push an existing repository from the command line" heading.
+
+1.  **Add the Remote:** This command tells your local Git repository where the remote version on GitHub is located. Copy the command from the GitHub page. It will look like this:
+
+    ```bash
+    # Replace the URL with the one provided on your new GitHub repository page
+    git remote add origin https://github.com/your-username/eventflow-app.git
+    ```
+
+2.  **Push Your Code:** This command uploads your `main` branch and all its commits to GitHub.
+
+    ```bash
+    git push -u origin main
+    ```
+
+After these steps are complete, your code will be safely stored on GitHub. When you make future changes, you can push them with a simple `git push` command.
