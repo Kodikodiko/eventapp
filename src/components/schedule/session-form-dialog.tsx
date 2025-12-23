@@ -106,8 +106,8 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Session' : 'Create New Session'}</DialogTitle>
-          <DialogDescription>
-            Fill in the details for the session. All fields are required except for the speaker.
+          <DialogDescription className="text-sm">
+            Fill in the details for the session. Specify the stream (1-4) for parallel sessions, or use Stream 1 for single-track events.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

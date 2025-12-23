@@ -67,7 +67,7 @@ export default function SchedulePage() {
     if (sessions && sessions.length === 0 && !isLoading) {
       const defaultSchedule: Omit<Session, 'id'>[] = [
         { title: 'Registration & Breakfast', from: '09:00', to: '10:00', location: 'Main Hall', tag: 'general', stream: 1, eventId: EVENT_ID },
-        { title: 'Opening Keynote', speaker: 'Dr. Evelyn Reed', from: '10:00', to: '10:45', location: 'Auditorium A', tag: 'talk', stream: 1, eventId: EVENT_ID },
+        { title: 'Opening Keynote', speaker: 'Dr. Evelyn Reed', from: '10:00', to: '10:45', location: 'Auditorium A', tag: 'general', stream: 1, eventId: EVENT_ID },
         { title: 'The Future of Web Development', speaker: 'Marcus Chen', from: '10:45', to: '11:30', location: 'Room 101', tag: 'talk', stream: 1, eventId: EVENT_ID },
         { title: 'UX Design Principles', speaker: 'Lena Petrova', from: '10:45', to: '11:30', location: 'Room 102', tag: 'talk', stream: 2, eventId: EVENT_ID },
         { title: 'Intro to Serverless', speaker: 'John Doe', from: '10:45', to: '12:15', location: 'Workshop B', tag: 'workshop', stream: 3, eventId: EVENT_ID },
@@ -133,13 +133,16 @@ export default function SchedulePage() {
     }
   }
 
-  const getStreamColorClass = (stream: number) => {
-    switch(stream) {
-      case 1: return 'border-l-blue-400';
-      case 2: return 'border-l-green-400';
-      case 3: return 'border-l-yellow-400';
-      case 4: return 'border-l-red-400';
-      default: return 'border-l-gray-400';
+  const getStreamColorClass = (session: Session, isFullWidth: boolean) => {
+    if (isFullWidth && session.tag === 'general') {
+        return 'border-t-purple-300';
+    }
+    switch(session.stream) {
+      case 1: return 'border-t-sky-400';
+      case 2: return 'border-t-emerald-400';
+      case 3: return 'border-t-amber-400';
+      case 4: return 'border-t-rose-400';
+      default: return 'border-t-gray-400';
     }
   }
 
@@ -193,51 +196,54 @@ export default function SchedulePage() {
         )}
 
         <div className="space-y-6">
-          {Object.entries(groupedSessions).map(([time, timeSlots]) => (
-            <div key={time} className="relative flex flex-col md:flex-row gap-4 md:gap-8">
-              <div className="md:sticky md:top-20 h-fit">
-                <h2 className="w-20 font-bold text-lg text-primary md:text-right">{time}</h2>
-              </div>
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:border-l-2 md:border-dashed md:border-border md:pl-8 pb-4">
-                <div className="md:hidden border-t-2 border-dashed -ml-4 mr-4 mb-4"></div>
-                  {timeSlots.map((session) => (
-                      <Card 
-                        key={session.id} 
-                        className={cn(
-                          'relative transition-all hover:shadow-md flex flex-col border-l-4',
-                          getStreamColorClass(session.stream)
-                        )}
-                        style={{
-                          gridColumn: timeSlots.length === 1 ? '1 / -1' : `span 1`,
-                        }}
-                      >
-                          <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
-                          <CardHeader>
-                              <CardTitle className="text-base">{session.title}</CardTitle>
-                              <CardDescription className="pt-1">
-                                <Badge className={getTagColor(session.tag)}>{session.tag}</Badge>
-                              </CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow">
-                              <div className="flex items-center gap-2"><Clock className="h-4 w-4"/><span>{session.from} - {session.to}</span></div>
-                              {session.speaker && <div className="flex items-center gap-2"><User className="h-4 w-4"/><span>{session.speaker}</span></div>}
-                          </CardContent>
-                          <CardFooter className="flex justify-between items-center">
-                              <div className="flex items-center gap-2 text-sm font-medium"><MapPin className="h-4 w-4"/><span>{session.location}</span></div>
-                              <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenForm(session)}>
-                                    <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteSession(session)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                          </CardFooter>
-                      </Card>
-                  ))}
-              </div>
-            </div>
-          ))}
+          {Object.entries(groupedSessions).map(([time, timeSlots]) => {
+            const isFullWidth = timeSlots.length === 1;
+            return (
+                <div key={time} className="relative flex flex-col md:flex-row gap-4 md:gap-8">
+                <div className="md:sticky md:top-20 h-fit">
+                    <h2 className="w-20 font-bold text-lg text-primary md:text-right">{time}</h2>
+                </div>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:border-l-2 md:border-dashed md:border-border md:pl-8 pb-4">
+                    <div className="md:hidden border-t-2 border-dashed -ml-4 mr-4 mb-4"></div>
+                    {timeSlots.map((session) => (
+                        <Card 
+                            key={session.id} 
+                            className={cn(
+                                'relative transition-all hover:shadow-md flex flex-col border-t-4',
+                                getStreamColorClass(session, isFullWidth)
+                            )}
+                            style={{
+                                gridColumn: isFullWidth ? '1 / -1' : 'span 1',
+                            }}
+                        >
+                            <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
+                            <CardHeader>
+                                <CardTitle className="text-base">{session.title}</CardTitle>
+                                <CardDescription className="pt-1">
+                                    <Badge className={getTagColor(session.tag)}>{session.tag}</Badge>
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow">
+                                <div className="flex items-center gap-2"><Clock className="h-4 w-4"/><span>{session.from} - {session.to}</span></div>
+                                {session.speaker && <div className="flex items-center gap-2"><User className="h-4 w-4"/><span>{session.speaker}</span></div>}
+                            </CardContent>
+                            <CardFooter className="flex justify-between items-center">
+                                <div className="flex items-center gap-2 text-sm font-medium"><MapPin className="h-4 w-4"/><span>{session.location}</span></div>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenForm(session)}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteSession(session)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+                </div>
+            );
+          })}
         </div>
       </div>
       
