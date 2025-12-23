@@ -32,6 +32,7 @@ export type Speaker = {
     company: string;
     proposalStatus: SpeakerProposalStatus;
     slidesStatus: SpeakerSlidesStatus;
+    slidesUrl?: string;
     eventId: string;
 };
 

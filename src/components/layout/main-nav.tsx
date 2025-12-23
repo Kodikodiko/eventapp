@@ -14,6 +14,7 @@ import {
   Ticket,
   Download,
   ClipboardPen,
+  FileClock,
 } from 'lucide-react';
 import {
   SidebarContent,
@@ -33,6 +34,7 @@ const navItems = [
   { href: '/schedule', icon: Calendar, label: 'Schedule' },
   { href: '/reporting', icon: BarChart2, label: 'Reporting' },
   { href: '/downloads', icon: Download, label: 'Downloads' },
+  { href: '/log', icon: FileClock, label: 'Log' },
   { href: '/event', icon: Ticket, label: 'Event' },
 ];
 
