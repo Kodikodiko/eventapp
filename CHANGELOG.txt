@@ -45,3 +45,20 @@ Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der Eve
 1.  **Datenmodell-Update:** Das Datenmodell für `Attendee` und `EventDetails` wurde erweitert, um neue Felder wie `billingAddress` und `termsOfService` zu unterstützen.
 2.  **`README.md` aktualisiert:** Das `README.md` wurde um eine detaillierte technische Architekturbeschreibung und eine Erläuterung zur Anpassung des Frontends erweitert.
 3.  **`HOMELAB_DEPLOYMENT.md` aktualisiert:** Die Bereitstellungsanleitung für Home-Labs wurde an die spezifische Infrastruktur des Benutzers (TrueNAS + Ubuntu VM) angepasst.
+
+# Änderungsprotokoll - 27.07.2024
+
+Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der EventFlow-Anwendung vorgenommen wurden.
+
+## Iterative Entwicklung der Stream-Visualisierung
+
+1.  **Implementierung & Verfeinerung der Farbcodierung:**
+    *   Mehrere Versuche wurden unternommen, die Streams auf der "Schedule"-Seite farblich zu kennzeichnen, zunächst mit farbigen Balken, dann mit farbigen Punkten.
+    *   Während dieses Prozesses wurden mehrere kritische Fehler im Frontend behoben:
+        *   **Behebung von "Maximum update depth exceeded"**: Ein Fehler, der durch eine unendliche Render-Schleife in React verursacht wurde, wurde durch die korrekte Verwendung des `useMemo`-Hooks behoben, um die unnötige Neuerstellung von Formular-Standardwerten zu verhindern.
+        *   **Behebung von "Encountered two children with the same key"**: Ein Fehler durch doppelte Schlüssel wurde korrigiert, indem die lokale Zustandsverwaltung vereinfacht und inkonsistente Daten-Updates verhindert wurden.
+        *   Die Logik wurde korrigiert, um sicherzustellen, dass neu erstellte Sessions sofort die korrekte (oder keine) Farbcodierung anzeigen (optimistisches UI-Update).
+
+2.  **Finale Entscheidung: Entfernung der Farbcodierung:**
+    *   Nach mehreren Iterationen wurde entschieden, **alle farblichen Kennzeichnungen** für die Streams sowohl aus der Live-Ansicht als auch aus dem Drucklayout vollständig zu entfernen.
+    *   **Grund:** Um das Design zu vereinfachen und die durch die dynamische Farbgebung verursachte Komplexität und Fehleranfälligkeit zu reduzieren. Die Benutzeroberfläche ist nun wieder in einem sauberen, neutralen Zustand ohne stream-spezifische Farben.
