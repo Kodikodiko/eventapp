@@ -233,6 +233,7 @@ export default function AttendeesPage() {
         ...attendeeData[0]
     };
     
+    // Remove undefined fields
     Object.keys(updateData).forEach(key => {
         if (updateData[key] === undefined) {
             delete updateData[key];
@@ -533,3 +534,5 @@ export default function AttendeesPage() {
     </>
   );
 }
+
+    

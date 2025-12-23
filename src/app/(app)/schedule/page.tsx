@@ -91,10 +91,13 @@ export default function SchedulePage() {
   };
   
   const handleSessionSubmit = (data: SessionFormValues) => {
-    const sessionData = {
-        ...data,
-        eventId: EVENT_ID,
-    };
+    const sessionData: Partial<SessionFormValues> = { ...data, eventId: EVENT_ID };
+
+    // Remove undefined fields to prevent Firestore errors
+    if (!sessionData.speaker) {
+        delete sessionData.speaker;
+    }
+    
     if (editingSession) {
         updateDocumentNonBlocking(doc(scheduleCol, editingSession.id), sessionData);
         toast({ title: "Session Updated" });
@@ -278,3 +281,5 @@ export default function SchedulePage() {
     </>
   );
 }
+
+    
