@@ -67,8 +67,10 @@ export default function SchedulePage() {
   useEffect(() => {
     if (serverSessions) {
       setLocalSessions(serverSessions);
+    } else if (!isLoading) {
+      setLocalSessions([]); // Explicitly set to empty array if server has no data
     }
-  }, [serverSessions]);
+  }, [serverSessions, isLoading]);
 
   useEffect(() => {
     // One-time creation of default schedule if collection is empty
@@ -127,6 +129,7 @@ export default function SchedulePage() {
         }
     }
     setIsFormOpen(false);
+    setEditingSession(undefined);
   };
 
   const handleDeleteSession = (session: Session) => {
@@ -272,7 +275,12 @@ export default function SchedulePage() {
       {isFormOpen && (
         <SessionFormDialog
             open={isFormOpen}
-            onOpenChange={setIsFormOpen}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setEditingSession(undefined);
+              }
+              setIsFormOpen(isOpen);
+            }}
             onSubmit={handleSessionSubmit}
             session={editingSession}
         />

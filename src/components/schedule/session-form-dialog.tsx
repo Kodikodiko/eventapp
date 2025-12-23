@@ -60,9 +60,7 @@ type SessionFormDialogProps = {
 export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: SessionFormDialogProps) {
   const isEditMode = !!session;
 
-  const form = useForm<SessionFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: isEditMode ? {
+  const defaultValues = isEditMode ? {
         title: session.title,
         speaker: session.speaker,
         from: session.from,
@@ -78,22 +76,18 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
       tag: 'talk',
       location: '',
       stream: 1,
-    },
+    };
+
+  const form = useForm<SessionFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
   useEffect(() => {
     if (open) {
-        form.reset(isEditMode ? session : {
-          title: '',
-          speaker: '',
-          from: '09:00',
-          to: '10:00',
-          tag: 'talk',
-          location: '',
-          stream: 1,
-        });
+        form.reset(defaultValues);
     }
-  }, [open, session, isEditMode, form]);
+  }, [open, session, isEditMode, form, defaultValues]);
 
   function handleFormSubmit(data: SessionFormValues) {
     onSubmit(data);
