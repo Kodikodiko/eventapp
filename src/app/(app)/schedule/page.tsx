@@ -94,6 +94,7 @@ export default function SchedulePage() {
   const handleSessionSubmit = (data: SessionFormValues) => {
     const sessionData: Omit<Session, 'id'> = { ...data, eventId: EVENT_ID };
 
+    // Firestore does not support `undefined` values.
     if (!sessionData.speaker) {
         delete (sessionData as Partial<Session>).speaker;
     }

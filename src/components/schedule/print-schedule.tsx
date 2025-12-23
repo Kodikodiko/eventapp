@@ -15,9 +15,9 @@ const getTagStyles = (tag: Session['tag']) => {
 };
 
 const getStreamDotColor = (stream: number, isFullWidth: boolean) => {
-    if (isFullWidth) return '#f87171'; // rose-400
+    if (isFullWidth) return '#f43f5e'; // rose-500
     switch (stream) {
-      case 1: return '#fbbf24'; // yellow-400
+      case 1: return '#facc15'; // yellow-400
       case 2: return '#38bdf8'; // sky-400
       case 3: return '#fb923c'; // orange-400
       case 4: return '#d946ef'; // fuchsia-400
