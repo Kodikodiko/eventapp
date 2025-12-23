@@ -26,17 +26,17 @@ graph TD
             B[PostgreSQL Container]
             C[Nginx Proxy Manager Container]
         end
+        subgraph "Inside Ubuntu VM"
+            direction LR
+            D[PM2] --> E[Next.js App]
+        end
     end
 
-    subgraph A[Ubuntu VM]
-      subgraph "Application"
-        D[PM2 Process Manager] --> E[Next.js App (EventFlow)]
-      end
-    end
-    
-    User[End User's Browser] -- "HTTPS (e.g., eventflow.yourdomain.com)" --> C
-    C -- "Forwards traffic to port 3000" --> A
-    E -- "Database Connection (port 5432)" --> B
+    User[End User's Browser] -- "HTTPS" --> C;
+    C -- "Forwards to port 3000" --> A;
+    A -- "Contains" --> E
+    E -- "DB Connection" --> B;
+
 ```
 
 ---
