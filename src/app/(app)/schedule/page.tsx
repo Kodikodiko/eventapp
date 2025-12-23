@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, User, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Clock, MapPin, User, PlusCircle, Edit, Trash2, Printer } from 'lucide-react';
 import { Session, EVENT_ID } from '@/lib/data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
+import { printSchedule } from '@/components/schedule/print-schedule';
 
 // Group sessions by their start time
 const groupSessionsByTime = (sessions: Session[]) => {
@@ -107,6 +108,12 @@ export default function SchedulePage() {
     setSessionToDelete(session);
   }
 
+  const handlePrint = () => {
+    if (!sessions) return;
+    const sorted = [...sessions].sort((a,b) => a.from.localeCompare(b.from) || a.stream - b.stream);
+    printSchedule(sorted);
+  };
+
   const handleDeleteConfirm = () => {
     if (sessionToDelete) {
         deleteDocumentNonBlocking(doc(scheduleCol, sessionToDelete.id));
@@ -132,14 +139,24 @@ export default function SchedulePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Event Schedule</h1>
-            <p className="text-muted-foreground">Plan your day and discover sessions.</p>
+            <p className="text-muted-foreground text-sm max-w-xl">
+              Organize your event by creating time slots and adding sessions. Sessions in the same time slot can be split into up to four parallel streams.
+            </p>
           </div>
-          <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenForm()}>
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Create Session
-            </span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint} disabled={isLoading || !sessions || sessions.length === 0}>
+                <Printer className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                    Print Schedule
+                </span>
+            </Button>
+            <Button size="sm" className="h-8 gap-1" onClick={() => handleOpenForm()}>
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                Create Session
+                </span>
+            </Button>
+          </div>
         </div>
         
         {isLoading && (
@@ -173,7 +190,13 @@ export default function SchedulePage() {
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:border-l-2 md:border-dashed md:border-border md:pl-8 pb-4">
                 <div className="md:hidden border-t-2 border-dashed -ml-4 mr-4 mb-4"></div>
                   {timeSlots.map((session) => (
-                      <Card key={session.id} className="relative transition-all hover:shadow-md flex flex-col" style={{gridColumn: `span ${Math.min(session.stream, 4)} / span ${Math.min(session.stream, 4)}`}}>
+                      <Card 
+                        key={session.id} 
+                        className="relative transition-all hover:shadow-md flex flex-col"
+                        style={{
+                           gridColumn: timeSlots.length === 1 ? 'span 4' : `span ${Math.min(session.stream, 4)} / span ${Math.min(session.stream, 4)}`,
+                        }}
+                      >
                           <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
                           <CardHeader>
                               <CardTitle className="text-base">{session.title}</CardTitle>
