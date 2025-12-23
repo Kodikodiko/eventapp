@@ -61,20 +61,11 @@ export default function SchedulePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const scheduleCol = useMemoFirebase(() => collection(firestore, `events/${EVENT_ID}/schedule`), [firestore]);
-  const { data: serverSessions, isLoading } = useCollection<Session>(scheduleCol);
-  const [localSessions, setLocalSessions] = useState<Session[] | null>(null);
+  const { data: sessions, isLoading } = useCollection<Session>(scheduleCol);
 
   useEffect(() => {
-    if (serverSessions) {
-      setLocalSessions(serverSessions);
-    } else if (!isLoading) {
-      setLocalSessions([]); // Explicitly set to empty array if server has no data
-    }
-  }, [serverSessions, isLoading]);
-
-  useEffect(() => {
-    // One-time creation of default schedule if collection is empty
-    if (serverSessions && serverSessions.length === 0 && !isLoading) {
+    // One-time creation of default schedule if collection is empty and not loading
+    if (sessions && sessions.length === 0 && !isLoading) {
       const defaultSchedule: Omit<Session, 'id'>[] = [
         { title: 'Registration & Breakfast', from: '09:00', to: '10:00', location: 'Main Hall', tag: 'general', stream: 1, eventId: EVENT_ID },
         { title: 'Opening Keynote', speaker: 'Dr. Evelyn Reed', from: '10:00', to: '10:45', location: 'Auditorium A', tag: 'general', stream: 1, eventId: EVENT_ID },
@@ -89,9 +80,7 @@ export default function SchedulePage() {
         addDoc(scheduleCol, session).catch(e => console.error("Error adding default session:", e));
       });
     }
-  }, [serverSessions, isLoading, scheduleCol]);
-
-  const sessions = localSessions;
+  }, [sessions, isLoading, scheduleCol]);
 
   const groupedSessions = useMemo(() => {
     if (!sessions) return {};
@@ -104,29 +93,25 @@ export default function SchedulePage() {
     setIsFormOpen(true);
   };
   
-  const handleSessionSubmit = async (data: SessionFormValues) => {
+  const handleSessionSubmit = (data: SessionFormValues) => {
     const sessionData: Omit<Session, 'id'> = { ...data, eventId: EVENT_ID };
 
-    // Firestore does not support `undefined` values.
     if (!sessionData.speaker) {
         delete (sessionData as Partial<Session>).speaker;
     }
     
     if (editingSession) {
-        const updatedSession = { ...sessionData, id: editingSession.id };
-        setLocalSessions(prev => prev ? prev.map(s => s.id === editingSession.id ? updatedSession : s) : [updatedSession]);
         updateDocumentNonBlocking(doc(scheduleCol, editingSession.id), sessionData);
         toast({ title: "Session Updated" });
     } else {
-        try {
-            const docRef = await addDoc(scheduleCol, sessionData);
-            const newSession = { ...sessionData, id: docRef.id };
-            setLocalSessions(prev => prev ? [...prev, newSession] : [newSession]);
-            toast({ title: "Session Added" });
-        } catch (error) {
-            console.error("Error adding session: ", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not add session."});
-        }
+        addDoc(scheduleCol, sessionData)
+            .then(() => {
+                toast({ title: "Session Added" });
+            })
+            .catch((error) => {
+                console.error("Error adding session: ", error);
+                toast({ variant: "destructive", title: "Error", description: "Could not add session."});
+            });
     }
     setIsFormOpen(false);
     setEditingSession(undefined);
@@ -144,7 +129,6 @@ export default function SchedulePage() {
 
   const handleDeleteConfirm = () => {
     if (sessionToDelete) {
-        setLocalSessions(prev => prev ? prev.filter(s => s.id !== sessionToDelete.id) : null);
         deleteDocumentNonBlocking(doc(scheduleCol, sessionToDelete.id));
         toast({ title: "Session Deleted", description: `"${sessionToDelete.title}" has been removed.` });
         setSessionToDelete(null);
