@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from '@/components/ui/skeleton';
 import { printSchedule } from '@/components/schedule/print-schedule';
+import { cn } from '@/lib/utils';
 
 // Group sessions by their start time
 const groupSessionsByTime = (sessions: Session[]) => {
@@ -132,6 +133,16 @@ export default function SchedulePage() {
     }
   }
 
+  const getStreamColorClass = (stream: number) => {
+    switch(stream) {
+      case 1: return 'border-l-blue-400';
+      case 2: return 'border-l-green-400';
+      case 3: return 'border-l-yellow-400';
+      case 4: return 'border-l-red-400';
+      default: return 'border-l-gray-400';
+    }
+  }
+
 
   return (
     <>
@@ -192,9 +203,12 @@ export default function SchedulePage() {
                   {timeSlots.map((session) => (
                       <Card 
                         key={session.id} 
-                        className="relative transition-all hover:shadow-md flex flex-col"
+                        className={cn(
+                          'relative transition-all hover:shadow-md flex flex-col border-l-4',
+                          getStreamColorClass(session.stream)
+                        )}
                         style={{
-                           gridColumn: timeSlots.length === 1 ? 'span 4' : `span ${Math.min(session.stream, 4)} / span ${Math.min(session.stream, 4)}`,
+                          gridColumn: timeSlots.length === 1 ? '1 / -1' : `span 1`,
                         }}
                       >
                           <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />

@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FormDescription as CustomFormDescription } from '@/components/ui/form';
 
 const sessionTags: SessionTag[] = ['talk', 'workshop', 'break', 'general'];
 const streams = [1, 2, 3, 4];
@@ -106,7 +107,7 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Session' : 'Create New Session'}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Update the details for this session.' : 'Fill in the details for a new session.'}
+            Fill in the details for the session. All fields are required except for the speaker.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -219,6 +220,9 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
                             ))}
                             </SelectContent>
                         </Select>
+                         <CustomFormDescription className="text-xs">
+                            The parallel track for this session (1-4).
+                        </CustomFormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
