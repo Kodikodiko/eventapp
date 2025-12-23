@@ -19,7 +19,7 @@ const getStreamColor = (session: Session, isFullWidth: boolean) => {
     }
     switch (session.stream) {
         case 1: return '#38bdf8'; // sky-400
-        case 2: return '#d946ef'; // fuchsia-400
+        case 2: return '#34d399'; // emerald-400
         case 3: return '#fbbf24'; // amber-400
         case 4: return '#f43f5e'; // rose-400
         default: return '#9ca3af'; // gray-400
@@ -52,7 +52,7 @@ const generateHtml = (sessions: Session[]): string => {
         const streamColor = getStreamColor(session, isFullWidth);
         scheduleHtml += `
             <div class="session-card" style="grid-column: ${isFullWidth ? 'span 4' : `span 1`};">
-            <div class="gradient-bar" style="background: linear-gradient(to bottom, ${streamColor}, transparent);"></div>
+            <div class="gradient-bar" style="background: linear-gradient(to right, ${streamColor}, transparent);"></div>
             <div class="session-content">
                 <div class="session-header">
                 <h3 class="session-title">${session.title}</h3>
@@ -150,12 +150,12 @@ const generateHtml = (sessions: Session[]): string => {
             position: absolute;
             left: 0;
             top: 0;
-            bottom: 0;
-            width: 4px;
+            right: 0;
+            height: 4px;
         }
         .session-content {
             padding: 1rem;
-            padding-left: 1.5rem;
+            padding-top: 1.5rem;
             width: 100%;
         }
         .session-header {

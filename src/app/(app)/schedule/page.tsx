@@ -91,7 +91,7 @@ export default function SchedulePage() {
   };
   
   const handleSessionSubmit = (data: SessionFormValues) => {
-    const sessionData: Partial<SessionFormValues> = { ...data, eventId: EVENT_ID };
+    const sessionData: Partial<Session> = { ...data, eventId: EVENT_ID };
 
     // Remove undefined fields to prevent Firestore errors
     if (!sessionData.speaker) {
@@ -142,7 +142,7 @@ export default function SchedulePage() {
     }
     switch(session.stream) {
       case 1: return 'from-sky-400';
-      case 2: return 'from-fuchsia-400';
+      case 2: return 'from-emerald-400';
       case 3: return 'from-amber-400';
       case 4: return 'from-rose-400';
       default: return 'from-gray-400';
@@ -218,19 +218,19 @@ export default function SchedulePage() {
                                 gridColumn: isFullWidth ? '1 / -1' : 'span 1',
                             }}
                         >
-                            <div className={cn('absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b to-transparent', getStreamGradientClass(session, isFullWidth))} />
+                            <div className={cn('absolute left-0 top-0 right-0 h-1 bg-gradient-to-r to-transparent', getStreamGradientClass(session, isFullWidth))} />
                             <div className="absolute top-2 left-[-2.3rem] h-4 w-4 rounded-full bg-primary border-4 border-background hidden md:block" />
-                            <CardHeader className="pl-5">
+                            <CardHeader>
                                 <CardTitle className="text-base">{session.title}</CardTitle>
                                 <CardDescription className="pt-1">
                                     <Badge className={getTagColor(session.tag)}>{session.tag}</Badge>
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow pl-5">
+                            <CardContent className="space-y-2 text-sm text-muted-foreground flex-grow">
                                 <div className="flex items-center gap-2"><Clock className="h-4 w-4"/><span>{session.from} - {session.to}</span></div>
                                 {session.speaker && <div className="flex items-center gap-2"><User className="h-4 w-4"/><span>{session.speaker}</span></div>}
                             </CardContent>
-                            <CardFooter className="flex justify-between items-center pl-5">
+                            <CardFooter className="flex justify-between items-center">
                                 <div className="flex items-center gap-2 text-sm font-medium"><MapPin className="h-4 w-4"/><span>{session.location}</span></div>
                                 <div className="flex items-center gap-1">
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenForm(session)}>

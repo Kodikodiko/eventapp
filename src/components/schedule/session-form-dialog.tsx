@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FormDescription as CustomFormDescription } from '@/components/ui/form';
 
 const sessionTags: SessionTag[] = ['talk', 'workshop', 'break', 'general'];
 const streams = [1, 2, 3, 4];
@@ -106,7 +105,7 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Session' : 'Create New Session'}</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground max-w-[150ch]">
+          <DialogDescription className="text-xs text-muted-foreground max-w-[150ch]">
             Specify the stream (1-4) for parallel sessions, or use Stream 1 for single-track events.
           </DialogDescription>
         </DialogHeader>
@@ -220,9 +219,6 @@ export function SessionFormDialog({ open, onOpenChange, onSubmit, session }: Ses
                             ))}
                             </SelectContent>
                         </Select>
-                         <CustomFormDescription className="text-xs">
-                            The parallel track for this session (1-4).
-                        </CustomFormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
