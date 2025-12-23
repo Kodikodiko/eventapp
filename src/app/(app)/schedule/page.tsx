@@ -137,7 +137,7 @@ export default function SchedulePage() {
   }
 
   const getStreamGradientClass = (session: Session, isFullWidth: boolean) => {
-    if (isFullWidth && session.tag === 'general') {
+    if (isFullWidth) {
         return 'from-rose-400';
     }
     switch(session.stream) {

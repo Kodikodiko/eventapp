@@ -14,8 +14,8 @@ const getTagStyles = (tag: Session['tag']) => {
 };
 
 const getStreamColor = (session: Session, isFullWidth: boolean) => {
-    if (isFullWidth && session.tag === 'general') {
-        return '#f43f5e'; // rose-500
+    if (isFullWidth) {
+        return '#f43f5e'; // rose-400
     }
     switch (session.stream) {
         case 1: return '#38bdf8'; // sky-400
