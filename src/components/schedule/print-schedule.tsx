@@ -21,7 +21,7 @@ const getStreamColor = (session: Session, isFullWidth: boolean) => {
         case 1: return '#eab308'; // yellow-500
         case 2: return '#38bdf8'; // sky-400
         case 3: return '#fbbf24'; // amber-400
-        case 4: return '#a855f7'; // fuchsia-500
+        case 4: return '#d946ef'; // fuchsia-500
         default: return '#9ca3af'; // gray-400
     }
 }
@@ -216,5 +216,7 @@ export function printSchedule(sessions: Session[]) {
     }, 500); // Wait for styles to apply
   }
 }
+
+    
 
     
