@@ -280,9 +280,3 @@ export default function SchedulePage() {
     </>
   );
 }
-
-    
-
-    
-
-    

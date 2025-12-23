@@ -216,9 +216,3 @@ export function printSchedule(sessions: Session[]) {
     }, 500); // Wait for styles to apply
   }
 }
-
-    
-
-    
-
-    
