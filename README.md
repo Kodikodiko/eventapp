@@ -20,6 +20,14 @@ The only direct costs will be standard transaction fees from Stripe for payment 
 
 ---
 
+### **Source Code Management**
+
+The source code for this application is managed using Git and is hosted on GitHub. This allows for version control, collaboration, and integration with deployment services.
+
+*   **Repository URL:** [https://github.com/Kodikodiko/eventapp](https://github.com/Kodikodiko/eventapp)
+
+---
+
 ### **Detailed Technical Architecture**
 
 This section breaks down the application into its core components for a technical audience.
