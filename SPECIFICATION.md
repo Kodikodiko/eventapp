@@ -89,29 +89,62 @@ The EventFlow ecosystem consists of two primary components:
 
 ---
 
-## 5. Backend & Data Requirements
+## 5. UI/UX Specification
 
-### 5.1 Data Persistence
+This section details the design system, components, and color palette.
+
+### 5.1 UI Framework
+- **Component Library**: **ShadCN UI**. This is not a traditional library but a collection of re-usable components that are copied into the project, allowing for full customization. Core components like `Card`, `Button`, `Table`, `Badge`, and `Dialog` are used extensively.
+- **Styling**: **Tailwind CSS**. A utility-first CSS framework is used for all styling.
+- **Icons**: **Lucide React**. A clean and consistent icon set.
+
+### 5.2 Color Scheme
+
+The application uses a theming system based on CSS variables. The colors are defined in HSL and then mapped to Hex codes for reference. This allows for easy theme changes (e.g., for a dark mode).
+
+#### **Light Theme Palette**
+
+| Name | HSL Value | Hex Code | Description |
+| :--- | :--- | :--- | :--- |
+| `background` | `210 40% 98%` | `#F8FAFC` | The main background color for pages. |
+| `foreground` | `222.2 84% 4.9%`| `#08091C` | The default text color. |
+| `card` | `210 40% 100%` | `#FFFFFF` | Background color for card components. |
+| `primary` | `262 52% 47%` | `#5839C3` | The primary accent color for buttons and links. |
+| `primary-foreground`| `210 40% 98%` | `#F8FAFC` | Text color used on primary backgrounds. |
+| `secondary` | `210 17% 95%` | `#EEF1F6` | Background for secondary elements (e.g., badges).|
+| `muted` | `210 17% 95%` | `#EEF1F6` | Background for muted elements. |
+| `muted-foreground` | `215.4 16.3% 46.9%` | `#667085` | Text color for muted or secondary text. |
+| `accent` | `231 99% 62%` | `#4F46E5` | An alternative accent color (e.g., for charts). |
+| `destructive` | `0 84.2% 60.2%` | `#F04438` | Color for destructive actions (e.g., delete). |
+| `border` | `214.3 31.8% 91.4%`| `#E4E7EB` | Color for borders and dividers. |
+| `input` | `214.3 31.8% 91.4%`| `#E4E7EB` | Background for input fields. |
+| `ring` | `262 52% 47%` | `#5839C3` | Color for focus rings on interactive elements. |
+
+---
+
+## 6. Backend & Data Requirements
+
+### 6.1 Data Persistence
 - All attendee registrations and related data must be securely stored in a database.
 
-### 5.2 Audit Logging
+### 6.2 Audit Logging
 - A logging functionality needs to be implemented to track user actions.
 - The system must record which event manager performed what action and when (e.g., "User 'admin@event.com' updated attendee 'John Doe' on YYYY-MM-DD HH:MM:SS").
 - A dedicated view in the admin app should display this log file.
 - The log view must be filterable and searchable to allow for easy auditing.
 
-### 5.3 Payments
+### 6.3 Payments
 - The system must integrate with **Stripe** for processing payments during public registration.
 
 ---
 
-## 6. Future & Deferred Requirements
+## 7. Future & Deferred Requirements
 
-### 6.1 Speaker Document Storage (Deferred)
+### 7.1 Speaker Document Storage (Deferred)
 - **Description:** A feature for speakers to upload presentation files (e.g., PDF, PPTX) and for admins to manage and download these files. This includes version control for uploaded documents.
 - **Status:** **Deferred**.
 - **Reason:** To avoid incurring cloud storage and data transfer costs during the initial development and rollout phase. The functionality will be re-evaluated for a future version once usage patterns and cost implications can be better estimated.
 
-### 6.2 Role Administration
+### 7.2 Role Administration
 - A dedicated administration area for managing attendee roles.
 - This area would allow for creating, editing, and deleting the available roles (e.g., "Attendee", "Speaker").
