@@ -15,6 +15,7 @@ import {
   Download,
   ClipboardPen,
   FileClock,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   SidebarContent,
@@ -36,6 +37,7 @@ const navItems = [
   { href: '/downloads', icon: Download, label: 'Downloads' },
   { href: '/log', icon: FileClock, label: 'Log' },
   { href: '/event', icon: Ticket, label: 'Event' },
+  { href: '/admin', icon: ShieldCheck, label: 'Admin' },
 ];
 
 export function MainNav() {
