@@ -28,6 +28,28 @@ The source code for this application is managed using Git and is hosted on GitHu
 
 ---
 
+### **Data Storage & Persistence**
+
+The application uses three primary methods for storing information:
+
+#### **1. Cloud Firestore (Primary Database)**
+The core of the application's data resides in **Google Cloud Firestore**, a highly scalable NoSQL document database.
+*   **Persistent Entities**: Attendees, Sponsors, Sponsorship Packages, Speakers, and the Event Schedule.
+*   **Security**: Data access is governed by **Firestore Security Rules**, ensuring that only authorized users can read or write specific information.
+*   **Real-time**: The UI updates instantly when data changes in Firestore, providing a live collaborative experience for event managers.
+
+#### **2. Firebase Authentication**
+User identity and login credentials are managed by **Firebase Authentication**.
+*   **Security**: Passwords are encrypted and managed by Google's secure infrastructure.
+*   **Access Control**: Used to verify administrators before allowing access to the event management tools.
+
+#### **3. Browser LocalStorage (Local Configuration)**
+Certain configuration settings are currently stored in the user's browser.
+*   **Entities**: Core Event Details (Name, Date, Location, Terms of Service).
+*   *Note: In future versions, these settings may be migrated to Firestore for shared access across multiple admin accounts.*
+
+---
+
 ### **Detailed Technical Architecture**
 
 This section breaks down the application into its core components for a technical audience.
@@ -35,145 +57,25 @@ This section breaks down the application into its core components for a technica
 #### **1. Hosting & Deployment**
 
 *   **Platform**: The application is configured for **Firebase App Hosting**. This is a managed, serverless platform specifically designed for hosting modern web applications.
-*   **Deployment**: Firebase App Hosting automatically builds the Next.js application and deploys it to a global Content Delivery Network (CDN). This ensures fast load times for users anywhere in the world. The `apphosting.yaml` file configures this environment.
-*   **Scalability**: The platform automatically scales resources in response to traffic. We've configured it with a starting point of one instance, which can be increased if the event's popularity grows significantly.
+*   **Deployment**: Firebase App Hosting automatically builds the Next.js application and deploys it to a global Content Delivery Network (CDN).
+*   **Scalability**: The platform automatically scales resources in response to traffic.
 
 #### **2. Frontend Architecture**
 
-The frontend is the interactive user interface for event managers. It's built as a Single-Page Application (SPA) for a fluid and responsive user experience.
+The frontend is built as a Single-Page Application (SPA) for a fluid and responsive user experience.
 
-*   **Framework**: **Next.js 15 (App Router)** with **React 18**. This is the industry-standard framework for building high-performance React applications. We use the App Router, which leverages React Server Components for optimized rendering, reducing the amount of JavaScript sent to the client and improving initial page load times.
-*   **Language**: **TypeScript**. We use TypeScript throughout the project. This adds static typing to JavaScript, which helps catch errors during development, improves code quality, and makes the codebase easier to understand and maintain.
-*   **UI Components**: **ShadCN UI** and **Tailwind CSS**. We use ShadCN UI, a collection of beautifully designed and accessible components (like tables, buttons, and forms) that are built on top of Tailwind CSS. This allows for rapid development of a polished, professional UI while maintaining full control over styling.
-
-    *   **Example (A ShadCN Card component from `src/app/(app)/dashboard/page.tsx`):**
-        ```tsx
-        import {
-          Card,
-          CardContent,
-          CardHeader,
-          CardTitle,
-        } from '@/components/ui/card';
-        import { DollarSign } from 'lucide-react';
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Revenue
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
-          </CardContent>
-        </Card>
-        ```
+*   **Framework**: **Next.js 15 (App Router)** with **React 18**.
+*   **Language**: **TypeScript**.
+*   **UI Components**: **ShadCN UI** and **Tailwind CSS**.
+*   **Icons**: **Lucide React**.
 
 #### **3. Backend & Data Layer**
 
-The application uses a "Backend-as-a-Service" (BaaS) model provided by **Google Firebase**. This means we do not manage any servers directly.
+*   **Data Interaction**: All database operations occur directly on the client-side using the Firebase client-side SDK.
+*   **Logic**: Complex logic like GDPR data anonymization or Excel exports is handled within the React application, leveraging client-side libraries like `xlsx`.
 
-*   **Database**: **Cloud Firestore**. This is a highly scalable, real-time NoSQL document database. All application data (attendees, sponsors, speakers, etc.) is stored in Firestore.
-    *   **Data Interaction**: A key architectural decision is that **all database operations occur directly on the client-side**. The Next.js application communicates securely with Firestore using the Firebase client-side SDK. This simplifies development and leverages Firestore's powerful real-time capabilities.
-    *   **Real-time Updates**: We use real-time listeners to fetch data. When data changes in the database (e.g., a new attendee registers), the UI updates automatically without needing a page refresh. This is achieved with custom hooks like `useCollection`.
-
-        *   **Example (Fetching attendees in `src/app/(app)/attendees/page.tsx`):**
-            ```tsx
-            import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-            import { collection } from 'firebase/firestore';
-
-            // ...inside the component...
-            const firestore = useFirestore();
-            const attendeesCol = useMemoFirebase(() =>
-              firestore ? collection(firestore, `events/${EVENT_ID}/attendees`) : null,
-              [firestore]
-            );
-            const { data: attendees, isLoading } = useCollection<Attendee>(attendeesCol);
-            // The 'attendees' variable will always contain the latest data from Firestore.
-            ```
-
-*   **Authentication**: **Firebase Authentication**. This service handles user identity. It securely manages user sign-in and sign-out. It supports anonymous access and can be easily extended to support email/password, Google, and other login providers.
-*   **Security**: Security is enforced by **Firestore Security Rules**. These are rules deployed to Firebase that define who can read, write, or update data. For instance, we can specify that only an authenticated admin user can edit event details.
-
-    *   **Example (Simplified rule from `firestore.rules`):**
-        ```rules
-        rules_version = '2';
-        service cloud.firestore {
-          match /databases/{database}/documents {
-            // Only allow signed-in users to read or write to event data
-            match /events/{eventId}/{document=**} {
-              allow read, write: if request.auth != null;
-            }
-          }
-        }
-        ```
-
-#### **4. Data Modeling**
-
-We define clear data structures using TypeScript to ensure consistency across the application.
-
-*   **Example (The `Attendee` data model from `src/lib/data.ts`):**
-    ```ts
-    import { Timestamp } from 'firebase/firestore';
-
-    export type AttendeeRole = 'attendee' | 'speaker' | 'orga' | 'sponsor';
-    export type AttendeeStatus = 'Confirmed' | 'Waitlisted' | 'Cancelled';
-
-    export type Attendee = {
-      id: string;
-      fullName: string;
-      email: string;
-      status: AttendeeStatus;
-      roles: AttendeeRole[];
-      registrationDate: Timestamp | string | null;
-      eventId: string;
-      price?: number;
-      company?: string;
-      pmiNumber?: string;
-    };
-    ```
 ---
 
 ### **Frontend Deep Dive & Customization**
 
-This section explains how the frontend is constructed and provides a practical example of how to customize its appearance.
-
-#### **1. How is the Frontend Created?**
-
-The application's frontend is built using a modern, component-based architecture:
-
-*   **Core Framework**: It uses **Next.js** with **React** and **TypeScript**, providing the foundation for the user interface.
-*   **UI Components**: The UI elements you see (like tables, buttons, badges, and cards) come from **ShadCN UI**. This is not a typical component library. Instead, each component is a separate file that has been added to your project under `src/components/ui/`. This is a major advantage because it gives you full control to modify the code for any component directly.
-*   **Styling**: All styling is handled by **Tailwind CSS**. This is a "utility-first" CSS framework, which means we build styles by combining small, single-purpose classes directly in the JSX code (e.g., `p-4`, `flex`, `font-bold`).
-*   **Theming & Colors**: The entire color scheme is managed through CSS variables. In `src/app/globals.css`, you will find variables like `--primary`, `--secondary`, `--destructive`, and `--accent`. These variables define the application's color palette, and the Tailwind configuration is set up to use them, ensuring a consistent look and feel.
-
-#### **2. Example: How to Change the "Attendee" Tag Color to Light Green**
-
-The tag you see is a `<Badge>` component. To change its color specifically for the "attendee" role, you would follow these steps:
-
-1.  **Locate the Component**: The attendee table is rendered in `src/app/(app)/attendees/page.tsx`. Inside this file, you would find the code that loops through `attendee.roles` and renders a `<Badge>` for each one.
-2.  **Define a New Style Variant**: To add a new "light green" color, you edit the badge's style definitions located in `src/components/ui/badge.tsx`. You would add a new variant (e.g., `"attendee-green"`) to the `badgeVariants` object. This new variant would define the background and text color using Tailwind CSS classes.
-
-    *   **Example (in `src/components/ui/badge.tsx`):**
-        ```tsx
-        const badgeVariants = cva(
-          /* ... */,
-          {
-            variants: {
-              variant: {
-                default: /* ... */,
-                secondary: /* ... */,
-                // ... other variants
-                // Add your new variant here:
-                "attendee-green": "border-transparent bg-green-100 text-green-800",
-              },
-            },
-            // ...
-          }
-        )
-        ```
-
-3.  **Apply the New Variant Conditionally**: Back in `src/app/(app)/attendees/page.tsx`, you would modify the `<Badge>` component to conditionally apply your new variant.
-
-    *   **Example (in `src/app/(app)/attendees/page.tsx`):**
-        You would change the `variant` prop of the Badge based on the `role`. Currently, it might look something like `variant={selectedRoles.includes(role) ? "default" : "secondary"}`. You would update it to check if the role is 'attendee' and apply your new `"attendee-green"` variant if it is.
+For details on how to customize the UI or change colors, please refer to the **UI/UX Specification** section in `SPECIFICATION.md`.
