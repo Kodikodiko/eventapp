@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -88,7 +87,6 @@ export function MainNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip={{children: 'Settings'}}>
-              {/* Using '#' as a placeholder for settings page */}
               <Link href="#">
                 <Settings />
                 <span>Settings</span>
