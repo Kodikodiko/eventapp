@@ -1,0 +1,70 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      username: "demouser1",
+      email: "demouser1@example.com",
+      createdAt: "2024-04-27T12:00:00Z",
+      displayName: "Demo User One"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      username: "demouser2",
+      email: "demouser2@example.com",
+      createdAt: "2024-04-27T13:00:00Z",
+      displayName: "Demo User Two"
+    }
+  ])
+  category_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      name: "Work",
+      description: "Work-related tasks"
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      name: "Personal",
+      description: "Personal tasks"
+    }
+  ])
+  tBDItem_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      categoryId: "650e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-28T08:00:00Z",
+      title: "Complete Report",
+      description: "Finish the quarterly report",
+      status: "In Progress",
+      priority: "High"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      categoryId: "650e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-28T09:00:00Z",
+      title: "Grocery Shopping",
+      description: "Buy groceries for the week",
+      status: "To Do",
+      priority: "Medium"
+    }
+  ])
+  note_insertMany(data: [
+    {
+      id: "850e8400-e29b-41d4-a716-446655440000",
+      tbdItemId: "750e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      content: "Remember to include all relevant data in the report",
+      createdAt: "2024-04-28T08:30:00Z"
+    },
+    {
+      id: "850e8400-e29b-41d4-a716-446655440001",
+      tbdItemId: "750e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      content: "Don't forget milk and bread!",
+      createdAt: "2024-04-28T09:30:00Z"
+    }
+  ])
+}
