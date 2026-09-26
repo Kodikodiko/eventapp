@@ -1,8 +1,17 @@
-# Änderungsprotokoll - 26.07.2024
+# Changelog
 
-Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der EventFlow-Anwendung vorgenommen wurden.
+## 26.09.2026 – Start der Migration auf Next.js + SQLite
 
-## Funktionserweiterungen
+- Stand vor der Migration als Tag `firebase-final` gesichert; Arbeit auf Branch `migration/sqlite`.
+- Spezifikation erweitert: DSGVO (Abschnitt 7), mehrere Events, Deutsch/Englisch, Anmelde- und Zahlungsstatus, Mitgliedsprüfung gegen Mitgliederliste, Zahlung per Stripe oder Rechnung, Kapazität und Warteliste, Storno und Erstattung, Rechnungen und USt-Vorbereitung.
+- Neue Dokumente: `MIGRATIONSPLAN.md`, `TODO.md`; `DEPLOYMENT.md` neu geschrieben (lokal, später EU-VPS ohne Docker).
+- Aufgeräumt: doppelte Spezifikationen (`SPECIFICATION.md`, `SPECIFICATION2.md`) und drei Changelogs zu diesem `CHANGELOG.md` zusammengeführt; `.env.example` und Node-Version (24 LTS) ergänzt.
+
+---
+
+## 26.07.2024 (Firebase-Version)
+
+### Funktionserweiterungen
 
 1.  **Öffentliche Registrierungsseite:**
     *   Eine neue, öffentliche Registrierungsseite wurde unter `/register` erstellt, damit sich Teilnehmer selbst anmelden können.
@@ -28,29 +37,27 @@ Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der Eve
     *   Eine neue "Downloads"-Seite wurde erstellt, um den Zugriff auf Projektdokumentationsdateien zu ermöglichen.
     *   Ein Link zu dieser Seite wurde der Hauptnavigation hinzugefügt.
 
-## Strategische & Technische Entscheidungen
+### Strategische & Technische Entscheidungen
 
 1.  **Aufschub der permanenten Dokumentenspeicherung:**
     *   Die Implementierung der permanenten Speicherung von Sprecher-Dokumenten (z.B. Präsentationen) über einen Dienst wie Firebase Storage wird vorerst zurückgestellt.
     *   **Grund:** Um unvorhergesehene Kosten im Zusammenhang mit der Datenspeicherung und dem Datenverkehr zu vermeiden. Die Funktionalität wird für eine zukünftige Version in Betracht gezogen, wenn die Nutzungsmetriken besser eingeschätzt werden können.
 
-## Fehlerbehebungen (Bugfixes)
+### Fehlerbehebungen (Bugfixes)
 
 1.  **Fehler bei der Formular-Initialisierung behoben:** Ein Fehler ("uncontrolled to controlled input") im Formular zum Hinzufügen/Bearbeiten von Teilnehmern wurde korrigiert.
 2.  **Laufzeitfehler behoben:** Ein Initialisierungsfehler ("can't access lexical declaration before initialization") auf der Teilnehmer-Seite wurde behoben.
 3.  **Speichern von Event-Details korrigiert:** Ein Fehler wurde behoben, bei dem Änderungen auf der "Event"-Seite nicht gespeichert und auf anderen Seiten nicht angezeigt wurden.
 
-## Technische Verbesserungen & Dokumentation
+### Technische Verbesserungen & Dokumentation
 
 1.  **Datenmodell-Update:** Das Datenmodell für `Attendee` und `EventDetails` wurde erweitert, um neue Felder wie `billingAddress` und `termsOfService` zu unterstützen.
 2.  **`README.md` aktualisiert:** Das `README.md` wurde um eine detaillierte technische Architekturbeschreibung und eine Erläuterung zur Anpassung des Frontends erweitert.
 3.  **`HOMELAB_DEPLOYMENT.md` aktualisiert:** Die Bereitstellungsanleitung für Home-Labs wurde an die spezifische Infrastruktur des Benutzers (TrueNAS + Ubuntu VM) angepasst.
 
-# Änderungsprotokoll - 27.07.2024
+## 27.07.2024 (Firebase-Version)
 
-Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der EventFlow-Anwendung vorgenommen wurden.
-
-## Iterative Entwicklung der Stream-Visualisierung
+### Iterative Entwicklung der Stream-Visualisierung
 
 1.  **Implementierung & Verfeinerung der Farbcodierung:**
     *   Mehrere Versuche wurden unternommen, die Streams auf der "Schedule"-Seite farblich zu kennzeichnen, zunächst mit farbigen Balken, dann mit farbigen Punkten.
@@ -63,11 +70,9 @@ Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der Eve
     *   Nach mehreren Iterationen wurde entschieden, **alle farblichen Kennzeichnungen** für die Streams sowohl aus der Live-Ansicht als auch aus dem Drucklayout vollständig zu entfernen.
     *   **Grund:** Um das Design zu vereinfachen und die durch die dynamische Farbgebung verursachte Komplexität und Fehleranfälligkeit zu reduzieren. Die Benutzeroberfläche ist nun wieder in einem sauberen, neutralen Zustand ohne stream-spezifische Farben.
 
-# Änderungsprotokoll - 29.12.2025
+## 29.12.2025 (Firebase-Version)
 
-Dieses Dokument fasst die wichtigsten Änderungen zusammen, die heute an der EventFlow-Anwendung vorgenommen wurden.
-
-## Dokumentation & Fehlerbehebung
+### Dokumentation & Fehlerbehebung
 
 1.  **Erweiterung der Spezifikation:**
     *   Das Dokument `SPECIFICATION.md` wurde um einen detaillierten Abschnitt `5. UI/UX Specification` erweitert.

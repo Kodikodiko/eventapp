@@ -43,3 +43,6 @@ next-env.d.ts
 # editor
 .vscode
 .idea
+
+# lokale Daten (Datenbank, Sicherungen, E-Mails, Rechnungen)
+/data/
