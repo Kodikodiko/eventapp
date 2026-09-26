@@ -16,7 +16,8 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "seed:demo": "tsx scripts/seed-demo.ts",
-    "db:backup": "tsx scripts/db-backup.ts"
+    "db:backup": "tsx scripts/db-backup.ts",
+    "admin:create": "tsx scripts/admin-create.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -40,6 +41,7 @@
     "@radix-ui/react-tabs": "^1.1.21",
     "@radix-ui/react-toast": "^1.2.23",
     "@radix-ui/react-tooltip": "^1.2.16",
+    "better-auth": "1.7",
     "better-sqlite3": "^13.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -48,6 +50,7 @@
     "lucide-react": "^1.48.0",
     "next": "^16.3.6",
     "next-intl": "^4.14.7",
+    "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.89.0",
@@ -60,6 +63,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.19.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "drizzle-kit": "^0.31.11",

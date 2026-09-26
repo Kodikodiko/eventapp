@@ -11,8 +11,11 @@ const checks = [
   { path: '/', status: 307, location: '/de' },
   { path: '/de', status: 200, contains: 'Zum Admin-Bereich' },
   { path: '/en', status: 200, contains: 'Go to admin area' },
-  { path: '/de/admin', status: 200, contains: 'Admin-Bereich' },
-  { path: '/en/admin', status: 200, contains: 'Admin area' },
+  { path: '/de/admin', status: 307, location: '/de/admin/login' },
+  { path: '/en/admin/security', status: 307, location: '/en/admin/login' },
+  { path: '/de/admin/login', status: 200, contains: 'Anmelden' },
+  { path: '/en/admin/login', status: 200, contains: 'Sign in' },
+  { path: '/api/auth/get-session', status: 200, contains: 'null' },
   { path: '/de/gibt-es-nicht', status: 404, contains: 'Seite nicht gefunden' },
   { path: '/en/does-not-exist', status: 404, contains: 'Page not found' },
   { path: '/api/health', status: 200, contains: '"status":"ok"' },
@@ -21,7 +24,13 @@ const checks = [
 const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-p', PORT, '-H', '127.0.0.1'], {
   stdio: ['ignore', 'pipe', 'pipe'],
   // eigene, wegwerfbare Datenbank für den Smoke-Test
-  env: { ...process.env, DATABASE_PATH: 'data/smoke/smoke.db', BACKUP_DIR: 'data/smoke/backups' },
+  env: {
+    ...process.env,
+    DATABASE_PATH: 'data/smoke/smoke.db',
+    BACKUP_DIR: 'data/smoke/backups',
+    BETTER_AUTH_SECRET: 'smoke-test-secret-'.padEnd(48, 'x'),
+    BETTER_AUTH_URL: BASE,
+  },
 });
 let serverLog = '';
 server.stdout.on('data', (d) => (serverLog += d));

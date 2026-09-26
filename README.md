@@ -17,7 +17,8 @@ next-intl · SQLite (better-sqlite3) · Drizzle ORM · Vitest
 npm ci
 copy .env.example .env.local   # Werte eintragen
 npm run seed:demo              # optional: Demodaten in eine leere Datenbank
-npm run dev                    # http://localhost:3000
+npm run admin:create -- --email du@example.org --name "Dein Name"
+npm run dev                    # http://localhost:3000/de/admin
 ```
 
 Die Datenbank liegt standardmäßig in `data/eventflow.db` und wird beim Start automatisch angelegt bzw. migriert.
@@ -36,7 +37,7 @@ npm run build; npm run smoke                       # Produktions-Build prüfen
 |---|---|
 | `src/app/[locale]/` | Seiten (öffentlich, Portal, Admin) je Sprache |
 | `src/app/api/` | Route Handler (Health-Check; später Auth, Stripe-Webhook, Exporte) |
-| `src/server/` | nur serverseitig: Datenbank, später Auth, Services, Server Actions |
+| `src/server/` | nur serverseitig: Datenbank (`db/`), Anmeldung und Rechte (`auth/`), später Services und Server Actions |
 | `src/components/` | UI-Komponenten (ShadCN) und fachliche Komponenten |
 | `src/lib/` | Hilfen: Geldbeträge (`money.ts`), mehrsprachige Inhalte (`localized.ts`) |
 | `src/i18n/` | Sprachkonfiguration; Übersetzungen in `messages/de.json` und `messages/en.json` |

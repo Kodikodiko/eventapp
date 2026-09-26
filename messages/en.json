@@ -8,10 +8,6 @@
     "intro": "Migration to Next.js and SQLite is in progress. Public event pages follow in phase 5.",
     "toAdmin": "Go to admin area"
   },
-  "admin": {
-    "title": "Admin area",
-    "placeholder": "Sign-in and management follow in phases 2 to 4."
-  },
   "localeSwitcher": {
     "label": "Choose language",
     "de": "DE",
@@ -21,5 +17,58 @@
     "title": "Page not found",
     "text": "The requested page does not exist.",
     "home": "Go to home page"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Please wait …",
+    "invalidCredentials": "Email or password is incorrect.",
+    "tooManyAttempts": "Too many attempts. Please wait a moment and try again.",
+    "forbidden": "This account has no access to the admin area.",
+    "genericError": "Something went wrong. Please try again.",
+    "totpHint": "Enter the 6-digit code from your authenticator app.",
+    "backupHint": "Enter one of your backup codes. Each code works only once.",
+    "code": "Code",
+    "backupCode": "Backup code",
+    "verify": "Verify",
+    "invalidCode": "The code is invalid or has expired.",
+    "useBackupCode": "Use a backup code instead",
+    "useTotp": "Use the authenticator app instead"
+  },
+  "adminNav": {
+    "label": "Admin navigation",
+    "dashboard": "Overview",
+    "security": "Security",
+    "logout": "Sign out",
+    "signedInAs": "Signed in as {name}"
+  },
+  "security": {
+    "title": "Two-factor authentication",
+    "required": "Two-factor authentication is mandatory for the admin area. Set it up now with an authenticator app (e.g. Microsoft or Google Authenticator, 1Password, Bitwarden).",
+    "enabled": "Two-factor authentication is set up.",
+    "toDashboard": "Continue to overview",
+    "step1": "First, confirm your password.",
+    "password": "Password",
+    "start": "Start setup",
+    "wrongPassword": "The password is incorrect.",
+    "genericError": "Something went wrong. Please try again.",
+    "scanTitle": "1. Scan the QR code",
+    "scanHint": "Scan the code with your authenticator app.",
+    "qrAlt": "QR code for the authenticator app",
+    "manualKey": "Or enter the key manually:",
+    "backupTitle": "2. Save your backup codes",
+    "backupHint": "Keep these codes safe (e.g. in your password manager). They let you in if you lose your phone. They are shown only now.",
+    "confirmCode": "3. Enter the code from the app",
+    "confirm": "Complete setup",
+    "invalidCode": "The code is invalid. Check your phone's clock and try again."
+  },
+  "dashboard": {
+    "title": "Overview",
+    "placeholder": "Managing events, attendees, speakers and sponsors follows in phases 3 and 4.",
+    "events": "Events",
+    "registrations": "Registrations",
+    "people": "People"
   }
 }

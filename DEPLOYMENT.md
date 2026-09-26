@@ -26,7 +26,7 @@ Kurzfassung:
 cd D:\aaa\python\Projekte\eventapp
 npm ci
 copy .env.example .env.local      # Werte eintragen, siehe A.3
-npm run admin:create               # ersten Admin anlegen (fragt E-Mail + Passwort ab)
+npm run admin:create -- --email du@example.org --name "Dein Name"   # ersten Admin anlegen
 npm run seed:demo                  # optional: Demodaten (nur lokal!)
 npm run dev                        # http://localhost:3000
 ```
@@ -88,7 +88,7 @@ Echte Personendaten gehören nie ins Repository. Für Tests und Vorführungen nu
 | `smoke` | startet den Produktions-Build mit einer Wegwerf-Datenbank und prüft Seiten und `/api/health` (vorher `build`) |
 | `db:generate` | nach Änderungen an `src/server/db/schema.ts`: neue SQL-Migration in `drizzle/` erzeugen |
 | `db:studio` | Datenbank im Browser ansehen/bearbeiten (Drizzle Studio) |
-| `admin:create` | Admin-Benutzer anlegen |
+| `admin:create` | Admin anlegen: `npm run admin:create -- --email … --name "…"` (Passwort wird verdeckt abgefragt); mit `--reset-password` Passwort neu setzen. Bei der ersten Anmeldung wird die Zwei-Faktor-Anmeldung eingerichtet (Pflicht) |
 | `seed:demo` | Demodaten in eine **leere** Datenbank schreiben; verweigert bei vorhandenen Daten |
 | `db:backup` | konsistente Sicherung der laufenden Datenbank nach `BACKUP_DIR` |
 | `retention` | Löschfristen anwenden (Spec 7.5); `--dry-run` zeigt nur an, was passieren würde |

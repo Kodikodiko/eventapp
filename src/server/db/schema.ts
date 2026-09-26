@@ -562,3 +562,102 @@ export const dsrRequests = sqliteTable(
   },
   (t) => [index('dsr_requests_received_idx').on(t.receivedAt)]
 );
+
+// ---------------------------------------------------------------------------
+// Anmeldung (Better Auth) – Tabellen- und Feldnamen gemäß Better Auth 1.7,
+// Modelle: user, session, account, verification, twoFactor (Zuordnung in src/server/auth/config.ts).
+// Ausnahme von der Zeitstempel-Konvention: Better Auth arbeitet mit Date-Objekten,
+// daher hier INTEGER in Millisekunden (timestamp_ms).
+// ---------------------------------------------------------------------------
+
+export const USER_ROLES = ['admin', 'attendee'] as const;
+
+const authTimestamp = (name: string) =>
+  integer(name, { mode: 'timestamp_ms' })
+    .notNull()
+    .$defaultFn(() => new Date());
+
+export const authUsers = sqliteTable('auth_users', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+  image: text('image'),
+  createdAt: authTimestamp('created_at'),
+  updatedAt: authTimestamp('updated_at'),
+  /** zusätzliches Feld: Rolle (nur serverseitig setzbar) */
+  role: text('role', { enum: USER_ROLES }).notNull().default('attendee'),
+  /** zusätzliches Feld: Verknüpfung zur Person (Teilnehmerportal) */
+  personId: integer('person_id').references(() => people.id, { onDelete: 'set null' }),
+  /** vom 2FA-Plugin verwaltet */
+  twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).default(false),
+});
+
+export const authSessions = sqliteTable(
+  'auth_sessions',
+  {
+    id: text('id').primaryKey(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    token: text('token').notNull().unique(),
+    createdAt: authTimestamp('created_at'),
+    updatedAt: authTimestamp('updated_at'),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+  },
+  (t) => [index('auth_sessions_user_idx').on(t.userId)]
+);
+
+export const authAccounts = sqliteTable(
+  'auth_accounts',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+    refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+    scope: text('scope'),
+    /** Passwort-Hash (nur bei providerId = 'credential') */
+    password: text('password'),
+    createdAt: authTimestamp('created_at'),
+    updatedAt: authTimestamp('updated_at'),
+  },
+  (t) => [index('auth_accounts_user_idx').on(t.userId)]
+);
+
+export const authVerifications = sqliteTable(
+  'auth_verifications',
+  {
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: authTimestamp('created_at'),
+    updatedAt: authTimestamp('updated_at'),
+  },
+  (t) => [index('auth_verifications_identifier_idx').on(t.identifier)]
+);
+
+export const authTwoFactors = sqliteTable(
+  'auth_two_factors',
+  {
+    id: text('id').primaryKey(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    verified: integer('verified', { mode: 'boolean' }).default(true),
+    failedVerificationCount: integer('failed_verification_count').default(0),
+    lockedUntil: integer('locked_until', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('auth_two_factors_secret_idx').on(t.secret), index('auth_two_factors_user_idx').on(t.userId)]
+);

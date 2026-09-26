@@ -1,5 +1,14 @@
 # Changelog
 
+## 27.09.2026 – Phase 2: Anmeldung & Rechte
+
+- Better Auth 1.7 mit SQLite: Admin-Login per E-Mail und Passwort (mind. 12 Zeichen), keine Selbstregistrierung.
+- Zwei-Faktor-Anmeldung (Authenticator-App) für Admins verpflichtend: Einrichtung mit QR-Code und Backup-Codes, Anmeldung mit Code oder Backup-Code.
+- Rechteprüfung auf dem Server in jedem Admin-Layout; Vorprüfung per Sitzungs-Cookie in `proxy.ts`; Abmelden.
+- `npm run admin:create` legt Admins an bzw. setzt Passwörter zurück (Audit-Log-Eintrag).
+- Tests: 7 neue Tests für Konten, Anmeldung, gesperrte Registrierung und den kompletten 2FA-Ablauf; Smoke-Test um Login-Seiten erweitert; Ablauf im Browser durchgespielt (DE/EN).
+- Behoben: Build öffnete die Datenbank beim Vorrendern (Reihenfolge Header/Anmeldung, `requestDb()`).
+
 ## 27.09.2026 – Phase 1: Fundament
 
 - Firebase, Genkit, Data Connect und Cloud Functions entfernt; alte Seiten als Portierungsvorlage in `legacy/`.

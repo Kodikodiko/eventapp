@@ -5,7 +5,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 
 ## Kritisch – vor jedem Einsatz mit echten Daten
 
-- [ ] **K1 – Admin-Authentifizierung einführen.** Derzeit wird jeder Besucher anonym angemeldet und hat vollen Zugriff auf alle Daten; „Admin Login“ ist nur ein Link, „Logout“ ohne Funktion.
+- [x] **K1 – Admin-Authentifizierung einführen.** *(erledigt in Phase 2: Better Auth, Admin-Login mit Pflicht-2FA, Rollenprüfung serverseitig in jedem Admin-Layout, Vorprüfung in proxy.ts, keine anonymen Sitzungen mehr)* Derzeit wird jeder Besucher anonym angemeldet und hat vollen Zugriff auf alle Daten; „Admin Login“ ist nur ein Link, „Logout“ ohne Funktion.
   Ziel: Login für Admins (Passwort + optional 2FA), Rollen admin / attendee / public, alle Admin-Seiten serverseitig geschützt.
 - [ ] **K2 – Weiterleitung nach der Registrierung korrigieren.** Nach dem Absenden landet der Teilnehmer auf `/attendees` (komplette Teilnehmerliste).
   Ziel: eigene Danke-Seite, bzw. Weiterleitung zu Stripe Checkout.
@@ -14,7 +14,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 - [ ] **K4 – Registrierung erst nach Zahlung bestätigen, Preis serverseitig.** Derzeit sofort „Confirmed“, Preis im Browser berechnet, jede PMI-Nummer gibt Rabatt.
   Ziel: Status „Reserved“ → Stripe Checkout → Webhook setzt „Confirmed“ (bzw. Kauf auf Rechnung, Spec 3.1); Preis und Mitgliedsprüfung gegen die Mitgliederliste nur auf dem Server.
 - [x] **K5 – Build-Fehler nicht mehr ignorieren.** *(erledigt in Phase 1: Flags entfernt, Typecheck/Lint/Build grün; die betroffenen alten Seiten liegen in `legacy/` und werden neu geschrieben)* `ignoreBuildErrors` und `ignoreDuringBuilds` in `next.config.ts` entfernen; Typ- und Lint-Fehler beheben (bekannt: `padding="checkbox"` auf TableHead/TableCell).
-- [ ] **K6 – Zugriffsregeln nachvollziehbar im Repo.** *(Phase 1: Firestore und seine Regeln entfernt; die Rechteprüfung auf dem Server folgt mit K1 in Phase 2)* `firestore.rules` ist in `firebase.json` nicht eingebunden.
+- [x] **K6 – Zugriffsregeln nachvollziehbar im Repo.** *(erledigt: Firestore entfernt; Rechteprüfung serverseitig in `src/server/auth/session.ts` – `requireAdmin`/`requireAdminWith2fa` für Seiten, `assertAdmin` für Aktionen – mit Tests)* `firestore.rules` ist in `firebase.json` nicht eingebunden.
   *Mit dem Firebase-Ausstieg:* entfällt als Firestore-Thema; ersetzt durch Rechteprüfung in jeder Server Action / Route (siehe K1) plus Tests dafür.
 
 ## DSGVO (siehe Spezifikation, Abschnitt 7)

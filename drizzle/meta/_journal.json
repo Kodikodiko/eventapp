@@ -15,6 +15,13 @@
       "when": 1790460642565,
       "tag": "0001_seed_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790461209268,
+      "tag": "0002_auth",
+      "breakpoints": true
     }
   ]
 }

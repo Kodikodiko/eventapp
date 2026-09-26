@@ -8,10 +8,6 @@
     "intro": "Die Migration auf Next.js und SQLite läuft. Öffentliche Eventseiten folgen in Phase 5.",
     "toAdmin": "Zum Admin-Bereich"
   },
-  "admin": {
-    "title": "Admin-Bereich",
-    "placeholder": "Anmeldung und Verwaltung folgen in den Phasen 2 bis 4."
-  },
   "localeSwitcher": {
     "label": "Sprache wählen",
     "de": "DE",
@@ -21,5 +17,58 @@
     "title": "Seite nicht gefunden",
     "text": "Die angeforderte Seite existiert nicht.",
     "home": "Zur Startseite"
+  },
+  "auth": {
+    "loginTitle": "Anmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Bitte warten …",
+    "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+    "tooManyAttempts": "Zu viele Versuche. Bitte warte kurz und versuche es erneut.",
+    "forbidden": "Dieses Konto hat keinen Zugang zum Admin-Bereich.",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "totpHint": "Gib den 6-stelligen Code aus deiner Authenticator-App ein.",
+    "backupHint": "Gib einen deiner Backup-Codes ein. Jeder Code funktioniert nur einmal.",
+    "code": "Code",
+    "backupCode": "Backup-Code",
+    "verify": "Bestätigen",
+    "invalidCode": "Der Code ist ungültig oder abgelaufen.",
+    "useBackupCode": "Stattdessen einen Backup-Code verwenden",
+    "useTotp": "Stattdessen die Authenticator-App verwenden"
+  },
+  "adminNav": {
+    "label": "Admin-Navigation",
+    "dashboard": "Übersicht",
+    "security": "Sicherheit",
+    "logout": "Abmelden",
+    "signedInAs": "Angemeldet als {name}"
+  },
+  "security": {
+    "title": "Zwei-Faktor-Anmeldung",
+    "required": "Für den Admin-Bereich ist die Zwei-Faktor-Anmeldung Pflicht. Richte sie jetzt mit einer Authenticator-App ein (z. B. Microsoft oder Google Authenticator, 1Password, Bitwarden).",
+    "enabled": "Die Zwei-Faktor-Anmeldung ist eingerichtet.",
+    "toDashboard": "Weiter zur Übersicht",
+    "step1": "Bestätige zuerst dein Passwort.",
+    "password": "Passwort",
+    "start": "Einrichtung starten",
+    "wrongPassword": "Das Passwort ist falsch.",
+    "genericError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "scanTitle": "1. QR-Code scannen",
+    "scanHint": "Scanne den Code mit deiner Authenticator-App.",
+    "qrAlt": "QR-Code für die Authenticator-App",
+    "manualKey": "Oder Schlüssel manuell eingeben:",
+    "backupTitle": "2. Backup-Codes sichern",
+    "backupHint": "Bewahre diese Codes sicher auf (z. B. im Passwort-Manager). Mit ihnen kommst du hinein, falls das Handy verloren geht. Sie werden nur jetzt angezeigt.",
+    "confirmCode": "3. Code aus der App eingeben",
+    "confirm": "Einrichtung abschließen",
+    "invalidCode": "Der Code ist ungültig. Prüfe die Uhrzeit am Handy und versuche es erneut."
+  },
+  "dashboard": {
+    "title": "Übersicht",
+    "placeholder": "Die Verwaltung von Events, Teilnehmenden, Speakern und Sponsoren folgt in den Phasen 3 und 4.",
+    "events": "Events",
+    "registrations": "Anmeldungen",
+    "people": "Personen"
   }
 }
