@@ -10,6 +10,31 @@ EventFlow is a modern, serverless web application designed for efficient event m
 
 ---
 
+### **Git Workflow: Pushing to GitHub**
+
+Because this project lives on your local machine, all Git commands must be run from your computer's **Terminal** (not from within the Firebase Studio website).
+
+#### **1. How to find your Terminal:**
+*   **Windows:** Press the **Windows Key**, type `cmd` or `PowerShell`, and hit Enter.
+*   **macOS:** Press **Cmd + Space**, type `Terminal`, and hit Enter.
+*   **Linux:** Press **Ctrl + Alt + T**.
+
+#### **2. How to push changes:**
+Once your terminal is open, navigate to your project folder (e.g., `cd Documents/eventapp`) and run:
+
+```bash
+# Stage the changes I made for you
+git add .
+
+# Save the changes with a message
+git commit -m "Update from Firebase Studio"
+
+# Send the changes to GitHub
+git push origin main
+```
+
+---
+
 ### **Cost Analysis (High-Level)**
 
 Based on the projected usage of approximately 3 admin users and 300 attendees, the application is expected to run entirely within the **Firebase Spark Plan (Free Tier)**. 
@@ -22,7 +47,7 @@ The only direct costs will be standard transaction fees from Stripe for payment 
 
 ### **Source Code Management**
 
-The source code for this application is managed using Git and is hosted on GitHub. This allows for version control, collaboration, and integration with deployment services.
+The source code for this application is managed using Git and is hosted on GitHub.
 
 *   **Repository URL:** [https://github.com/Kodikodiko/eventapp](https://github.com/Kodikodiko/eventapp)
 
