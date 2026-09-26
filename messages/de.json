@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "EventFlow",
+    "description": "Eventverwaltung"
+  },
+  "home": {
+    "title": "EventFlow",
+    "intro": "Die Migration auf Next.js und SQLite läuft. Öffentliche Eventseiten folgen in Phase 5.",
+    "toAdmin": "Zum Admin-Bereich"
+  },
+  "admin": {
+    "title": "Admin-Bereich",
+    "placeholder": "Anmeldung und Verwaltung folgen in den Phasen 2 bis 4."
+  },
+  "localeSwitcher": {
+    "label": "Sprache wählen",
+    "de": "DE",
+    "en": "EN"
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "text": "Die angeforderte Seite existiert nicht.",
+    "home": "Zur Startseite"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "EventFlow",
+    "description": "Event management"
+  },
+  "home": {
+    "title": "EventFlow",
+    "intro": "Migration to Next.js and SQLite is in progress. Public event pages follow in phase 5.",
+    "toAdmin": "Go to admin area"
+  },
+  "admin": {
+    "title": "Admin area",
+    "placeholder": "Sign-in and management follow in phases 2 to 4."
+  },
+  "localeSwitcher": {
+    "label": "Choose language",
+    "de": "DE",
+    "en": "EN"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The requested page does not exist.",
+    "home": "Go to home page"
+  }
+}
