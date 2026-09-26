@@ -13,8 +13,8 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
   Ziel: Druckansichten als normale React-Seite rendern oder alle Werte escapen; Tailwind-CDN-Script entfernen.
 - [ ] **K4 – Registrierung erst nach Zahlung bestätigen, Preis serverseitig.** Derzeit sofort „Confirmed“, Preis im Browser berechnet, jede PMI-Nummer gibt Rabatt.
   Ziel: Status „Reserved“ → Stripe Checkout → Webhook setzt „Confirmed“ (bzw. Kauf auf Rechnung, Spec 3.1); Preis und Mitgliedsprüfung gegen die Mitgliederliste nur auf dem Server.
-- [ ] **K5 – Build-Fehler nicht mehr ignorieren.** `ignoreBuildErrors` und `ignoreDuringBuilds` in `next.config.ts` entfernen; Typ- und Lint-Fehler beheben (bekannt: `padding="checkbox"` auf TableHead/TableCell).
-- [ ] **K6 – Zugriffsregeln nachvollziehbar im Repo.** `firestore.rules` ist in `firebase.json` nicht eingebunden.
+- [x] **K5 – Build-Fehler nicht mehr ignorieren.** *(erledigt in Phase 1: Flags entfernt, Typecheck/Lint/Build grün; die betroffenen alten Seiten liegen in `legacy/` und werden neu geschrieben)* `ignoreBuildErrors` und `ignoreDuringBuilds` in `next.config.ts` entfernen; Typ- und Lint-Fehler beheben (bekannt: `padding="checkbox"` auf TableHead/TableCell).
+- [ ] **K6 – Zugriffsregeln nachvollziehbar im Repo.** *(Phase 1: Firestore und seine Regeln entfernt; die Rechteprüfung auf dem Server folgt mit K1 in Phase 2)* `firestore.rules` ist in `firebase.json` nicht eingebunden.
   *Mit dem Firebase-Ausstieg:* entfällt als Firestore-Thema; ersetzt durch Rechteprüfung in jeder Server Action / Route (siehe K1) plus Tests dafür.
 
 ## DSGVO (siehe Spezifikation, Abschnitt 7)

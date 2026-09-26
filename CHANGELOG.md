@@ -1,5 +1,14 @@
 # Changelog
 
+## 27.09.2026 – Phase 1: Fundament
+
+- Firebase, Genkit, Data Connect und Cloud Functions entfernt; alte Seiten als Portierungsvorlage in `legacy/`.
+- Next.js 16, React 19, Tailwind CSS 4, Zod 4, ESLint 9; Build-Fehler werden nicht mehr ignoriert.
+- Mehrsprachigkeit Deutsch (Standard) und Englisch mit next-intl, Routen `/de/…` und `/en/…`.
+- SQLite-Datenschicht (better-sqlite3 + Drizzle): vollständiges Schema (24 Tabellen), automatische Migrationen mit Sicherung vorher, Standardrollen.
+- Tests mit Vitest (Migrationen, Schema-Regeln, Geldbeträge, Sprach-Fallback), Smoke-Test des Produktions-Builds, `/api/health`.
+- Skripte: `seed:demo` (Demodaten inkl. Dummy-Mitgliedern), `db:backup`, `db:generate`, `db:studio`.
+
 ## 26.09.2026 – Start der Migration auf Next.js + SQLite
 
 - Stand vor der Migration als Tag `firebase-final` gesichert; Arbeit auf Branch `migration/sqlite`.

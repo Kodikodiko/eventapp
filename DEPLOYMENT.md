@@ -18,7 +18,7 @@ Kurzfassung:
 | Git | Versionsverwaltung | |
 | Visual Studio Build Tools (C++-Workload) | nur falls `better-sqlite3` kein vorkompiliertes Paket findet | normalerweise nicht nötig |
 | Stripe CLI | Webhooks an `localhost` weiterleiten | ab Phase 5 |
-| optional: DB Browser for SQLite | Datenbank ansehen | alternativ `npx drizzle-kit studio` |
+| optional: DB Browser for SQLite | Datenbank ansehen | alternativ `npm run db:studio` |
 
 ### A.2 Einrichtung
 
@@ -85,6 +85,9 @@ Echte Personendaten gehören nie ins Repository. Für Tests und Vorführungen nu
 | `dev` | Entwicklungsserver |
 | `build` / `start` | Produktions-Build bzw. -Start (lokal zum Testen möglich) |
 | `typecheck`, `lint`, `test` | Qualitätsprüfungen – müssen vor jedem Commit grün sein |
+| `smoke` | startet den Produktions-Build mit einer Wegwerf-Datenbank und prüft Seiten und `/api/health` (vorher `build`) |
+| `db:generate` | nach Änderungen an `src/server/db/schema.ts`: neue SQL-Migration in `drizzle/` erzeugen |
+| `db:studio` | Datenbank im Browser ansehen/bearbeiten (Drizzle Studio) |
 | `admin:create` | Admin-Benutzer anlegen |
 | `seed:demo` | Demodaten in eine **leere** Datenbank schreiben; verweigert bei vorhandenen Daten |
 | `db:backup` | konsistente Sicherung der laufenden Datenbank nach `BACKUP_DIR` |
