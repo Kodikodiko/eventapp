@@ -1,5 +1,13 @@
 # Changelog
 
+## 27.09.2026 – Phase 4e: Protokoll (D8)
+
+- Neue Seite „Protokoll“ im Admin-Bereich: alle Audit-Einträge, neueste zuerst, 50 pro Seite.
+- Filter nach Event, Bereich, Admin (inkl. System) und Zeitraum in Wiener Kalendertagen; Suche in Beschreibung, Aktion und Datensatz-ID (% und _ werden wörtlich gesucht). Filter stehen in der URL und lassen sich teilen oder als Lesezeichen speichern.
+- Aktionen und Bereiche übersetzt (DE/EN), gelöschte Admins bleiben als solche erkennbar.
+- Fehlermeldungen nach Aktionen heißen jetzt allgemein „Aktion fehlgeschlagen“ (auch beim Löschen passend).
+- TODO D8 erledigt; 6 neue Tests (97 gesamt), Smoke-Test erweitert, im Browser (DE/EN) geprüft.
+
 ## 27.09.2026 – Phase 4d: Sponsoren
 
 - Sponsorpakete pro Event: zweisprachiger Name, Leistungen (eine pro Zeile), Bruttopreis, USt-Satz, Reihenfolge; Löschen nur, solange kein Sponsor das Paket gebucht hat.

@@ -26,7 +26,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 - [ ] **D5 – Löschung vs. Aufbewahrungspflicht.** Anonymisierung überschreibt derzeit auch Rechnungsdaten. Rechnungs-/Zahlungsdaten 7 Jahre aufbewahren (§ 132 BAO), stattdessen Verarbeitung einschränken (7.4, 7.5).
 - [ ] **D6 – Automatisches Löschkonzept** mit den Fristen aus 7.5 umsetzen (geplanter Job mit Protokoll); Backup-Rotation festlegen.
 - [ ] **D7 – Anfragen von Betroffenen protokollieren** (Art, Eingang, Erledigung, Admin; Frist 1 Monat) (7.4).
-- [ ] **D8 – Audit-Log** für Änderungen und für jeden Export personenbezogener Daten (6.2, 7.6).
+- [x] **D8 – Audit-Log** für Änderungen und für jeden Export personenbezogener Daten (6.2, 7.6).
 - [ ] **D9 – Hosting in der EU**, Auftragsverarbeitungsverträge (Hosting, E-Mail, ggf. Zahlungsanbieter), Verzeichnis von Verarbeitungstätigkeiten, Ablauf für Datenpannen (72 h) dokumentieren (7.7).
 
 ## Rechtliches außerhalb der DSGVO
