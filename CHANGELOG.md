@@ -1,5 +1,15 @@
 # Changelog
 
+## 27.09.2026 – Phase 3: Events & Einstellungen
+
+- Mehrere Events: Liste (mit Belegung, Warteliste, Anmeldestatus), Anlegen, Bearbeiten, Kopieren als Vorlage (Einstellungen, Stornobedingungen, AGB, Sponsorpakete), Archivieren (schreibgeschützt) und Wiederherstellen; Event-Umschalter in der Kopfzeile.
+- Event-Einstellungen: zweisprachiger Name und Beschreibung, Kurzname für Links, Termine in Wiener Ortszeit, Anmeldezeitraum, Kapazität, Normal- und Mitgliederpreis, USt-Satz, Zahlungsarten (Stripe/Rechnung), Stornostaffel und Erstattungsmodus (automatisch/mit Freigabe).
+- Versionierte AGB pro Event und globale Datenschutzerklärung (neue Version statt Überschreiben).
+- Veranstalterdaten für Rechnungen und USt-Modus (Kleinunternehmer mit Hinweistext; regulär vorbereitet).
+- Service-Schicht mit Audit-Eintrag in derselben Transaktion; Server Actions mit Rechteprüfung, Validierung (Zod, Browser und Server) und einheitlichen Fehlercodes.
+- Übersicht zeigt kommende Events mit Belegung aus der Datenbank.
+- Tests: 28 neue (Zeitumrechnung inkl. Sommerzeit, Formularprüfung, Events, Rechtstexte, Veranstalter) – insgesamt 49; im Browser auf Deutsch und Englisch durchgespielt.
+
 ## 27.09.2026 – Phase 2: Anmeldung & Rechte
 
 - Better Auth 1.7 mit SQLite: Admin-Login per E-Mail und Passwort (mind. 12 Zeichen), keine Selbstregistrierung.

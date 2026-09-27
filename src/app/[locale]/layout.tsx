@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
+import { Toaster } from '@/components/ui/toaster';
 import { initLocale, type LocaleParams } from '@/i18n/page';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
@@ -26,7 +27,10 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} className={inter.variable}>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

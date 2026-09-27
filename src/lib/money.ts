@@ -59,3 +59,11 @@ export function percentOf(cents: number, percent: number): number {
   if (percent < 0 || percent > 100) throw new Error(`Ungültiger Prozentsatz: ${percent}`);
   return Math.floor((cents * percent) / 100);
 }
+
+/** Cent → Eingabewert für ein Formularfeld, z. B. 14950 → "149,50" (Komma, wird von parseEuroToCents gelesen). */
+export function centsToInput(cents: number): string {
+  assertCents(cents);
+  const sign = cents < 0 ? '-' : '';
+  const abs = Math.abs(cents);
+  return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, '0')}`;
+}

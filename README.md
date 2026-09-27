@@ -37,9 +37,9 @@ npm run build; npm run smoke                       # Produktions-Build prüfen
 |---|---|
 | `src/app/[locale]/` | Seiten (öffentlich, Portal, Admin) je Sprache |
 | `src/app/api/` | Route Handler (Health-Check; später Auth, Stripe-Webhook, Exporte) |
-| `src/server/` | nur serverseitig: Datenbank (`db/`), Anmeldung und Rechte (`auth/`), später Services und Server Actions |
+| `src/server/` | nur serverseitig: Datenbank (`db/`), Anmeldung und Rechte (`auth/`), Geschäftslogik (`services/`), Server Actions (`actions/`) |
 | `src/components/` | UI-Komponenten (ShadCN) und fachliche Komponenten |
-| `src/lib/` | Hilfen: Geldbeträge (`money.ts`), mehrsprachige Inhalte (`localized.ts`) |
+| `src/lib/` | Hilfen: Geldbeträge (`money.ts`), Datum/Zeitzone (`dates.ts`), mehrsprachige Inhalte (`localized.ts`), Formularschemas (`validation/`) |
 | `src/i18n/` | Sprachkonfiguration; Übersetzungen in `messages/de.json` und `messages/en.json` |
 | `drizzle/` | SQL-Migrationen (von `npm run db:generate` erzeugt) |
 | `scripts/` | Kommandozeilen-Skripte (Demodaten, Sicherung, Smoke-Test) |
@@ -54,6 +54,8 @@ npm run build; npm run smoke                       # Produktions-Build prüfen
 - **Schema-Änderungen:** `src/server/db/schema.ts` anpassen → `npm run db:generate` → neue Datei in `drizzle/`
   committen. Bestehende Migrationen nie ändern. Eingespielt wird automatisch beim Start, mit Sicherung vorher.
 - **Datenbankzugriff** nur auf dem Server (`src/server/`); der Browser spricht nie direkt mit der Datenbank.
+- **Server Actions** sind dünn: Eingaben mit dem Zod-Schema prüfen → `runAdminAction` (Rechte) → Service aufrufen.
+  Jede Änderung schreibt im Service einen Audit-Eintrag (`writeAudit`) in derselben Transaktion.
 - **Mehrsprachige Inhalte** als `{ de, en? }` speichern und mit `localized()` ausgeben; Texte der Oberfläche in
   `messages/*.json`.
 - **Keine echten Personendaten** ins Repository; für Tests und Vorführungen `npm run seed:demo`.

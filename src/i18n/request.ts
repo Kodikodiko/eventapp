@@ -1,8 +1,7 @@
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
+import { TIME_ZONE } from '@/lib/dates';
 import { routing } from './routing';
-
-export const TIME_ZONE = 'Europe/Vienna';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
