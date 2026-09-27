@@ -16,6 +16,7 @@ const checks = [
   { path: '/de/admin/events', status: 307, location: '/de/admin/login' },
   { path: '/de/admin/events/1/settings', status: 307, location: '/de/admin/login' },
   { path: '/en/admin/settings', status: 307, location: '/en/admin/login' },
+  { path: '/de/admin/members', status: 307, location: '/de/admin/login' },
   { path: '/de/admin/login', status: 200, contains: 'Anmelden' },
   { path: '/en/admin/login', status: 200, contains: 'Sign in' },
   { path: '/api/auth/get-session', status: 200, contains: 'null' },

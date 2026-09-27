@@ -46,7 +46,8 @@
     "events": "Events",
     "settings": "Einstellungen",
     "eventSwitcher": "Event wählen",
-    "chooseEvent": "Event wählen …"
+    "chooseEvent": "Event wählen …",
+    "members": "Mitglieder"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -379,5 +380,52 @@
     "save": "Speichern",
     "created": "Anmeldung hinzugefügt",
     "saved": "Anmeldung gespeichert"
+  },
+  "members": {
+    "title": "Mitgliederliste",
+    "importTitle": "Liste hochladen",
+    "current": "{count, plural, =0 {Noch keine Mitglieder} one {# Mitglied} other {# Mitglieder}} gespeichert",
+    "lastImport": "letzter Upload {date} ({file})",
+    "fileLabel": "Datei (CSV oder Excel .xlsx)",
+    "fileHint": "Pflichtspalten: Mitgliedsnummer und Nachname; optional Vorname, E-Mail, gültig bis. Die erste Zeile enthält die Überschriften (deutsch oder englisch). Der Upload ersetzt die gesamte Liste.",
+    "checking": "Datei wird geprüft …",
+    "previewTitle": "Vorschau: {file}",
+    "valid": "Gültige Zeilen",
+    "added": "Neu",
+    "updated": "Geändert",
+    "removed": "Entfällt",
+    "unchanged": "Unverändert",
+    "hasErrors": "{count, plural, one {# Fehler} other {# Fehler}} gefunden – bitte die Datei korrigieren und erneut hochladen. Es wurde nichts übernommen.",
+    "moreErrors": "… und {count} weitere",
+    "errorLine": "Zeile {line}: {text}",
+    "removeWarning": "{count, plural, one {# bisheriges Mitglied ist} other {# bisherige Mitglieder sind}} in der neuen Datei nicht mehr enthalten und {count, plural, one {wird} other {werden}} entfernt.",
+    "apply": "{count, plural, one {# Mitglied} other {# Mitglieder}} übernehmen (Liste ersetzen)",
+    "imported": "Mitgliederliste mit {count} Einträgen übernommen",
+    "listTitle": "Aktuelle Liste",
+    "listHint": "Bei der Anmeldung gilt der Mitgliederpreis nur, wenn Mitgliedsnummer und Nachname zu einem Eintrag passen und die Mitgliedschaft gültig ist.",
+    "search": "Mitglieder durchsuchen",
+    "searchPlaceholder": "Nummer, Name, E-Mail …",
+    "empty": "Noch keine Mitgliederliste hochgeladen.",
+    "noMatches": "Keine Treffer.",
+    "shown": "{shown} von {total} Treffern angezeigt",
+    "columns": {
+      "memberNumber": "Mitgliedsnummer",
+      "lastName": "Nachname",
+      "firstName": "Vorname",
+      "email": "E-Mail",
+      "validUntil": "Gültig bis"
+    },
+    "errors": {
+      "fileType": "Nur CSV- oder Excel-Dateien (.xlsx) werden unterstützt.",
+      "fileTooLarge": "Die Datei ist größer als 2 MB.",
+      "tooManyRows": "Die Datei hat mehr als 20.000 Zeilen.",
+      "empty": "Die Datei enthält keine Mitglieder.",
+      "missingColumns": "Spalten „Mitgliedsnummer“ und „Nachname“ nicht gefunden – bitte Überschriften prüfen.",
+      "required": "„{column}“ fehlt.",
+      "duplicate": "Mitgliedsnummer {value} kommt mehrfach vor.",
+      "invalidDate": "Ungültiges Datum „{value}“ bei „{column}“.",
+      "invalidEmail": "Ungültige E-Mail-Adresse „{value}“.",
+      "tooLong": "Ein Wert ist zu lang."
+    }
   }
 }

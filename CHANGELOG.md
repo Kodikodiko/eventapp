@@ -1,5 +1,13 @@
 # Changelog
 
+## 27.09.2026 – Phase 4b: Mitgliederliste
+
+- Upload als CSV (Semikolon oder Komma, UTF-8 oder Windows-1252) oder Excel (.xlsx); Spalten werden an deutschen oder englischen Überschriften erkannt (Pflicht: Mitgliedsnummer, Nachname; optional Vorname, E-Mail, gültig bis).
+- Zwei Schritte: Vorschau mit Fehlern je Zeile (fehlende Werte, doppelte Nummern, ungültige Daten/E-Mails) und Änderungen (neu/geändert/entfällt/unverändert) → Übernehmen ersetzt die Liste vollständig; Importprotokoll und Audit-Eintrag.
+- Anmeldungen mit Mitgliedspreis werden nach dem Ersetzen über die eingegebene Nummer neu verknüpft.
+- Prüffunktion für die öffentliche Anmeldung: Mitgliedsnummer und Nachname müssen passen, „gültig bis“ wird beachtet.
+- Mitgliederseite mit Suche; 10 neue Tests (74 gesamt).
+
 ## 27.09.2026 – Phase 4a: Teilnehmerverwaltung
 
 - Teilnehmerliste pro Event: Suche, Filter nach Rollen (alle müssen zutreffen) und Status (einer muss zutreffen), Badge-Klick filtert, mit Strg/Cmd Mehrfachauswahl, Sortierung nach Name und Anmeldedatum, Zähler „x von y“ (Spezifikation 2.3).

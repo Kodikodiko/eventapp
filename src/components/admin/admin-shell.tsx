@@ -38,6 +38,9 @@ export async function AdminShell({ locale, user, fullAccess, children }: Props) 
                 <Link href="/admin/events" className="hover:underline">
                   {t('events')}
                 </Link>
+                <Link href="/admin/members" className="hover:underline">
+                  {t('members')}
+                </Link>
                 <Link href="/admin/settings" className="hover:underline">
                   {t('settings')}
                 </Link>

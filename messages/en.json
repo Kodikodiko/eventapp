@@ -46,7 +46,8 @@
     "events": "Events",
     "settings": "Settings",
     "eventSwitcher": "Choose event",
-    "chooseEvent": "Choose event …"
+    "chooseEvent": "Choose event …",
+    "members": "Members"
   },
   "security": {
     "title": "Two-factor authentication",
@@ -379,5 +380,52 @@
     "save": "Save",
     "created": "Registration added",
     "saved": "Registration saved"
+  },
+  "members": {
+    "title": "Member list",
+    "importTitle": "Upload list",
+    "current": "{count, plural, =0 {No members} one {# member} other {# members}} stored",
+    "lastImport": "last upload {date} ({file})",
+    "fileLabel": "File (CSV or Excel .xlsx)",
+    "fileHint": "Required columns: member number and last name; optional first name, email, valid until. The first row contains the headers (German or English). The upload replaces the entire list.",
+    "checking": "Checking file …",
+    "previewTitle": "Preview: {file}",
+    "valid": "Valid rows",
+    "added": "New",
+    "updated": "Changed",
+    "removed": "Removed",
+    "unchanged": "Unchanged",
+    "hasErrors": "{count, plural, one {# error} other {# errors}} found – please fix the file and upload it again. Nothing was imported.",
+    "moreErrors": "… and {count} more",
+    "errorLine": "Line {line}: {text}",
+    "removeWarning": "{count, plural, one {# existing member is} other {# existing members are}} no longer in the new file and will be removed.",
+    "apply": "Import {count, plural, one {# member} other {# members}} (replace list)",
+    "imported": "Member list with {count} entries imported",
+    "listTitle": "Current list",
+    "listHint": "At registration, the member price only applies if member number and last name match an entry and the membership is valid.",
+    "search": "Search members",
+    "searchPlaceholder": "Number, name, email …",
+    "empty": "No member list uploaded yet.",
+    "noMatches": "No matches.",
+    "shown": "Showing {shown} of {total} matches",
+    "columns": {
+      "memberNumber": "Member number",
+      "lastName": "Last name",
+      "firstName": "First name",
+      "email": "Email",
+      "validUntil": "Valid until"
+    },
+    "errors": {
+      "fileType": "Only CSV or Excel files (.xlsx) are supported.",
+      "fileTooLarge": "The file is larger than 2 MB.",
+      "tooManyRows": "The file has more than 20,000 rows.",
+      "empty": "The file contains no members.",
+      "missingColumns": "Columns “member number” and “last name” not found – please check the headers.",
+      "required": "“{column}” is missing.",
+      "duplicate": "Member number {value} appears more than once.",
+      "invalidDate": "Invalid date “{value}” in “{column}”.",
+      "invalidEmail": "Invalid email address “{value}”.",
+      "tooLong": "A value is too long."
+    }
   }
 }

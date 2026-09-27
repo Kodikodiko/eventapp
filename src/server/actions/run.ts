@@ -10,10 +10,10 @@ import { assertAdmin, ForbiddenError } from '@/server/auth/session';
 import { getDb, type Db } from '@/server/db';
 import type { Actor } from '@/server/services/audit';
 
-export async function runAdminAction<T>(fn: (ctx: { actor: Actor; db: Db }) => T): Promise<ActionResult<T>> {
+export async function runAdminAction<T>(fn: (ctx: { actor: Actor; db: Db }) => T | Promise<T>): Promise<ActionResult<T>> {
   try {
     const session = await assertAdmin();
-    const result = fn({ actor: { userId: session.user.id }, db: getDb() });
+    const result = await fn({ actor: { userId: session.user.id }, db: getDb() });
     // Admin-Seiten werden dynamisch gerendert; Router-Cache verwerfen, damit Listen aktuell sind
     revalidatePath('/', 'layout');
     return ok(result);
