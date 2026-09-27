@@ -56,6 +56,7 @@ export const sponsorFormSchema = z.object({
   dueOn: z.string().refine((v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v), 'date'),
   paymentStatus: z.enum(SPONSOR_PAYMENT_STATUS_KEYS, 'required'),
   billingAddress: optionalText(500),
+  vatId: optionalText(30),
   notes: optionalText(2000),
   contacts: z
     .array(contactSchema)
@@ -88,6 +89,7 @@ export type SponsorInput = {
   dueOn: string | null;
   paymentStatus: (typeof SPONSOR_PAYMENT_STATUS_KEYS)[number];
   billingAddress: string;
+  vatId: string | null;
   notes: string | null;
   contacts: SponsorContactInput[];
 };
@@ -100,6 +102,7 @@ export function toSponsorInput(v: SponsorFormValues): SponsorInput {
     dueOn: v.dueOn || null,
     paymentStatus: v.paymentStatus,
     billingAddress: v.billingAddress.trim(),
+    vatId: v.vatId.trim() || null,
     notes: v.notes.trim() || null,
     contacts: v.contacts.map((c) => ({
       firstName: c.firstName.trim(),

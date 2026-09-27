@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MoreHorizontal, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { FileText, MoreHorizontal, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
@@ -34,9 +34,11 @@ import {
   updatePackageAction,
   updateSponsorAction,
 } from '@/server/actions/sponsors';
+import { issueSponsorInvoiceAction } from '@/server/actions/invoices';
 import type { PackageRow, SponsorRow, SponsorTotals } from '@/server/services/sponsors';
 import { ConfirmDialog } from '../confirm-dialog';
 import { Field, fieldError, LocalizedFields, useValidationMessage } from '../form-fields';
+import { useIssueFeedback } from '../invoices/use-issue-feedback';
 import { useActionFeedback } from '../use-action-feedback';
 
 const selectClass =
@@ -56,6 +58,7 @@ type DialogState =
   | { kind: 'deletePackage'; row: PackageRow }
   | { kind: 'sponsor'; row?: SponsorRow }
   | { kind: 'deleteSponsor'; row: SponsorRow }
+  | { kind: 'invoice'; row: SponsorRow }
   | null;
 
 export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: Props) {
@@ -63,9 +66,16 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
   const locale = useLocale() as Locale;
   const router = useRouter();
   const handle = useActionFeedback();
+  const reportIssue = useIssueFeedback();
   const [, startTransition] = useTransition();
   const [dialog, setDialog] = useState<DialogState>(null);
   const fmt = (cents: number) => formatEuro(cents, locale);
+
+  function issueInvoice(sponsorId: number) {
+    startTransition(async () => {
+      if (reportIssue(await issueSponsorInvoiceAction(sponsorId))) router.refresh();
+    });
+  }
 
   function run(action: () => Promise<ActionResult<void>>, success: string) {
     startTransition(async () => {
@@ -166,6 +176,7 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                   <td className="p-2 whitespace-nowrap">{s.dueOn ? formatDateOnly(s.dueOn, locale) : '–'}</td>
                   <td className="p-2">
                     <Badge variant={paymentVariant[s.paymentStatus]}>{t(`payment.${s.paymentStatus}`)}</Badge>
+                    {s.invoiceNumber && <div className="mt-1 text-xs text-muted-foreground">{t('invoiceNumber', { number: s.invoiceNumber })}</div>}
                   </td>
                   <td className="p-2">
                     {s.contacts.map((c) => (
@@ -189,6 +200,12 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                             <Pencil aria-hidden className="size-4" />
                             {t('edit')}
                           </DropdownMenuItem>
+                          {!s.invoiceNumber && s.paymentStatus !== 'paid' && s.amountCents > 0 && (
+                            <DropdownMenuItem onSelect={() => setDialog({ kind: 'invoice', row: s })}>
+                              <FileText aria-hidden className="size-4" />
+                              {t('issueInvoice')}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onSelect={() => setDialog({ kind: 'deleteSponsor', row: s })} className="text-destructive">
                             <Trash2 aria-hidden className="size-4" />
                             {t('delete')}
@@ -255,6 +272,7 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                   dueOn: dialog.row.dueOn ?? '',
                   paymentStatus: dialog.row.paymentStatus,
                   billingAddress: dialog.row.billingAddress,
+                  vatId: dialog.row.vatId ?? '',
                   notes: dialog.row.notes ?? '',
                   contacts: dialog.row.contacts.map((c) => ({
                     firstName: c.firstName,
@@ -272,12 +290,23 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                   dueOn: '',
                   paymentStatus: 'open',
                   billingAddress: '',
+                  vatId: '',
                   notes: '',
                   contacts: [{ firstName: '', lastName: '', email: '', phone: '', function: '', locale: 'de' }],
                 }
           }
           save={(v) => (dialog.row ? updateSponsorAction(dialog.row.id, v) : createSponsorAction(eventId, v))}
           onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'invoice' && (
+        <ConfirmDialog
+          open
+          onOpenChange={(o) => !o && setDialog(null)}
+          title={t('issueInvoiceTitle', { name: dialog.row.companyName, amount: fmt(dialog.row.amountCents) })}
+          description={t('issueInvoiceHint')}
+          confirmLabel={t('issueInvoiceConfirm')}
+          onConfirm={() => issueInvoice(dialog.row.id)}
         />
       )}
       {dialog?.kind === 'deleteSponsor' && (
@@ -439,6 +468,9 @@ function SponsorDialog({
                 </Field>
                 <Field id="sp-billing" label={t('billingAddress')} error={fieldError(errors, 'billingAddress')}>
                   <Textarea id="sp-billing" rows={3} {...reg('billingAddress')} />
+                </Field>
+                <Field id="sp-vat" label={t('vatId')} hint={t('vatIdHint')} error={fieldError(errors, 'vatId')}>
+                  <Input id="sp-vat" {...reg('vatId')} />
                 </Field>
               </div>
               <Field id="sp-notes" label={t('notes')} error={fieldError(errors, 'notes')}>

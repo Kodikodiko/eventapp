@@ -18,6 +18,7 @@ import { getPaymentProvider } from '@/server/payments/provider';
 import { clientIp, RATE_LIMITS, takeToken } from '@/server/rate-limit';
 import { beginCheckout } from '@/server/services/checkout';
 import { getEvent } from '@/server/services/events';
+import { notifyRegistrationSafely } from '@/server/services/notifications';
 import { quotePrice, registerPublic, type MemberCheck, type PublicRegistrationResult } from '@/server/services/public-registration';
 
 async function limited(kind: keyof typeof RATE_LIMITS): Promise<boolean> {
@@ -68,6 +69,9 @@ export async function registerPublicAction(meta: unknown, values: unknown): Prom
       const provider = await getPaymentProvider();
       if (!provider) throw new Error('Online-Zahlung nicht eingerichtet');
       checkoutUrl = (await beginCheckout(db, provider, registrationId, { locale: m.data.locale })).url;
+    } else {
+      // Bestätigung bzw. Wartelisten-Bestätigung, bei Kauf auf Rechnung mit Rechnung im Anhang
+      await notifyRegistrationSafely(db, registrationId);
     }
     return ok({ ...result, checkoutUrl });
   } catch (error) {

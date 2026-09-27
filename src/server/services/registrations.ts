@@ -18,6 +18,7 @@ import type { Db } from '@/server/db/core';
 import { events, people, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { getEventStats } from './events';
+import { activeInvoiceNumbersByRegistration, activeInvoiceOf } from './invoices';
 import { updatePerson, upsertPerson } from './people';
 
 export type RegistrationListRow = {
@@ -42,6 +43,8 @@ export type RegistrationListRow = {
   confirmedAt: string | null;
   cancelledAt: string | null;
   cancelReason: string | null;
+  /** Nummer der gültigen (nicht stornierten) Rechnung */
+  invoiceNumber: string | null;
 };
 
 export function listRegistrations(db: Db, eventId: number): RegistrationListRow[] {
@@ -58,6 +61,7 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     .innerJoin(registrations, eq(registrations.id, registrationRoles.registrationId))
     .where(eq(registrations.eventId, eventId))
     .all();
+  const invoiceNumbers = activeInvoiceNumbersByRegistration(db, eventId);
   const rolesByReg = new Map<number, string[]>();
   for (const rr of roleRows) rolesByReg.set(rr.registrationId, [...(rolesByReg.get(rr.registrationId) ?? []), rr.key]);
 
@@ -83,6 +87,7 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     confirmedAt: r.confirmedAt,
     cancelledAt: r.cancelledAt,
     cancelReason: r.cancelReason,
+    invoiceNumber: invoiceNumbers.get(r.id) ?? null,
   }));
 }
 
@@ -186,6 +191,7 @@ export function updateRegistrationByAdmin(db: Db, actor: Actor, id: number, inpu
     const paymentLocked = reg.paymentStatus === 'paid' || reg.paymentStatus === 'partially_refunded' || reg.paymentStatus === 'refunded';
     if (input.priceCents !== reg.priceCents || input.ticketType !== reg.ticketType) {
       if (paymentLocked) throw new ServiceError('CONFLICT', { price: 'priceLocked' });
+      if (activeInvoiceOf(tx, { registrationId: id })) throw new ServiceError('CONFLICT', { price: 'priceInvoiced' });
       changed.push('Preis/Tickettyp');
     }
     tx.update(registrations)

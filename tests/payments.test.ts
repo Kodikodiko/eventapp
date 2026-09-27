@@ -250,7 +250,7 @@ describe('Warteliste', () => {
     cancelRegistrationByAdmin(db, actor, a.registrationId, 'x');
     const sent: MailMessage[] = [];
     const mailer = async (m: MailMessage) => void sent.push(m);
-    expect(await runJobs(db, mailer, NOW)).toEqual({ expiredReservations: 0, expiredOffers: 0, offered: 1, mailFailures: 0 });
+    expect(await runJobs(db, mailer, NOW)).toMatchObject({ expiredReservations: 0, expiredOffers: 0, offered: 1, mailFailures: 0 });
     expect(await runJobs(db, mailer, NOW)).toMatchObject({ offered: 0 });
     expect(sent).toHaveLength(1);
     expect(sent[0].to).toBe('b@example.org');

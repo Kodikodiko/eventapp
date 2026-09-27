@@ -116,7 +116,16 @@
     "checkoutClosed": "Diese Zahlung kann nicht mehr fortgesetzt werden.",
     "offerExpired": "Das Angebot ist abgelaufen.",
     "offerClosed": "Das Angebot ist nicht mehr gültig.",
-    "onlinePaymentUnavailable": "Die Online-Zahlung ist derzeit nicht verfügbar."
+    "onlinePaymentUnavailable": "Die Online-Zahlung ist derzeit nicht verfügbar.",
+    "invoiceNotPossible": "Für diesen Eintrag kann keine Rechnung erstellt werden (nicht bestätigt, kostenlos oder bereits bezahlt).",
+    "invoiceExists": "Es gibt bereits eine gültige Rechnung. Zum Korrigieren zuerst stornieren (Gutschrift).",
+    "organizerIncomplete": "Veranstalterdaten unvollständig (Name, Anschrift; bei regulärer USt die UID). Bitte unter Einstellungen ergänzen.",
+    "billingAddressMissing": "Bitte zuerst eine Rechnungsadresse eintragen.",
+    "invoiceAlreadyCredited": "Die Rechnung ist bereits (teilweise) gutgeschrieben.",
+    "invoiceHasPayments": "Zu dieser Rechnung gibt es bereits Zahlungen. Bezahlte Rechnungen werden über eine Erstattung korrigiert.",
+    "noRecipientEmail": "Keine E-Mail-Adresse für den Versand vorhanden (oder Verarbeitung eingeschränkt).",
+    "mailFailed": "Die E-Mail konnte nicht versendet werden. Bitte später erneut senden.",
+    "priceInvoiced": "Es gibt bereits eine Rechnung. Preis erst nach Stornierung der Rechnung änderbar."
   },
   "forms": {
     "german": "Deutsch",
@@ -202,7 +211,8 @@
     "attendees": "Teilnehmende",
     "speakers": "Speaker",
     "schedule": "Programm",
-    "sponsors": "Sponsoren"
+    "sponsors": "Sponsoren",
+    "invoices": "Rechnungen"
   },
   "registrationState": {
     "archived": "Archiviert",
@@ -329,7 +339,7 @@
     "confirmWaitlisted": "Von der Warteliste bestätigen",
     "cancelRegistration": "Stornieren",
     "cancelTitle": "Anmeldung von {name} stornieren?",
-    "cancelHint": "Die Anmeldung bleibt mit Status „Storniert“ erhalten und der Platz wird frei. Erstattungen folgen mit dem Zahlungsmodul.",
+    "cancelHint": "Die Anmeldung bleibt mit Status „Storniert“ erhalten und der Platz wird frei. Eine noch unbezahlte Rechnung wird per Gutschrift storniert. Erstattungen bezahlter Tickets folgen mit dem Erstattungsmodul.",
     "cancelReason": "Grund",
     "cancelConfirm": "Stornieren",
     "cancelled": "Anmeldung storniert",
@@ -377,7 +387,12 @@
       "ticketType": "Ticket",
       "price": "Preis (€)",
       "registered": "Angemeldet am"
-    }
+    },
+    "issueInvoice": "Rechnung erstellen und senden",
+    "issueInvoiceTitle": "Rechnung für {name} über {amount} erstellen?",
+    "issueInvoiceHint": "Die Rechnung erhält die nächste fortlaufende Nummer, kann danach nicht mehr geändert werden und wird als PDF per E-Mail an die Person gesendet. Korrekturen sind nur über eine Gutschrift möglich.",
+    "issueInvoiceConfirm": "Erstellen und senden",
+    "confirmMailHint": "Die Person erhält eine Bestätigung per E-Mail (bei Kauf auf Rechnung mit Rechnung im Anhang)."
   },
   "registrationForm": {
     "createTitle": "Anmeldung hinzufügen",
@@ -408,7 +423,9 @@
     "create": "Hinzufügen",
     "save": "Speichern",
     "created": "Anmeldung hinzugefügt",
-    "saved": "Anmeldung gespeichert"
+    "saved": "Anmeldung gespeichert",
+    "notifyConfirmed": "Bestätigung per E-Mail senden (bei Preis über 0 mit Rechnung im Anhang)",
+    "notifyWaitlisted": "Wartelisten-Bestätigung per E-Mail senden"
   },
   "members": {
     "title": "Mitgliederliste",
@@ -581,7 +598,7 @@
     "save": "Speichern",
     "noPackage": "– kein Paket –",
     "discount": "Rabatt (€)",
-    "paymentHint": "Wird manuell gepflegt, bis Rechnungen automatisch erstellt werden.",
+    "paymentHint": "Wird beim Rechnungsversand, beim Verbuchen von Zahlungen und bei Überfälligkeit automatisch gesetzt.",
     "billingAddress": "Rechnungsadresse",
     "notes": "Notizen",
     "contacts": "Ansprechpersonen",
@@ -591,7 +608,69 @@
     "email": "E-Mail",
     "phone": "Telefon",
     "removeContact": "Ansprechperson entfernen",
-    "addContact": "Ansprechperson hinzufügen"
+    "addContact": "Ansprechperson hinzufügen",
+    "invoiceNumber": "Rechnung {number}",
+    "issueInvoice": "Rechnung erstellen und senden",
+    "issueInvoiceTitle": "Rechnung an {name} über {amount} erstellen?",
+    "issueInvoiceHint": "Die Rechnung erhält die nächste fortlaufende Nummer und wird als PDF an die erste Ansprechperson gesendet. Fälligkeit: das eingetragene Datum, sonst das Zahlungsziel aus den Einstellungen. Korrekturen nur über Gutschrift.",
+    "issueInvoiceConfirm": "Erstellen und senden",
+    "vatId": "UID des Sponsors (optional)",
+    "vatIdHint": "Bei regulärer USt Pflicht auf Rechnungen über 10.000 € brutto."
+  },
+  "invoices": {
+    "title": "Rechnungen",
+    "organizerIncomplete": "Die Veranstalterdaten sind unvollständig – Rechnungen können erst ausgestellt werden, wenn Name und Anschrift (bei regulärer USt auch die UID) hinterlegt sind.",
+    "toSettings": "Zu den Einstellungen",
+    "mailToFileHint": "Entwicklungsmodus: E-Mails werden nicht versendet, sondern als .eml-Datei in data/mail-outbox abgelegt.",
+    "summary": "{count, plural, =0 {Noch keine Rechnungen} one {# Rechnung} other {# Rechnungen}} · {openCount} offen über {open} · davon überfällig {overdue}",
+    "colNumber": "Nummer",
+    "colDate": "Datum",
+    "colRecipient": "Empfänger",
+    "colAmount": "Betrag",
+    "colDue": "Fällig",
+    "colState": "Status",
+    "colSent": "Versendet",
+    "colActions": "Aktionen",
+    "creditFor": "Gutschrift zu {number}",
+    "kind": {
+      "registration": "Teilnahme",
+      "sponsor": "Sponsoring"
+    },
+    "openAmount": "offen {amount}",
+    "state": {
+      "open": "Offen",
+      "overdue": "Überfällig",
+      "paid": "Bezahlt",
+      "cancelled": "Storniert",
+      "credit_note": "Gutschrift"
+    },
+    "reminders": "{count, plural, one {# Erinnerung} other {# Erinnerungen}} gesendet",
+    "actionsFor": "Aktionen für {number}",
+    "view": "PDF anzeigen",
+    "download": "PDF herunterladen",
+    "send": "Per E-Mail senden",
+    "resend": "Erneut senden",
+    "recordPayment": "Zahlungseingang verbuchen",
+    "cancelInvoice": "Stornieren (Gutschrift)",
+    "empty": "Noch keine Rechnungen für dieses Event.",
+    "sent": "{number} wurde versendet",
+    "paymentTitle": "Zahlungseingang zu {number}",
+    "paymentHint": "Überweisung erfassen. Offen: {open}. Ist der Betrag vollständig bezahlt, wird die Zahlung als „Bezahlt“ markiert.",
+    "paymentAmount": "Betrag (€)",
+    "paymentDate": "Eingang am",
+    "paymentSave": "Verbuchen",
+    "paymentRecordedPaid": "Zahlung verbucht – Rechnung bezahlt",
+    "paymentRecordedPartial": "Teilzahlung verbucht – offen {open}",
+    "back": "Zurück",
+    "cancelTitle": "Rechnung {number} stornieren?",
+    "cancelHint": "Es wird eine Gutschrift über den vollen Betrag erstellt und per E-Mail gesendet. Die Rechnung selbst bleibt unverändert erhalten. Danach kann eine neue Rechnung erstellt werden.",
+    "cancelReason": "Grund",
+    "cancelReasonHint": "Erscheint auf der Gutschrift, z. B. „Falsche Rechnungsadresse“.",
+    "cancelConfirm": "Gutschrift erstellen",
+    "issuedAndSent": "Rechnung {number} erstellt und versendet",
+    "issuedNotSent": "Rechnung {number} erstellt, aber nicht versendet",
+    "creditIssuedAndSent": "Gutschrift {number} erstellt und versendet",
+    "creditIssuedNotSent": "Gutschrift {number} erstellt, aber nicht versendet"
   },
   "audit": {
     "title": "Protokoll",

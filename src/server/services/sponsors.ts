@@ -11,6 +11,7 @@ import type { PackageInput, SponsorInput } from '@/lib/validation/sponsors';
 import type { Db } from '@/server/db/core';
 import { events, invoices, payments, people, sponsorContacts, sponsorPackages, sponsors } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
+import { activeInvoiceNumbersBySponsor } from './invoices';
 import { upsertPerson } from './people';
 
 export type PackageRow = typeof sponsorPackages.$inferSelect & { sponsorCount: number };
@@ -30,6 +31,8 @@ export type SponsorRow = typeof sponsors.$inferSelect & {
   packagePriceCents: number;
   amountCents: number;
   contacts: SponsorContactRow[];
+  /** Nummer der gültigen (nicht stornierten) Rechnung */
+  invoiceNumber: string | null;
 };
 
 function loadWritableEvent(tx: Tx | Db, eventId: number) {
@@ -116,6 +119,7 @@ export function listSponsors(db: Db, eventId: number): SponsorRow[] {
       { personId: p.id, firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone, function: c.function, locale: p.locale },
     ]);
   }
+  const invoiceNumbers = activeInvoiceNumbersBySponsor(db, eventId);
   return rows
     .map(({ s, p }) => {
       const price = p?.priceCents ?? 0;
@@ -125,6 +129,7 @@ export function listSponsors(db: Db, eventId: number): SponsorRow[] {
         packagePriceCents: price,
         amountCents: Math.max(0, price - s.discountCents),
         contacts: bySponsor.get(s.id) ?? [],
+        invoiceNumber: invoiceNumbers.get(s.id) ?? null,
       };
     })
     .sort((a, b) => a.companyName.localeCompare(b.companyName, 'de'));

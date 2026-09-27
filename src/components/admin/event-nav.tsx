@@ -15,6 +15,7 @@ export function EventNav({ eventId }: { eventId: number }) {
     { href: `${base}/speakers`, label: t('speakers') },
     { href: `${base}/schedule`, label: t('schedule') },
     { href: `${base}/sponsors`, label: t('sponsors') },
+    { href: `${base}/invoices`, label: t('invoices') },
     { href: `${base}/settings`, label: t('settings') },
     { href: `${base}/terms`, label: t('terms') },
   ];

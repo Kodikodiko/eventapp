@@ -4,8 +4,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  // natives Modul, nicht bündeln
-  serverExternalPackages: ['better-sqlite3'],
+  // natives Modul bzw. Paket mit Schriftdateien (pdfkit) – nicht bündeln
+  serverExternalPackages: ['better-sqlite3', 'pdfkit'],
   experimental: {
     // Upload der Mitgliederliste (max. 2 MB Datei, Vorschau-Daten zurück)
     serverActions: { bodySizeLimit: '4mb' },

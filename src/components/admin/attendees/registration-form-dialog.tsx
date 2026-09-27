@@ -27,7 +27,7 @@ type Props = {
   seatsFree: number;
 } & (
   | { mode: 'create'; eventId: number }
-  | { mode: 'edit'; registrationId: number; defaultValues: Omit<RegistrationCreateValues, 'status' | 'overbook'>; priceLocked: boolean }
+  | { mode: 'edit'; registrationId: number; defaultValues: Omit<RegistrationCreateValues, 'status' | 'overbook' | 'notify'>; priceLocked: boolean }
 );
 
 export function RegistrationFormDialog(props: Props) {
@@ -40,7 +40,7 @@ export function RegistrationFormDialog(props: Props) {
 
   const defaults: RegistrationCreateValues =
     mode === 'edit'
-      ? { ...props.defaultValues, status: 'confirmed', overbook: false }
+      ? { ...props.defaultValues, status: 'confirmed', overbook: false, notify: false }
       : {
           firstName: '',
           lastName: '',
@@ -54,6 +54,7 @@ export function RegistrationFormDialog(props: Props) {
           billingAddress: '',
           status: seatsFree > 0 ? 'confirmed' : 'waitlisted',
           overbook: false,
+          notify: true,
         };
 
   const form = useForm<RegistrationCreateValues>({
@@ -184,6 +185,10 @@ export function RegistrationFormDialog(props: Props) {
                       {t('overbook')}
                     </label>
                   )}
+                  <label className="flex items-start gap-2 text-sm">
+                    <input type="checkbox" className="mt-0.5 size-4" {...register('notify')} />
+                    <span>{status === 'waitlisted' ? t('notifyWaitlisted') : t('notifyConfirmed')}</span>
+                  </label>
                 </div>
               )}
             </fieldset>

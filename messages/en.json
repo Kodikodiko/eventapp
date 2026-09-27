@@ -116,7 +116,16 @@
     "checkoutClosed": "This payment can no longer be continued.",
     "offerExpired": "The offer has expired.",
     "offerClosed": "The offer is no longer valid.",
-    "onlinePaymentUnavailable": "Online payment is currently unavailable."
+    "onlinePaymentUnavailable": "Online payment is currently unavailable.",
+    "invoiceNotPossible": "No invoice can be created for this entry (not confirmed, free of charge or already paid).",
+    "invoiceExists": "A valid invoice already exists. To correct it, cancel it first (credit note).",
+    "organizerIncomplete": "Organizer details incomplete (name, address; VAT ID when charging VAT). Please complete them in the settings.",
+    "billingAddressMissing": "Please enter a billing address first.",
+    "invoiceAlreadyCredited": "The invoice has already been (partially) credited.",
+    "invoiceHasPayments": "Payments have already been recorded for this invoice. Paid invoices are corrected via a refund.",
+    "noRecipientEmail": "No e-mail address available for sending (or processing is restricted).",
+    "mailFailed": "The e-mail could not be sent. Please try again later.",
+    "priceInvoiced": "An invoice already exists. The price can only be changed after cancelling the invoice."
   },
   "forms": {
     "german": "German",
@@ -202,7 +211,8 @@
     "attendees": "Attendees",
     "speakers": "Speakers",
     "schedule": "Schedule",
-    "sponsors": "Sponsors"
+    "sponsors": "Sponsors",
+    "invoices": "Invoices"
   },
   "registrationState": {
     "archived": "Archived",
@@ -329,7 +339,7 @@
     "confirmWaitlisted": "Confirm from waitlist",
     "cancelRegistration": "Cancel",
     "cancelTitle": "Cancel the registration of {name}?",
-    "cancelHint": "The registration is kept with status “Cancelled” and the seat becomes free. Refunds follow with the payment module.",
+    "cancelHint": "The registration is kept with status “Cancelled” and the seat becomes free. An unpaid invoice is cancelled with a credit note. Refunds for paid tickets follow with the refund module.",
     "cancelReason": "Reason",
     "cancelConfirm": "Cancel registration",
     "cancelled": "Registration cancelled",
@@ -377,7 +387,12 @@
       "ticketType": "Ticket",
       "price": "Price (€)",
       "registered": "Registered on"
-    }
+    },
+    "issueInvoice": "Create and send invoice",
+    "issueInvoiceTitle": "Create an invoice for {name} over {amount}?",
+    "issueInvoiceHint": "The invoice gets the next consecutive number, cannot be changed afterwards and is sent to the person as a PDF by e-mail. Corrections are only possible via a credit note.",
+    "issueInvoiceConfirm": "Create and send",
+    "confirmMailHint": "The person receives a confirmation by e-mail (for invoice payment with the invoice attached)."
   },
   "registrationForm": {
     "createTitle": "Add registration",
@@ -408,7 +423,9 @@
     "create": "Add",
     "save": "Save",
     "created": "Registration added",
-    "saved": "Registration saved"
+    "saved": "Registration saved",
+    "notifyConfirmed": "Send confirmation by e-mail (with the invoice attached if the price is above 0)",
+    "notifyWaitlisted": "Send waitlist confirmation by e-mail"
   },
   "members": {
     "title": "Member list",
@@ -581,7 +598,7 @@
     "save": "Save",
     "noPackage": "– no package –",
     "discount": "Discount (€)",
-    "paymentHint": "Maintained manually until invoices are created automatically.",
+    "paymentHint": "Set automatically when the invoice is sent, when payments are recorded and when it becomes overdue.",
     "billingAddress": "Billing address",
     "notes": "Notes",
     "contacts": "Contact persons",
@@ -591,7 +608,69 @@
     "email": "Email",
     "phone": "Phone",
     "removeContact": "Remove contact person",
-    "addContact": "Add contact person"
+    "addContact": "Add contact person",
+    "invoiceNumber": "Invoice {number}",
+    "issueInvoice": "Create and send invoice",
+    "issueInvoiceTitle": "Create an invoice to {name} over {amount}?",
+    "issueInvoiceHint": "The invoice gets the next consecutive number and is sent as a PDF to the first contact person. Due date: the date entered, otherwise the payment term from the settings. Corrections only via credit note.",
+    "issueInvoiceConfirm": "Create and send",
+    "vatId": "Sponsor VAT ID (optional)",
+    "vatIdHint": "Required on invoices above €10,000 gross when charging VAT."
+  },
+  "invoices": {
+    "title": "Invoices",
+    "organizerIncomplete": "The organizer details are incomplete – invoices can only be issued once name and address (and the VAT ID when charging VAT) are set.",
+    "toSettings": "Go to settings",
+    "mailToFileHint": "Development mode: e-mails are not sent but saved as .eml files in data/mail-outbox.",
+    "summary": "{count, plural, =0 {No invoices yet} one {# invoice} other {# invoices}} · {openCount} open totalling {open} · of which overdue {overdue}",
+    "colNumber": "Number",
+    "colDate": "Date",
+    "colRecipient": "Recipient",
+    "colAmount": "Amount",
+    "colDue": "Due",
+    "colState": "Status",
+    "colSent": "Sent",
+    "colActions": "Actions",
+    "creditFor": "Credit note for {number}",
+    "kind": {
+      "registration": "Attendance",
+      "sponsor": "Sponsoring"
+    },
+    "openAmount": "{amount} open",
+    "state": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "cancelled": "Cancelled",
+      "credit_note": "Credit note"
+    },
+    "reminders": "{count, plural, one {# reminder} other {# reminders}} sent",
+    "actionsFor": "Actions for {number}",
+    "view": "View PDF",
+    "download": "Download PDF",
+    "send": "Send by e-mail",
+    "resend": "Send again",
+    "recordPayment": "Record payment",
+    "cancelInvoice": "Cancel (credit note)",
+    "empty": "No invoices for this event yet.",
+    "sent": "{number} has been sent",
+    "paymentTitle": "Payment for {number}",
+    "paymentHint": "Record a bank transfer. Open: {open}. Once the amount is paid in full, the payment is marked as “Paid”.",
+    "paymentAmount": "Amount (€)",
+    "paymentDate": "Received on",
+    "paymentSave": "Record",
+    "paymentRecordedPaid": "Payment recorded – invoice paid",
+    "paymentRecordedPartial": "Partial payment recorded – {open} open",
+    "back": "Back",
+    "cancelTitle": "Cancel invoice {number}?",
+    "cancelHint": "A credit note for the full amount is created and sent by e-mail. The invoice itself remains unchanged. Afterwards a new invoice can be created.",
+    "cancelReason": "Reason",
+    "cancelReasonHint": "Shown on the credit note, e.g. “Wrong billing address”.",
+    "cancelConfirm": "Create credit note",
+    "issuedAndSent": "Invoice {number} created and sent",
+    "issuedNotSent": "Invoice {number} created but not sent",
+    "creditIssuedAndSent": "Credit note {number} created and sent",
+    "creditIssuedNotSent": "Credit note {number} created but not sent"
   },
   "audit": {
     "title": "Audit log",

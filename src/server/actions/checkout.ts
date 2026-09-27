@@ -12,6 +12,7 @@ import { getPaymentProvider } from '@/server/payments/provider';
 import { clientIp, RATE_LIMITS, takeToken } from '@/server/rate-limit';
 import { fillFreeSeats } from '@/server/services/automation';
 import { beginCheckout, markCheckoutClosed, markCheckoutPaid, resumeCheckout } from '@/server/services/checkout';
+import { notifyRegistrationSafely } from '@/server/services/notifications';
 import { acceptOffer } from '@/server/services/waitlist';
 
 const locale = z.enum(['de', 'en']);
@@ -49,7 +50,10 @@ export async function acceptOfferAction(t: unknown, lang: unknown): Promise<Acti
   const db = getDb();
   try {
     const result = acceptOffer(db, tk.data, { onlinePaymentEnabled: isOnlinePaymentEnabled() });
-    if (result.status !== 'reserved') return ok({ status: result.status, checkoutUrl: null });
+    if (result.status !== 'reserved') {
+      await notifyRegistrationSafely(db, result.registrationId);
+      return ok({ status: result.status, checkoutUrl: null });
+    }
     const provider = await getPaymentProvider();
     if (!provider) return fail('CONFLICT', { _form: 'onlinePaymentUnavailable' });
     const { url } = await beginCheckout(db, provider, result.registrationId, { locale: l.data });
@@ -68,7 +72,8 @@ export async function fakePaymentAction(sessionId: unknown, outcome: unknown): P
   const db = getDb();
   try {
     if (o.data === 'paid') {
-      markCheckoutPaid(db, { sessionId: s.data, paymentIntentId: `fake_pi_${s.data.slice(8, 20)}`, amountCents: null });
+      const r = markCheckoutPaid(db, { sessionId: s.data, paymentIntentId: `fake_pi_${s.data.slice(8, 20)}`, amountCents: null });
+      if ((r.outcome === 'confirmed' || r.outcome === 'late') && r.registrationId != null) await notifyRegistrationSafely(db, r.registrationId);
     } else {
       const r = markCheckoutClosed(db, s.data, o.data);
       if (r.released) await fillFreeSeats(db, [r.eventId]);

@@ -29,7 +29,7 @@ import {
 import type { RegistrationListRow } from '@/server/services/registrations';
 import { RegistrationFormDialog } from './registration-form-dialog';
 import { centsToInput } from '@/lib/money';
-import { CancelDialog, ConfirmWaitlistedDialog, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
+import { CancelDialog, ConfirmWaitlistedDialog, IssueInvoiceDialog, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
 
 export type RoleOption = { key: string; label: string };
 
@@ -203,7 +203,10 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
                 </td>
                 <td className="p-2">
                   <Badge variant={paymentVariant[r.paymentStatus]}>{t(`payment.${r.paymentStatus}`)}</Badge>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{t(`method.${r.paymentMethod}`)}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {t(`method.${r.paymentMethod}`)}
+                    {r.invoiceNumber && <> · {r.invoiceNumber}</>}
+                  </div>
                 </td>
                 <td className="p-2 text-right tabular-nums whitespace-nowrap">
                   {formatEuro(r.priceCents, locale as 'de' | 'en')}
@@ -252,7 +255,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             roles={roles}
             prices={prices}
             seatsFree={seatsFree}
-            priceLocked={['paid', 'partially_refunded', 'refunded'].includes(active.row.paymentStatus)}
+            priceLocked={['paid', 'partially_refunded', 'refunded'].includes(active.row.paymentStatus) || active.row.invoiceNumber !== null}
             defaultValues={{
               firstName: active.row.firstName,
               lastName: active.row.lastName,
@@ -271,6 +274,14 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             registrationId={active.row.id}
             name={`${active.row.firstName} ${active.row.lastName}`}
             open={active.dialog === 'cancel'}
+            onOpenChange={(o) => !o && setActive(null)}
+          />
+          <IssueInvoiceDialog
+            key={`invoice-${active.row.id}`}
+            registrationId={active.row.id}
+            name={`${active.row.firstName} ${active.row.lastName}`}
+            amount={formatEuro(active.row.priceCents, locale as 'de' | 'en')}
+            open={active.dialog === 'invoice'}
             onOpenChange={(o) => !o && setActive(null)}
           />
           <ConfirmWaitlistedDialog

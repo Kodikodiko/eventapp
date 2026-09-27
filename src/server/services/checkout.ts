@@ -124,7 +124,7 @@ export async function resumeCheckout(db: Db, provider: PaymentProvider, ref: str
   return url;
 }
 
-export type PaidOutcome = { outcome: 'confirmed' | 'late' | 'duplicate' | 'unknown'; eventId: number | null };
+export type PaidOutcome = { outcome: 'confirmed' | 'late' | 'duplicate' | 'unknown'; eventId: number | null; registrationId: number | null };
 
 /** Zahlung erfolgreich (Webhook „checkout.session.completed“ mit payment_status=paid bzw. „async_payment_succeeded“). */
 export function markCheckoutPaid(
@@ -135,9 +135,9 @@ export function markCheckoutPaid(
   return db.transaction(
     (tx) => {
       const payment = tx.select().from(payments).where(eq(payments.stripeCheckoutSessionId, data.sessionId)).get();
-      if (!payment || payment.registrationId == null) return { outcome: 'unknown' as const, eventId: null };
+      if (!payment || payment.registrationId == null) return { outcome: 'unknown' as const, eventId: null, registrationId: null };
       const reg = tx.select().from(registrations).where(eq(registrations.id, payment.registrationId)).get()!;
-      if (payment.status === 'succeeded') return { outcome: 'duplicate' as const, eventId: reg.eventId };
+      if (payment.status === 'succeeded') return { outcome: 'duplicate' as const, eventId: reg.eventId, registrationId: reg.id };
 
       const nowIso = now.toISOString();
       tx.update(payments)
@@ -165,7 +165,7 @@ export function markCheckoutPaid(
         eventId: reg.eventId,
         summary: `Online-Zahlung erhalten${note}`,
       });
-      return { outcome: late ? ('late' as const) : ('confirmed' as const), eventId: reg.eventId };
+      return { outcome: late ? ('late' as const) : ('confirmed' as const), eventId: reg.eventId, registrationId: reg.id };
     },
     { behavior: 'immediate' }
   );

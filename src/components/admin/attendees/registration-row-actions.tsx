@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ban, MoreHorizontal, Pencil, UserCheck } from 'lucide-react';
+import { Ban, FileText, MoreHorizontal, Pencil, UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -11,12 +11,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from '@/i18n/navigation';
 import { cancelSchema, type CancelValues } from '@/lib/validation/registrations';
+import { issueRegistrationInvoiceAction } from '@/server/actions/invoices';
 import { cancelRegistrationAction, confirmWaitlistedAction } from '@/server/actions/registrations';
 import type { RegistrationListRow } from '@/server/services/registrations';
+import { ConfirmDialog } from '../confirm-dialog';
 import { Field, fieldError } from '../form-fields';
+import { useIssueFeedback } from '../invoices/use-issue-feedback';
 import { useActionFeedback } from '../use-action-feedback';
 
-export type RowDialog = 'edit' | 'cancel' | 'confirm';
+export type RowDialog = 'edit' | 'cancel' | 'confirm' | 'invoice';
 
 /** Aktionsmenü einer Zeile – öffnet die gemeinsamen Dialoge der Tabelle. */
 export function RegistrationRowMenu({ row, onAction }: { row: RegistrationListRow; onAction: (dialog: RowDialog) => void }) {
@@ -37,6 +40,12 @@ export function RegistrationRowMenu({ row, onAction }: { row: RegistrationListRo
           <DropdownMenuItem onSelect={() => onAction('confirm')}>
             <UserCheck aria-hidden className="size-4" />
             {t('confirmWaitlisted')}
+          </DropdownMenuItem>
+        )}
+        {row.status === 'confirmed' && row.paymentMethod !== 'free' && row.priceCents > 0 && !row.invoiceNumber && (
+          <DropdownMenuItem onSelect={() => onAction('invoice')}>
+            <FileText aria-hidden className="size-4" />
+            {t('issueInvoice')}
           </DropdownMenuItem>
         )}
         {row.status !== 'cancelled' && (
@@ -95,6 +104,27 @@ export function CancelDialog({ registrationId, name, open, onOpenChange }: Dialo
   );
 }
 
+export function IssueInvoiceDialog({ registrationId, name, amount, open, onOpenChange }: DialogProps & { amount: string }) {
+  const t = useTranslations('attendees');
+  const router = useRouter();
+  const report = useIssueFeedback();
+  const [, startTransition] = useTransition();
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('issueInvoiceTitle', { name, amount })}
+      description={t('issueInvoiceHint')}
+      confirmLabel={t('issueInvoiceConfirm')}
+      onConfirm={() =>
+        startTransition(async () => {
+          if (report(await issueRegistrationInvoiceAction(registrationId))) router.refresh();
+        })
+      }
+    />
+  );
+}
+
 export function ConfirmWaitlistedDialog({ registrationId, name, seatsFree, open, onOpenChange }: DialogProps & { seatsFree: number }) {
   const t = useTranslations('attendees');
   const router = useRouter();
@@ -117,7 +147,9 @@ export function ConfirmWaitlistedDialog({ registrationId, name, seatsFree, open,
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('confirmTitle', { name })}</DialogTitle>
-          <DialogDescription>{full ? t('confirmFull') : t('confirmHint', { count: seatsFree })}</DialogDescription>
+          <DialogDescription>
+            {full ? t('confirmFull') : t('confirmHint', { count: seatsFree })} {t('confirmMailHint')}
+          </DialogDescription>
         </DialogHeader>
         {full && (
           <label className="flex items-center gap-2 text-sm">

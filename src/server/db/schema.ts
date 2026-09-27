@@ -315,6 +315,8 @@ export const sponsors = sqliteTable(
     companyName: text('company_name').notNull(),
     packageId: integer('package_id').references(() => sponsorPackages.id, { onDelete: 'restrict' }),
     billingAddress: text('billing_address').notNull().default(''),
+    /** UID des Sponsors (Pflicht auf Rechnungen über 10.000 € brutto bei regulärer USt) */
+    vatId: text('vat_id'),
     discountCents: integer('discount_cents').notNull().default(0),
     dueOn: text('due_on'),
     paymentStatus: text('payment_status', { enum: SPONSOR_PAYMENT_STATUSES }).notNull().default('open'),
@@ -403,6 +405,10 @@ export type InvoiceParty = {
   address: string;
   vatId?: string | null;
   email?: string | null;
+  /** nur beim Veranstalter: Bankverbindung und Kleinunternehmer-Hinweis zum Zeitpunkt der Ausstellung */
+  iban?: string | null;
+  bic?: string | null;
+  smallBusinessNote?: LocalizedText | null;
 };
 
 export type InvoiceItem = {
@@ -438,7 +444,11 @@ export const invoices = sqliteTable(
     netCents: integer('net_cents').notNull(),
     vatCents: integer('vat_cents').notNull(),
     grossCents: integer('gross_cents').notNull(),
+    /** Hinweistext auf dem Beleg (z. B. Grund einer Gutschrift) – Teil des Belegs, unveränderlich */
+    note: text('note'),
     pdfPath: text('pdf_path'),
+    /** Verwaltungsangabe (nicht Teil des Belegs): zuletzt per E-Mail versendet */
+    sentAt: text('sent_at'),
     retainUntil: text('retain_until').notNull(),
     createdBy: text('created_by'),
   },

@@ -1,5 +1,16 @@
 # Changelog
 
+## 27.09.2026 – Phase 7: Rechnungen und E-Mail (R1)
+
+- Rechnungen und Gutschriften: fortlaufender Nummernkreis je Kalenderjahr (Wien), gemeinsam für beide, lückenlos in derselben Transaktion vergeben (`2026-0001`). Belege sind unveränderlich: Empfänger, Veranstalter (inkl. Bank und Kleinunternehmer-Hinweis), Positionen und Beträge werden als Momentaufnahme gespeichert; Korrektur nur über Gutschrift. Aufbewahrung bis 31.12. des Ausstellungsjahres + 7 Jahre.
+- PDF (de/en, A4) mit allen Pflichtangaben nach § 11 UStG: Aussteller mit UID, Empfänger (bei Sponsoren mit UID), Nummer, Datum, Leistungsdatum bzw. -zeitraum, Menge/Beschreibung, bei regulärer USt Netto/USt je Satz, sonst Kleinunternehmer-Hinweis; Zahlungshinweis mit IBAN oder „bereits bezahlt“. Abgelegt unter `data/invoices/<Jahr>/`, danach unverändert ausgeliefert.
+- Automatisch: Kauf auf Rechnung → Rechnung mit Zahlungsziel und Bestätigung in einer E-Mail; Online-Zahlung → Rechnung (bezahlt) mit Bestätigung; Warteliste → Wartelisten-Bestätigung; Nachrücken → Bestätigung. Admin-Anmeldung mit Häkchen „Bestätigung senden“.
+- Admin: neuer Bereich „Rechnungen“ je Event (Status offen/überfällig/bezahlt/storniert, Mahnstufe, versendet am; PDF ansehen/herunterladen, senden, Zahlungseingang verbuchen inkl. Teilzahlung, stornieren per Gutschrift); „Rechnung erstellen und senden“ bei Teilnehmenden und Sponsoren. Stornieren einer Anmeldung storniert eine unbezahlte Rechnung automatisch per Gutschrift. Preisänderung gesperrt, solange eine Rechnung besteht. Sponsoren mit UID; Zahlungsstatus „verrechnet/bezahlt/überfällig“ wird automatisch gesetzt.
+- E-Mail: SMTP-Versand (nodemailer, TLS Pflicht) neben der .eml-Ablage, Anhänge, Reply-To = Kontakt-E-Mail; alle Vorlagen de/en mit Veranstalter und Link zur Datenschutzerklärung (D1).
+- `npm run jobs` zusätzlich: Zahlungserinnerungen (1. am Tag nach Fälligkeit, 2. nach 14 Tagen, Rechnung im Anhang, kein Doppelversand, Fehlversand wird wiederholt), überfällige Sponsoren markieren, fehlende Rechnungen zu Online-Zahlungen nachholen.
+- PDF-Abruf nur für Admins und protokolliert. Migration `0004_invoices_mail` (Notiz und Versanddatum am Beleg, UID beim Sponsor). Neue Abhängigkeiten: `nodemailer`, `pdfkit`.
+- 22 neue Tests (144 gesamt), im Browser (DE/EN) durchgespielt: Anmeldung auf Rechnung mit E-Mail und PDF, Teil- und Restzahlung, Rechnung aus der Teilnehmerliste, Storno mit Gutschrift, Sponsor-Rechnung (en).
+
 ## 27.09.2026 – Phase 6: Online-Zahlung und Warteliste
 
 - Online-Zahlung über Stripe Checkout: Kassensitzung mit Serverpreis, Reservierung 30 Minuten (plus 1 Minute Puffer), Bestätigung ausschließlich über den Webhook (`/api/stripe/webhook`, Signaturprüfung, jede Ereignis-ID nur einmal). Ablauf oder Fehlschlag gibt den Platz frei; eine verspätete Zahlung wird angenommen und im Protokoll vermerkt.

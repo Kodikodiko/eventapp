@@ -61,6 +61,7 @@ const sponsor = (o: Partial<SponsorInput> = {}): SponsorInput => ({
   dueOn: null,
   paymentStatus: 'open',
   billingAddress: 'Hauptstraße 1, 1010 Wien',
+  vatId: null,
   notes: null,
   contacts: [contact('max@acme.example')],
   ...o,
@@ -83,7 +84,7 @@ describe('Sponsor-Formulare', () => {
   });
 
   it('Sponsor: mindestens ein Kontakt, keine doppelten E-Mails', () => {
-    const base = { companyName: 'Acme', packageId: '', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', notes: '' };
+    const base = { companyName: 'Acme', packageId: '', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
     const c = { firstName: 'A', lastName: 'B', email: 'a@x.example', phone: '', function: '', locale: 'de' };
     const none = sponsorFormSchema.safeParse({ ...base, contacts: [] });
     expect(none.success).toBe(false);

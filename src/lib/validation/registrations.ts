@@ -22,6 +22,8 @@ export const registrationCreateSchema = z.object({
   ...base,
   status: z.enum(['confirmed', 'waitlisted'], 'required'),
   overbook: z.boolean(),
+  /** Bestätigung per E-Mail senden (bei Preis > 0 mit Rechnung im Anhang) */
+  notify: z.boolean(),
 });
 export type RegistrationCreateValues = z.infer<typeof registrationCreateSchema>;
 

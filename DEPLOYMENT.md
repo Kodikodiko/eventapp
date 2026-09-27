@@ -47,10 +47,11 @@ Beim ersten Start legt die App `data\eventflow.db` an und führt alle Migratione
 | `PAYMENT_PROVIDER` | `fake` (nur ohne Stripe-Testschlüssel) | **nicht setzen** | simulierte Kasse unter `/pay/fake/…`; wird ignoriert, sobald `STRIPE_SECRET_KEY` gesetzt ist |
 | `MAIL_TRANSPORT` | `file` | `smtp` | `file` schreibt E-Mails nach `MAIL_OUTBOX_DIR` |
 | `MAIL_OUTBOX_DIR` | `data/mail-outbox` | – | |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | – | vom E-Mail-Anbieter | |
-| `MAIL_FROM` | `EventFlow <noreply@localhost>` | `Veranstalter <noreply@<domain>>` | |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | – | vom E-Mail-Anbieter | Port 465 = TLS, sonst STARTTLS (Pflicht; `SMTP_REQUIRE_TLS=false` nur für lokale Testserver) |
+| `MAIL_FROM` | `EventFlow <noreply@localhost>` | `Veranstalter <noreply@<domain>>` | Antworten gehen an die Kontakt-E-Mail aus den Einstellungen (Reply-To) |
+| `INVOICE_DIR` | `data/invoices` | `/var/lib/eventflow/invoices` | Ablage der Rechnungs-/Gutschrift-PDFs (je Jahr ein Unterordner) |
 
-Veranstalterdaten für Rechnungen (Name, Anschrift, UID, Bank) stehen **nicht** in Umgebungsvariablen, sondern in der App unter Einstellungen (Tabelle `settings`).
+Veranstalterdaten für Rechnungen (Name, Anschrift, UID, Bank, Kontakt-E-Mail, Zahlungsziel) stehen **nicht** in Umgebungsvariablen, sondern in der App unter Einstellungen (Tabelle `organizer_settings`). Ohne Name und Anschrift (bei regulärer USt auch UID) werden keine Rechnungen ausgestellt; Bestätigungen gehen dann ohne Rechnung hinaus und das Protokoll vermerkt den Fehler.
 
 Ein Stripe-Publishable-Key wird nicht benötigt: Die App leitet direkt auf die von Stripe gelieferte Checkout-URL weiter.
 
@@ -69,9 +70,11 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 ### A.5 E-Mails lokal
 
-Mit `MAIL_TRANSPORT=file` landen alle E-Mails als `.eml`-Dateien in `data\mail-outbox\` und lassen sich per Doppelklick in Outlook/Thunderbird öffnen. Es wird nichts verschickt. (Bis Phase 7 ist das der einzige Versandweg; derzeit werden Wartelisten-Angebote verschickt.)
+Mit `MAIL_TRANSPORT=file` landen alle E-Mails (inkl. PDF-Anhängen) als `.eml`-Dateien in `data\mail-outbox\` und lassen sich per Doppelklick in Outlook/Thunderbird öffnen. Es wird nichts verschickt. Zum Test des echten Versands `MAIL_TRANSPORT=smtp` und die `SMTP_*`-Werte setzen (z. B. ein Test-Postfach des späteren Anbieters).
 
-Zeitgesteuerte Abläufe lokal von Hand: `npm run jobs` (gibt abgelaufene Reservierungen frei, schließt abgelaufene Wartelisten-Angebote und bietet freie Plätze an).
+Versendet werden: Anmeldebestätigung (bei Kauf auf Rechnung bzw. nach Online-Zahlung mit Rechnung im Anhang), Wartelisten-Bestätigung, Wartelisten-Angebot, Rechnung/Gutschrift (Admin: „Senden“), Zahlungserinnerungen. Alle in der Sprache der Person, mit Link zur Datenschutzerklärung.
+
+Zeitgesteuerte Abläufe lokal von Hand: `npm run jobs` (gibt abgelaufene Reservierungen frei, schließt abgelaufene Wartelisten-Angebote und bietet freie Plätze an, holt fehlende Rechnungen zu Online-Zahlungen nach, sendet Zahlungserinnerungen – 1. am Tag nach Fälligkeit, 2. nach weiteren 14 Tagen – und markiert überfällige Sponsoren).
 
 ### A.6 Ordner `data\` (gitignored)
 
@@ -80,7 +83,7 @@ data\
   eventflow.db          Datenbank (+ -wal, -shm im Betrieb)
   backups\              automatische und manuelle Sicherungen
   mail-outbox\          lokale E-Mails
-  invoices\             erzeugte Rechnungs-PDFs
+  invoices\2026\        Rechnungs-/Gutschrift-PDFs, unverändert abgelegt (INVOICE_DIR)
 ```
 
 Echte Personendaten gehören nie ins Repository. Für Tests und Vorführungen nur `npm run seed:demo` verwenden.
@@ -239,6 +242,8 @@ Beim Anbieter die Absenderdomain verifizieren und **SPF, DKIM und DMARC** im DNS
 | `eventflow-jobs.timer` | alle 5 Minuten | `npm run jobs` – Reservierungen freigeben, Wartelisten-Angebote, Zahlungserinnerungen |
 | `eventflow-backup.timer` | täglich 02:30 | `npm run db:backup` (konsistente Online-Sicherung) → verschlüsselt (z. B. restic) auf externen EU-Speicher; Aufbewahrung 90 Tage (Spec 7.5) |
 | `eventflow-retention.timer` | täglich 03:30 | `npm run retention` – Löschfristen aus Spec 7.5; Ergebnis im Audit-Log |
+
+**Rechnungs-PDFs** (`/var/lib/eventflow/invoices`) gehören mit in die externe Sicherung (7 Jahre, § 132 BAO). Die Belegdaten liegen zusätzlich unveränderlich in der Datenbank; fehlt ein PDF, erzeugt die App es beim nächsten Abruf aus diesen Daten neu.
 
 **Wiederherstellung** mindestens einmal vor dem Go-live und danach halbjährlich testen: Dienst stoppen, Sicherung nach `/var/lib/eventflow/eventflow.db` kopieren, Dienst starten.
 

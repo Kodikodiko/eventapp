@@ -1,11 +1,13 @@
 /**
- * Stripe-Webhook: Signatur prüfen, Ereignis genau einmal verarbeiten, danach ggf. frei gewordene Plätze anbieten.
+ * Stripe-Webhook: Signatur prüfen, Ereignis genau einmal verarbeiten, danach Bestätigung/Rechnung senden bzw.
+ * frei gewordene Plätze anbieten.
  * Antwortet 400 bei ungültiger Signatur, 500 bei Verarbeitungsfehlern (Stripe wiederholt dann).
  */
 import { NextResponse } from 'next/server';
 import { getDb } from '@/server/db';
 import { stripeClient } from '@/server/payments/stripe';
 import { fillFreeSeats } from '@/server/services/automation';
+import { notifyRegistrationSafely } from '@/server/services/notifications';
 import { handleProviderEvent, type ProviderEvent } from '@/server/services/payment-events';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +30,9 @@ export async function POST(request: Request) {
     const db = getDb();
     const object = event.data.object as unknown as ProviderEvent['object'];
     const result = handleProviderEvent(db, { id: event.id, type: event.type, object });
-    if (result.eventId != null) await fillFreeSeats(db, [result.eventId]);
+    // Rechnung (bezahlt) ausstellen und Bestätigung senden – Fehler dabei führen nicht zu einer Wiederholung
+    if (result.paidRegistrationId != null) await notifyRegistrationSafely(db, result.paidRegistrationId);
+    if (result.eventId != null && result.paidRegistrationId == null) await fillFreeSeats(db, [result.eventId]);
     return NextResponse.json({ received: true, result: result.result });
   } catch (error) {
     console.error('[stripe] Webhook-Verarbeitung fehlgeschlagen', event.type, error instanceof Error ? error.message : error);

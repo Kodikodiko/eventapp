@@ -28,6 +28,8 @@ const checks = [
   { path: '/de/admin/events/1/attendees', status: 307, location: '/de/admin/login' },
   { path: '/api/export/registrations?event=1', status: 403 },
   { path: '/de/admin/events/1/sponsors', status: 307, location: '/de/admin/login' },
+  { path: '/de/admin/events/1/invoices', status: 307, location: '/de/admin/login' },
+  { path: '/api/export/invoices/1', status: 403 },
   { path: '/de/admin/audit', status: 307, location: '/de/admin/login' },
   { path: '/de/privacy', status: 200, contains: 'Datenschutz' },
   { path: '/en/imprint', status: 200, contains: 'Imprint' },
