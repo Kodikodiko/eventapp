@@ -6,6 +6,7 @@ import { routing } from './i18n/routing';
 const intl = createMiddleware(routing);
 
 const ADMIN_PATH = new RegExp(`^/(${routing.locales.join('|')})/admin(/.*)?$`);
+const PORTAL_PATH = new RegExp(`^/(${routing.locales.join('|')})/portal/?$`);
 
 export default function proxy(request: NextRequest) {
   // Vorprüfung: Admin-Bereich ohne Sitzungs-Cookie direkt zum Login.
@@ -13,6 +14,11 @@ export default function proxy(request: NextRequest) {
   const match = request.nextUrl.pathname.match(ADMIN_PATH);
   if (match && !(match[2] ?? '').startsWith('/login') && !getSessionCookie(request)) {
     return NextResponse.redirect(new URL(`/${match[1]}/admin/login`, request.url));
+  }
+  // ebenso das Teilnehmerportal (Anmeldeseite ausgenommen)
+  const portal = request.nextUrl.pathname.match(PORTAL_PATH);
+  if (portal && !getSessionCookie(request)) {
+    return NextResponse.redirect(new URL(`/${portal[1]}/portal/login`, request.url));
   }
   return intl(request);
 }

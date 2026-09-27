@@ -36,11 +36,32 @@ export async function requireAdminWith2fa(locale: Locale): Promise<AuthSession> 
   return session;
 }
 
+/** Angemeldete Teilnehmerin / angemeldeter Teilnehmer mit verknüpfter Person. */
+export type AttendeeSession = AuthSession & { user: AuthSession['user'] & { personId: number } };
+
+export function isAttendee(session: AuthSession | null): session is AttendeeSession {
+  return session?.user.role === 'attendee' && typeof session.user.personId === 'number';
+}
+
+/** Für Portal-Seiten: Teilnehmer-Sitzung, sonst Weiterleitung zur Portal-Anmeldung. */
+export async function requireAttendee(locale: Locale): Promise<AttendeeSession> {
+  const session = await getSession();
+  if (!isAttendee(session)) return redirect({ href: '/portal/login', locale });
+  return session;
+}
+
 export class ForbiddenError extends Error {
   constructor() {
     super('FORBIDDEN');
     this.name = 'ForbiddenError';
   }
+}
+
+/** Für Portal-Actions und -Routen: wirft, wenn keine Teilnehmer-Sitzung besteht. */
+export async function assertAttendee(): Promise<AttendeeSession> {
+  const session = await getSession();
+  if (!isAttendee(session)) throw new ForbiddenError();
+  return session;
 }
 
 /** Für Server Actions und Route Handler: wirft, wenn kein Admin mit 2FA angemeldet ist. */

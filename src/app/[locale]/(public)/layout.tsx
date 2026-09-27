@@ -27,6 +27,9 @@ export default async function PublicLayout({ children, params }: Props) {
             <Link href="/" className="hover:underline">
               {t('events')}
             </Link>
+            <Link href="/portal" className="hover:underline">
+              {t('myRegistrations')}
+            </Link>
             <LocaleSwitcher />
           </nav>
         </div>

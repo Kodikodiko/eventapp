@@ -162,6 +162,8 @@ export function confirmationMail(d: ConfirmationMailData): MailMessage {
           : 'Sobald ein Platz frei wird, erhalten Sie ein Angebot per E-Mail, das 48 Stunden gültig ist.',
         '',
         ...details,
+        '',
+        en ? `Manage your registration: ${portalUrl('en')}` : `Anmeldung verwalten: ${portalUrl('de')}`,
       ],
       d.locale,
       d.organizer
@@ -195,6 +197,8 @@ export function confirmationMail(d: ConfirmationMailData): MailMessage {
       '',
       ...details,
       ...(payment.length ? ['', ...payment] : []),
+      '',
+      en ? `Manage your registration: ${portalUrl('en')}` : `Anmeldung verwalten: ${portalUrl('de')}`,
       '',
       en ? 'We look forward to seeing you!' : 'Wir freuen uns auf Sie!',
     ],
@@ -423,4 +427,35 @@ export function refundMail(d: RefundMailData): MailMessage {
     d.organizer,
     d.creditNote ? [d.creditNote.attachment] : undefined
   );
+}
+
+// ---------------------------------------------------------------------------
+// Teilnehmerportal
+// ---------------------------------------------------------------------------
+
+export type PortalLinkMailData = { email: string; firstName: string; lastName: string; locale: Locale; url: string; validMinutes: number; organizer: MailOrganizer | null };
+
+export function portalLinkMail(d: PortalLinkMailData): MailMessage {
+  const en = d.locale === 'en';
+  return mail(
+    d.email,
+    en ? 'Your sign-in link' : 'Ihr Anmeldelink',
+    [
+      greeting(d.locale, d.firstName, d.lastName),
+      '',
+      en
+        ? `use this link to sign in to your registrations (valid for ${d.validMinutes} minutes, can be used once):`
+        : `mit diesem Link melden Sie sich bei Ihren Anmeldungen an (gültig ${d.validMinutes} Minuten, einmal verwendbar):`,
+      d.url,
+      '',
+      en ? 'If you did not request this link, you can ignore this e-mail.' : 'Falls Sie diesen Link nicht angefordert haben, können Sie diese E-Mail ignorieren.',
+    ],
+    d.locale,
+    d.organizer
+  );
+}
+
+/** Link zum Teilnehmerportal für Bestätigungen. */
+export function portalUrl(locale: Locale): string {
+  return `${appBaseUrl()}/${locale}/portal`;
 }

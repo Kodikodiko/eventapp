@@ -19,7 +19,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 
 ## DSGVO (siehe Spezifikation, Abschnitt 7)
 
-- [ ] **D1 – Datenschutzerklärung** erstellen, versionieren und auf Registrierungsseite, im Portal und in allen E-Mails verlinken (7.1). *Stand Phase 5: Entwurf als Vorlage, versionierte Seite /privacy, auf Event- und Anmeldeseite verlinkt; in allen E-Mails verlinkt (Phase 7); Portal (Phase 9) folgt; Text vor Go-live prüfen lassen.*
+- [ ] **D1 – Datenschutzerklärung** erstellen, versionieren und auf Registrierungsseite, im Portal und in allen E-Mails verlinken (7.1). *Stand Phase 5: Entwurf als Vorlage, versionierte Seite /privacy, auf Event- und Anmeldeseite verlinkt; in allen E-Mails (Phase 7) und im Teilnehmerportal (Phase 9) verlinkt; Text vor Go-live prüfen lassen.*
 - [x] **D2 – Zustimmungen protokollieren.** AGB- und Datenschutz-Version samt Zeitpunkt je Registrierung speichern (7.3).
 - [x] **D3 – Foto-/Video-Einwilligung aus den AGB herauslösen** (derzeit AGB-Punkt 7) und als eigene, freiwillige Opt-in-Checkbox umsetzen; ebenso Newsletter (7.3).
 - [ ] **D4 – Auskunft/Export vervollständigen.** Sponsor-Kontakte werden nie gefunden (Abfrage vergleicht ganzes Kontaktobjekt), Speaker fehlen, Suche ist case-sensitiv, Datum wird als Objekt exportiert (7.4).

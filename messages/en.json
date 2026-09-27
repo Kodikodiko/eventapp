@@ -130,7 +130,8 @@
     "refundTooHigh": "The amount exceeds the amount that can still be refunded.",
     "refundNotOpen": "This refund has already been handled.",
     "refundNeedsTransfer": "Bank transfers are recorded after transferring the money back, not via the checkout.",
-    "refundIsOnline": "Online payments are refunded via the checkout."
+    "refundIsOnline": "Online payments are refunded via the checkout.",
+    "cancelNotPossible": "This registration can no longer be cancelled here. Please contact the organizer."
   },
   "forms": {
     "german": "German",
@@ -867,7 +868,8 @@
     "legalMissing": "This text is not available yet.",
     "termsTitle": "Terms and conditions",
     "imprintOwner": "Owner and organizer",
-    "vatId": "VAT ID"
+    "vatId": "VAT ID",
+    "myRegistrations": "My registrations"
   },
   "publicForm": {
     "waitlistTitle": "This event is sold out",
@@ -990,5 +992,84 @@
     "acceptAndPay": "Accept and pay",
     "onlineUnavailable": "Online payment is currently unavailable. Please contact us.",
     "backToEvent": "← Back to the event"
+  },
+  "portal": {
+    "title": "My registrations",
+    "loginTitle": "My registrations",
+    "loginIntro": "Enter the e-mail address you registered with. We will send you a sign-in link – no password needed.",
+    "linkInvalid": "The link is invalid or has expired. Please request a new one.",
+    "adminSessionHint": "You are currently signed in to the admin area. For the attendee portal, please sign in with your attendee e-mail address.",
+    "email": "E-mail address",
+    "emailHint": "The link is valid for 15 minutes and can be used once.",
+    "sendLink": "Send sign-in link",
+    "loginFailed": "That did not work. Please try again later.",
+    "linkSentTitle": "Please check your inbox",
+    "linkSent": "If there is a registration for {email}, we have just sent a sign-in link.",
+    "tryAgain": "Use a different address",
+    "signedInAs": "Signed in as {name} ({email})",
+    "logout": "Sign out",
+    "registrations": "Registrations",
+    "noRegistrations": "No registrations.",
+    "status": {
+      "confirmed": "Confirmed",
+      "waitlisted": "Waitlist",
+      "reserved": "Payment pending",
+      "cancelled": "Cancelled"
+    },
+    "ticket": "Ticket",
+    "ticketType": {
+      "normal": "Regular price",
+      "member": "Member price"
+    },
+    "free": "free",
+    "payment": "Payment",
+    "paymentStatus": {
+      "open": "open",
+      "paid": "paid",
+      "partially_refunded": "partially refunded",
+      "refunded": "refunded",
+      "not_required": "not required"
+    },
+    "paymentMethod": {
+      "stripe": "online",
+      "invoice": "by invoice",
+      "free": "free"
+    },
+    "cancelledAt": "Cancelled on",
+    "documents": "Documents",
+    "invoiceDoc": "Invoice {number}",
+    "creditDoc": "Credit note {number}",
+    "docCancelled": "cancelled",
+    "cancel": "Cancel registration",
+    "leaveWaitlist": "Leave the waitlist",
+    "cancelTitle": "Cancel your registration for {event}?",
+    "cancelHint": "The cancellation is binding. Refunds and fees follow the event’s cancellation terms.",
+    "leaveWaitlistTitle": "Leave the waitlist for {event}?",
+    "leaveWaitlistHint": "You will no longer receive an offer when a seat becomes available.",
+    "noRules": "No cancellation terms are set for this event; no refund is provided.",
+    "rule": "{days, plural, =0 {Today is the event day} one {# day until the start} other {# days until the start}} – {percent} % refund according to the cancellation terms.",
+    "refundOnline": "You will receive {amount} back to your payment method.",
+    "refundTransfer": "We will transfer {amount} back to you.",
+    "refundApproval": "A refund of {amount} will be reviewed by the organizer.",
+    "noRefund": "According to the cancellation terms, no refund is due.",
+    "feeOpen": "A cancellation fee of {amount} remains payable.",
+    "invoiceCancelled": "Your invoice will be cancelled; you do not need to pay anything.",
+    "cancelNotPossible": "This registration can no longer be cancelled here.",
+    "cancelReason": "Reason (optional)",
+    "back": "Back",
+    "cancelConfirm": "Cancel for good",
+    "cancelled": "Registration cancelled",
+    "leftWaitlist": "Removed from the waitlist",
+    "cancelledMail": "You will receive a confirmation by e-mail.",
+    "profile": "My details",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "emailReadonly": "Your e-mail address is your login. To change it, please contact the organizer.",
+    "company": "Company (optional)",
+    "phone": "Phone (optional)",
+    "locale": "Language",
+    "localeHint": "For e-mails and documents.",
+    "save": "Save",
+    "profileSaved": "Details saved"
   }
 }

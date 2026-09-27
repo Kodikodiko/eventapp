@@ -14,6 +14,8 @@ export const RATE_LIMITS = {
   register: { limit: 10, windowMs: 10 * 60_000 },
   quote: { limit: 40, windowMs: 10 * 60_000 },
   checkout: { limit: 30, windowMs: 10 * 60_000 },
+  portalLink: { limit: 5, windowMs: 10 * 60_000 },
+  portalLinkEmail: { limit: 3, windowMs: 30 * 60_000 },
 } satisfies Record<string, RateLimit>;
 
 /** Zählt einen Zugriff; false, wenn das Limit im Zeitfenster bereits erreicht ist. */

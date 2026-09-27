@@ -130,7 +130,8 @@
     "refundTooHigh": "Der Betrag ist höher als der noch erstattbare Betrag.",
     "refundNotOpen": "Diese Erstattung ist bereits erledigt.",
     "refundNeedsTransfer": "Überweisungen werden nach der Rücküberweisung verbucht, nicht über die Kasse.",
-    "refundIsOnline": "Online-Zahlungen werden über die Kasse erstattet."
+    "refundIsOnline": "Online-Zahlungen werden über die Kasse erstattet.",
+    "cancelNotPossible": "Diese Anmeldung kann hier nicht mehr storniert werden. Bitte wenden Sie sich an den Veranstalter."
   },
   "forms": {
     "german": "Deutsch",
@@ -867,7 +868,8 @@
     "legalMissing": "Dieser Text ist noch nicht verfügbar.",
     "termsTitle": "Allgemeine Geschäftsbedingungen",
     "imprintOwner": "Medieninhaber und Veranstalter",
-    "vatId": "UID-Nummer"
+    "vatId": "UID-Nummer",
+    "myRegistrations": "Meine Anmeldungen"
   },
   "publicForm": {
     "waitlistTitle": "Die Veranstaltung ist ausgebucht",
@@ -990,5 +992,84 @@
     "acceptAndPay": "Annehmen und bezahlen",
     "onlineUnavailable": "Die Online-Zahlung ist derzeit nicht verfügbar. Bitte kontaktieren Sie uns.",
     "backToEvent": "← Zur Veranstaltung"
+  },
+  "portal": {
+    "title": "Meine Anmeldungen",
+    "loginTitle": "Meine Anmeldungen",
+    "loginIntro": "Geben Sie die E-Mail-Adresse ein, mit der Sie sich angemeldet haben. Wir senden Ihnen einen Anmeldelink – ein Passwort ist nicht nötig.",
+    "linkInvalid": "Der Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen an.",
+    "adminSessionHint": "Sie sind derzeit im Admin-Bereich angemeldet. Für das Teilnehmerportal melden Sie sich bitte mit Ihrer Teilnehmer-E-Mail-Adresse an.",
+    "email": "E-Mail-Adresse",
+    "emailHint": "Der Link ist 15 Minuten gültig und nur einmal verwendbar.",
+    "sendLink": "Anmeldelink senden",
+    "loginFailed": "Das hat nicht geklappt. Bitte versuchen Sie es später erneut.",
+    "linkSentTitle": "Bitte prüfen Sie Ihr Postfach",
+    "linkSent": "Wenn zu {email} eine Anmeldung vorliegt, haben wir soeben einen Anmeldelink gesendet.",
+    "tryAgain": "Andere Adresse eingeben",
+    "signedInAs": "Angemeldet als {name} ({email})",
+    "logout": "Abmelden",
+    "registrations": "Anmeldungen",
+    "noRegistrations": "Keine Anmeldungen vorhanden.",
+    "status": {
+      "confirmed": "Bestätigt",
+      "waitlisted": "Warteliste",
+      "reserved": "Zahlung offen",
+      "cancelled": "Storniert"
+    },
+    "ticket": "Ticket",
+    "ticketType": {
+      "normal": "Normalpreis",
+      "member": "Mitgliederpreis"
+    },
+    "free": "kostenlos",
+    "payment": "Zahlung",
+    "paymentStatus": {
+      "open": "offen",
+      "paid": "bezahlt",
+      "partially_refunded": "teilweise erstattet",
+      "refunded": "erstattet",
+      "not_required": "nicht nötig"
+    },
+    "paymentMethod": {
+      "stripe": "online",
+      "invoice": "auf Rechnung",
+      "free": "kostenlos"
+    },
+    "cancelledAt": "Storniert am",
+    "documents": "Belege",
+    "invoiceDoc": "Rechnung {number}",
+    "creditDoc": "Gutschrift {number}",
+    "docCancelled": "storniert",
+    "cancel": "Anmeldung stornieren",
+    "leaveWaitlist": "Von der Warteliste abmelden",
+    "cancelTitle": "Anmeldung zu {event} stornieren?",
+    "cancelHint": "Die Stornierung ist verbindlich. Erstattung und Gebühren richten sich nach den Stornobedingungen der Veranstaltung.",
+    "leaveWaitlistTitle": "Von der Warteliste für {event} abmelden?",
+    "leaveWaitlistHint": "Sie erhalten dann kein Angebot mehr, wenn ein Platz frei wird.",
+    "noRules": "Für diese Veranstaltung sind keine Stornobedingungen hinterlegt; eine Erstattung ist nicht vorgesehen.",
+    "rule": "{days, plural, =0 {Heute ist Veranstaltungstag} one {Noch # Tag bis zum Beginn} other {Noch # Tage bis zum Beginn}} – laut Stornobedingungen {percent} % Erstattung.",
+    "refundOnline": "Sie erhalten {amount} auf Ihr Zahlungsmittel zurück.",
+    "refundTransfer": "Wir überweisen Ihnen {amount} zurück.",
+    "refundApproval": "Eine Erstattung von {amount} wird vom Veranstalter geprüft.",
+    "noRefund": "Eine Erstattung ist laut Stornobedingungen nicht vorgesehen.",
+    "feeOpen": "Es bleibt eine Stornogebühr von {amount} zu bezahlen.",
+    "invoiceCancelled": "Ihre Rechnung wird storniert; Sie müssen nichts bezahlen.",
+    "cancelNotPossible": "Diese Anmeldung kann hier nicht mehr storniert werden.",
+    "cancelReason": "Grund (optional)",
+    "back": "Zurück",
+    "cancelConfirm": "Verbindlich stornieren",
+    "cancelled": "Anmeldung storniert",
+    "leftWaitlist": "Von der Warteliste abgemeldet",
+    "cancelledMail": "Sie erhalten eine Bestätigung per E-Mail.",
+    "profile": "Meine Daten",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "emailReadonly": "Die E-Mail-Adresse ist Ihr Zugang. Für eine Änderung wenden Sie sich bitte an den Veranstalter.",
+    "company": "Firma (optional)",
+    "phone": "Telefon (optional)",
+    "locale": "Sprache",
+    "localeHint": "Für E-Mails und Belege.",
+    "save": "Speichern",
+    "profileSaved": "Daten gespeichert"
   }
 }

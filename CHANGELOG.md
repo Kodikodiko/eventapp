@@ -1,5 +1,15 @@
 # Changelog
 
+## 27.09.2026 – Phase 9: Teilnehmerportal
+
+- „Meine Anmeldungen“ (`/de/portal`, Link in der Kopfzeile und in jeder Bestätigung): Anmeldung ohne Passwort per Link an die E-Mail-Adresse der Anmeldung (Better-Auth-Plugin „magic link“, 15 Minuten gültig, einmal verwendbar, Token nur als Hash gespeichert).
+- Sicherheit: Links nur für Personen mit Anmeldung (nicht eingeschränkt/anonymisiert); für Admin-Adressen und unbekannte Adressen wird kein Token erzeugt – die Antwort ist immer gleich (keine Ausforschung von Adressen); zusätzliche Sperre, falls eine Link-Anmeldung doch ein Nicht-Teilnehmer-Konto träfe; Begrenzung pro IP und pro Adresse.
+- Übersicht aller eigenen Anmeldungen mit Termin, Ort, Status, Zahlung und Belegen (Rechnungen/Gutschriften als PDF, nur eigene – fremde liefern 404; Abruf protokolliert).
+- Stammdaten ändern (Name, Firma, Telefon, Sprache für E-Mails und Belege); die E-Mail-Adresse bleibt das Login und wird vom Veranstalter geändert.
+- Stornieren bzw. von der Warteliste abmelden bis Eventbeginn, mit Vorschau nach Stornobedingungen (Erstattung, Gebühr, Prüfung durch Veranstalter im Modus „mit Freigabe“); nutzt den Ablauf aus Phase 8 inkl. Stornobestätigung und frei gewordenem Platz für die Warteliste.
+- Anmeldebestätigung und Wartelisten-Bestätigung enthalten den Link zum Portal. Datenschutzerklärung im Portal verlinkt (D1).
+- 6 neue Tests (163 gesamt), Smoke-Test erweitert, im Browser durchgespielt: Anmeldung, Link per E-Mail, Portal (DE/EN), PDF, fremde Belege/Admin-Routen gesperrt, Stammdaten, Storno, verbrauchter Link, kein Link für Admin-Adresse.
+
 ## 27.09.2026 – Phase 8: Storno und Erstattung
 
 - Stornobedingungen werden angewendet: Tage bis Eventbeginn (Wiener Kalendertage) → Erstattungssatz der höchsten passenden Zeile; ohne Bedingungen 0 %. Daraus: Gutschrift, Stornogebühr, Erstattung und ggf. noch offener Betrag – auch für teilweise bezahlte oder unbezahlte Rechnungen.

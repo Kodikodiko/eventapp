@@ -3,7 +3,13 @@
  */
 import 'server-only';
 import { getDb } from '@/server/db';
-import { createAuth, type Auth } from './config';
+import { people } from '@/server/db/schema';
+import { getMailer, trySend } from '@/server/mail';
+import { portalLinkMail } from '@/server/mail/templates';
+import { mailOrganizer } from '@/server/services/notifications';
+import { portalLinkRecipient } from '@/server/services/portal';
+import { eq } from 'drizzle-orm';
+import { createAuth, PORTAL_LINK_TTL_SECONDS, type Auth } from './config';
 
 const globalForAuth = globalThis as unknown as { __eventflowAuth?: Auth };
 
@@ -23,6 +29,25 @@ export function getAuth(): Auth {
       secret,
       baseURL: process.env.BETTER_AUTH_URL || process.env.APP_URL || 'http://localhost:3000',
       withNextCookies: true,
+      sendPortalLink: async ({ email, url }) => {
+        const db = getDb();
+        // nur Teilnehmer-Konten mit gültiger Person; Admins nie (Link würde die Zwei-Faktor-Anmeldung umgehen)
+        const account = portalLinkRecipient(db, email);
+        if (!account) return;
+        const person = db.select().from(people).where(eq(people.id, account.personId)).get()!;
+        await trySend(
+          portalLinkMail({
+            email: account.email,
+            firstName: person.firstName,
+            lastName: person.lastName,
+            locale: account.locale,
+            url,
+            validMinutes: PORTAL_LINK_TTL_SECONDS / 60,
+            organizer: mailOrganizer(db),
+          }),
+          getMailer()
+        );
+      },
     });
   }
   return globalForAuth.__eventflowAuth;
