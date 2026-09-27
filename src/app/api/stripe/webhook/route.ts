@@ -3,10 +3,13 @@
  * frei gewordene Plätze anbieten.
  * Antwortet 400 bei ungültiger Signatur, 500 bei Verarbeitungsfehlern (Stripe wiederholt dann).
  */
+import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { refunds } from '@/server/db/schema';
 import { getDb } from '@/server/db';
 import { stripeClient } from '@/server/payments/stripe';
 import { fillFreeSeats } from '@/server/services/automation';
+import { sendRefundMail } from '@/server/services/cancellation';
 import { notifyRegistrationSafely } from '@/server/services/notifications';
 import { handleProviderEvent, type ProviderEvent } from '@/server/services/payment-events';
 
@@ -32,6 +35,10 @@ export async function POST(request: Request) {
     const result = handleProviderEvent(db, { id: event.id, type: event.type, object });
     // Rechnung (bezahlt) ausstellen und Bestätigung senden – Fehler dabei führen nicht zu einer Wiederholung
     if (result.paidRegistrationId != null) await notifyRegistrationSafely(db, result.paidRegistrationId);
+    if (result.syncedRefundId != null) {
+      const refund = db.select().from(refunds).where(eq(refunds.id, result.syncedRefundId)).get();
+      if (refund) await sendRefundMail(db, refund).catch(() => false);
+    }
     if (result.eventId != null && result.paidRegistrationId == null) await fillFreeSeats(db, [result.eventId]);
     return NextResponse.json({ received: true, result: result.result });
   } catch (error) {

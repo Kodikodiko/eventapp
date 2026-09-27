@@ -26,6 +26,7 @@ import {
   paymentReminders,
   payments,
   people,
+  refunds,
   registrations,
   sponsorContacts,
   sponsorPackages,
@@ -135,11 +136,18 @@ export function hasPayments(tx: Tx | Db, owner: Owner): boolean {
   return paidCentsOf(tx, owner) > 0;
 }
 
-function paidCentsOf(tx: Tx | Db, owner: Owner): number {
+/** Bezahlter Betrag abzüglich ausgeführter Erstattungen. */
+export function paidCentsOf(tx: Tx | Db, owner: Owner): number {
   const where =
     'registrationId' in owner ? eq(payments.registrationId, owner.registrationId) : eq(payments.sponsorId, owner.sponsorId);
   const row = tx.select({ s: sum(payments.amountCents) }).from(payments).where(and(where, eq(payments.status, 'succeeded'))).get();
-  return Number(row?.s ?? 0);
+  const refunded = tx
+    .select({ s: sum(refunds.amountCents) })
+    .from(refunds)
+    .innerJoin(payments, eq(payments.id, refunds.paymentId))
+    .where(and(where, eq(refunds.status, 'executed')))
+    .get();
+  return Number(row?.s ?? 0) - Number(refunded?.s ?? 0);
 }
 
 function insertInvoice(
@@ -606,7 +614,8 @@ export function findDueReminders(db: Db, now = new Date()): DueReminder[] {
     .all();
   const result: DueReminder[] = [];
   for (const { inv, reg, sp } of candidates) {
-    if (reg && (reg.status === 'cancelled' || reg.paymentStatus !== 'open')) continue;
+    // auch stornierte Anmeldungen: eine offene Stornogebühr wird weiter eingemahnt
+    if (reg && reg.paymentStatus !== 'open') continue;
     if (sp && sp.paymentStatus === 'paid') continue;
     const owner: Owner = inv.registrationId ? { registrationId: inv.registrationId } : { sponsorId: inv.sponsorId! };
     const openCents = inv.grossCents - creditedCents(db, inv.id) - paidCentsOf(db, owner);

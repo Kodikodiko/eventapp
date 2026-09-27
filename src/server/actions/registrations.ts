@@ -9,14 +9,13 @@ import {
   toRegistrationInput,
 } from '@/lib/validation/registrations';
 import {
-  cancelRegistrationByAdmin,
   confirmWaitlistedByAdmin,
   createRegistrationByAdmin,
   updateRegistrationByAdmin,
 } from '@/server/services/registrations';
 import { fillFreeSeats } from '@/server/services/automation';
-import { activeInvoiceOf, cancelInvoice, hasPayments } from '@/server/services/invoices';
-import { notifyRegistration, sendInvoiceDocument } from '@/server/services/notifications';
+import { cancelAndProcess } from '@/server/services/cancellation';
+import { notifyRegistration } from '@/server/services/notifications';
 import { runAdminAction } from './run';
 
 const idSchema = z.number().int().positive();
@@ -43,21 +42,30 @@ export async function updateRegistrationAction(registrationId: number, values: u
   return runAdminAction(({ actor, db }) => updateRegistrationByAdmin(db, actor, id.data, toRegistrationInput(parsed.data)));
 }
 
-export async function cancelRegistrationAction(registrationId: number, values: unknown): Promise<ActionResult<void>> {
+export async function cancelRegistrationAction(
+  registrationId: number,
+  values: unknown
+): Promise<ActionResult<{ refundCents: number; refundStatus: 'none' | 'proposed' | 'approved'; failedRefunds: number; awaitingTransfer: boolean }>> {
   const id = idSchema.safeParse(registrationId);
   const parsed = cancelSchema.safeParse(values);
   if (!id.success) return fail('NOT_FOUND');
   if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
   return runAdminAction(async ({ actor, db }) => {
-    const eventId = cancelRegistrationByAdmin(db, actor, id.data, parsed.data.reason);
-    // Offene (unbezahlte) Rechnung per Gutschrift stornieren; bezahlte Rechnungen → Erstattung (Phase 8)
-    const invoice = activeInvoiceOf(db, { registrationId: id.data });
-    if (invoice && !hasPayments(db, { registrationId: id.data })) {
-      const credit = cancelInvoice(db, actor, invoice.id, parsed.data.reason);
-      await sendInvoiceDocument(db, actor, credit.id).catch(() => undefined);
-    }
+    // Erstattung/Gutschrift nach Stornobedingungen (Satz vom Admin bestätigt oder geändert)
+    const r = await cancelAndProcess(db, actor, id.data, {
+      reason: parsed.data.reason,
+      percent: Number(parsed.data.percent),
+      source: 'admin',
+      notify: parsed.data.notify,
+    });
     // frei gewordenen Platz sofort der Warteliste anbieten
-    await fillFreeSeats(db, [eventId]);
+    await fillFreeSeats(db, [r.eventId]);
+    return {
+      refundCents: r.amounts.refundCents,
+      refundStatus: r.refundStatus,
+      failedRefunds: r.failedRefunds,
+      awaitingTransfer: r.refundStatus === 'approved' && r.executeIds.length < r.refundIds.length,
+    };
   });
 }
 

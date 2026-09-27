@@ -30,7 +30,12 @@ export type RegistrationCreateValues = z.infer<typeof registrationCreateSchema>;
 export const registrationUpdateSchema = z.object(base);
 export type RegistrationUpdateValues = z.infer<typeof registrationUpdateSchema>;
 
-export const cancelSchema = z.object({ reason: z.string().trim().min(1, 'required').max(500, 'tooLong') });
+export const cancelSchema = z.object({
+  reason: z.string().trim().min(1, 'required').max(500, 'tooLong'),
+  /** Erstattungssatz in % (vorbelegt aus den Stornobedingungen, von Admins änderbar) */
+  percent: z.string().trim().regex(/^(100|\d{1,2})$/, 'percent'),
+  notify: z.boolean(),
+});
 export type CancelValues = z.infer<typeof cancelSchema>;
 
 export type RegistrationPersonInput = {

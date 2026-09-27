@@ -29,7 +29,7 @@ import {
 import type { RegistrationListRow } from '@/server/services/registrations';
 import { RegistrationFormDialog } from './registration-form-dialog';
 import { centsToInput } from '@/lib/money';
-import { CancelDialog, ConfirmWaitlistedDialog, IssueInvoiceDialog, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
+import { CancelDialog, ConfirmWaitlistedDialog, IssueInvoiceDialog, RefundDialog, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
 
 export type RoleOption = { key: string; label: string };
 
@@ -274,6 +274,14 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             registrationId={active.row.id}
             name={`${active.row.firstName} ${active.row.lastName}`}
             open={active.dialog === 'cancel'}
+            onOpenChange={(o) => !o && setActive(null)}
+          />
+          <RefundDialog
+            key={`refund-${active.row.id}`}
+            registrationId={active.row.id}
+            name={`${active.row.firstName} ${active.row.lastName}`}
+            refundableCents={active.row.refundableCents}
+            open={active.dialog === 'refund'}
             onOpenChange={(o) => !o && setActive(null)}
           />
           <IssueInvoiceDialog

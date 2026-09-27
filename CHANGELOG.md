@@ -1,5 +1,18 @@
 # Changelog
 
+## 27.09.2026 – Phase 8: Storno und Erstattung
+
+- Stornobedingungen werden angewendet: Tage bis Eventbeginn (Wiener Kalendertage) → Erstattungssatz der höchsten passenden Zeile; ohne Bedingungen 0 %. Daraus: Gutschrift, Stornogebühr, Erstattung und ggf. noch offener Betrag – auch für teilweise bezahlte oder unbezahlte Rechnungen.
+- Storno-Dialog im Admin zeigt die Berechnung live; der Erstattungssatz ist vorbelegt und abänderbar (Abweichung wird protokolliert); Stornobestätigung per E-Mail auf Wunsch.
+- Erstattung je Zahlung mit Status „zur Freigabe / freigegeben / erstattet / abgelehnt / fehlgeschlagen“. Admin-Entscheidungen gelten sofort; Stornos von Teilnehmenden (ab Phase 9 im Portal) je nach Erstattungsmodus des Events automatisch oder als Vorschlag.
+- Online-Zahlungen werden über die Kasse erstattet (Stripe-Refund mit Idempotenzschlüssel, simulierte Kasse für fake-Zahlungen); Fehler bleiben als „fehlgeschlagen“ stehen und lassen sich erneut ausführen. Überweisungen: nach der Rücküberweisung verbuchen (Teilzahlungen gemeinsam, eine Gutschrift).
+- Manuelle Erstattung (z. B. Kulanz) bis zum erstattbaren Betrag, mit Pflichtbegründung, ohne Storno.
+- Jede ausgeführte Erstattung erzeugt eine Gutschrift zur Rechnung und eine E-Mail mit PDF; der nicht erstattete Teil einer unbezahlten Rechnung wird sofort gutgeschrieben, eine verbleibende Stornogebühr wird weiter eingemahnt.
+- Neuer Bereich „Erstattungen“ je Event (Freigabeliste): freigeben mit änderbarem Betrag, ablehnen, erneut versuchen, Rücküberweisung verbuchen.
+- Stripe-Webhook `charge.refunded`: Erstattungen direkt im Stripe-Dashboard werden übernommen (Differenz zum bekannten Stand), inkl. Gutschrift und E-Mail.
+- Tests schreiben E-Mails und PDFs nur noch in temporäre Ordner. Migration `0005_refund_credit_note`.
+- 13 neue Tests (157 gesamt), im Browser durchgespielt: Storno mit 60 % (Online, EN), Storno mit Rücküberweisung (DE), Kulanz-Erstattung, Ablehnung.
+
 ## 27.09.2026 – Phase 7: Rechnungen und E-Mail (R1)
 
 - Rechnungen und Gutschriften: fortlaufender Nummernkreis je Kalenderjahr (Wien), gemeinsam für beide, lückenlos in derselben Transaktion vergeben (`2026-0001`). Belege sind unveränderlich: Empfänger, Veranstalter (inkl. Bank und Kleinunternehmer-Hinweis), Positionen und Beträge werden als Momentaufnahme gespeichert; Korrektur nur über Gutschrift. Aufbewahrung bis 31.12. des Ausstellungsjahres + 7 Jahre.

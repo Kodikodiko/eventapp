@@ -6,7 +6,7 @@
  * - Eine Person (E-Mail) wird wiederverwendet; pro Event höchstens eine nicht stornierte Anmeldung.
  * - Bestätigte und nicht abgelaufene reservierte Anmeldungen zählen gegen die Kapazität;
  *   Admins dürfen bewusst überbuchen (overbook).
- * - Stornieren löscht nie, sondern setzt den Status (Erstattung folgt in Phase 8).
+ * - Stornieren löscht nie, sondern setzt den Status (Erstattung und Gutschrift: services/refunds.ts).
  * - Preis 0 → Zahlungsart „free“, Zahlung „not_required“; sonst Rechnung mit offener Zahlung.
  */
 import { randomUUID } from 'node:crypto';
@@ -20,6 +20,7 @@ import { writeAudit, type Actor, type Tx } from './audit';
 import { getEventStats } from './events';
 import { activeInvoiceNumbersByRegistration, activeInvoiceOf } from './invoices';
 import { updatePerson, upsertPerson } from './people';
+import { cancelRegistration, refundableByRegistration } from './refunds';
 
 export type RegistrationListRow = {
   id: number;
@@ -45,6 +46,8 @@ export type RegistrationListRow = {
   cancelReason: string | null;
   /** Nummer der gültigen (nicht stornierten) Rechnung */
   invoiceNumber: string | null;
+  /** noch erstattbarer, bezahlter Betrag */
+  refundableCents: number;
 };
 
 export function listRegistrations(db: Db, eventId: number): RegistrationListRow[] {
@@ -62,6 +65,7 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     .where(eq(registrations.eventId, eventId))
     .all();
   const invoiceNumbers = activeInvoiceNumbersByRegistration(db, eventId);
+  const refundable = refundableByRegistration(db, eventId);
   const rolesByReg = new Map<number, string[]>();
   for (const rr of roleRows) rolesByReg.set(rr.registrationId, [...(rolesByReg.get(rr.registrationId) ?? []), rr.key]);
 
@@ -88,6 +92,7 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     cancelledAt: r.cancelledAt,
     cancelReason: r.cancelReason,
     invoiceNumber: invoiceNumbers.get(r.id) ?? null,
+    refundableCents: refundable.get(r.id) ?? 0,
   }));
 }
 
@@ -215,24 +220,12 @@ export function updateRegistrationByAdmin(db: Db, actor: Actor, id: number, inpu
   });
 }
 
-/** Storniert und liefert die Event-ID (damit der frei gewordene Platz angeboten werden kann). */
+/**
+ * Storniert (Erstattungssatz laut Stornobedingungen) und liefert die Event-ID. Die App nutzt
+ * services/cancellation.ts (mit E-Mail und Ausführung der Erstattung); diese Kurzform für Skripte und Tests.
+ */
 export function cancelRegistrationByAdmin(db: Db, actor: Actor, id: number, reason: string): number {
-  return db.transaction((tx) => {
-    const { reg } = loadRegistration(tx, id);
-    if (reg.status === 'cancelled') throw new ServiceError('CONFLICT');
-    tx.update(registrations)
-      .set({ status: 'cancelled', cancelledAt: new Date().toISOString(), cancelReason: reason, reservedUntil: null })
-      .where(eq(registrations.id, id))
-      .run();
-    writeAudit(tx, actor, {
-      action: 'registration.cancelled',
-      entity: 'registration',
-      entityId: id,
-      eventId: reg.eventId,
-      summary: `Storniert durch Admin (vorher ${reg.status})`,
-    });
-    return reg.eventId;
-  });
+  return cancelRegistration(db, actor, id, { reason, source: 'admin' }).eventId;
 }
 
 export function confirmWaitlistedByAdmin(db: Db, actor: Actor, id: number, overbook: boolean): void {

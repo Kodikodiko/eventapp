@@ -314,3 +314,113 @@ export function reminderMail(d: ReminderMailData): MailMessage {
     [d.attachment]
   );
 }
+
+// ---------------------------------------------------------------------------
+// Stornobestätigung und Erstattung
+// ---------------------------------------------------------------------------
+
+export type CancellationMailData = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  locale: Locale;
+  eventName: LocalizedText;
+  refundCents: number;
+  refundStatus: 'none' | 'proposed' | 'approved';
+  refundMethod: 'stripe' | 'bank_transfer' | null;
+  /** bezahlter Betrag vor dem Storno (0 = nichts bezahlt) */
+  paidCents: number;
+  openCents: number;
+  invoiceNumber: string | null;
+  creditNote: { number: string; attachment: MailAttachment } | null;
+  bank: BankDetails | null;
+  organizer: MailOrganizer | null;
+};
+
+export function cancellationMail(d: CancellationMailData): MailMessage {
+  const en = d.locale === 'en';
+  const event = localized(d.eventName, d.locale);
+  const money = (c: number) => formatEuro(c, d.locale);
+  const lines: string[] = [];
+  if (d.refundCents > 0) {
+    if (d.refundStatus === 'proposed') {
+      lines.push(en ? `A refund of ${money(d.refundCents)} is being reviewed. We will let you know once it has been processed.` : `Eine Erstattung von ${money(d.refundCents)} wird geprüft. Sie erhalten Bescheid, sobald sie durchgeführt ist.`);
+    } else if (d.refundMethod === 'bank_transfer') {
+      lines.push(
+        en
+          ? `We will transfer ${money(d.refundCents)} back to you. If we do not have your bank details yet, please reply to this e-mail with them.`
+          : `Wir überweisen Ihnen ${money(d.refundCents)} zurück. Falls uns Ihre Bankverbindung noch nicht vorliegt, antworten Sie bitte mit Ihrer IBAN auf diese E-Mail.`
+      );
+    } else {
+      lines.push(en ? `We will refund ${money(d.refundCents)} to your original payment method.` : `Wir erstatten ${money(d.refundCents)} auf das ursprünglich verwendete Zahlungsmittel.`);
+    }
+    lines.push(en ? 'You will receive a credit note by e-mail once the refund has been made.' : 'Sobald die Erstattung durchgeführt ist, erhalten Sie eine Gutschrift per E-Mail.');
+  } else if (d.paidCents > 0) {
+    lines.push(en ? 'According to the cancellation terms, no refund is due.' : 'Laut Stornobedingungen ist keine Erstattung vorgesehen.');
+  }
+  if (d.creditNote) {
+    lines.push(
+      en
+        ? `Please find credit note ${d.creditNote.number}${d.invoiceNumber ? ` for invoice ${d.invoiceNumber}` : ''} attached.`
+        : `Im Anhang finden Sie die Gutschrift ${d.creditNote.number}${d.invoiceNumber ? ` zur Rechnung ${d.invoiceNumber}` : ''}.`
+    );
+  }
+  if (d.openCents > 0) {
+    lines.push(
+      en
+        ? `According to the cancellation terms, a cancellation fee of ${money(d.openCents)} remains payable${d.invoiceNumber ? ` (invoice ${d.invoiceNumber})` : ''}.`
+        : `Laut Stornobedingungen bleibt eine Stornogebühr von ${money(d.openCents)} zu bezahlen${d.invoiceNumber ? ` (Rechnung ${d.invoiceNumber})` : ''}.`,
+      ...bankLines(d.bank, d.locale)
+    );
+  }
+  return mail(
+    d.email,
+    en ? `Cancellation confirmed: ${event}` : `Stornierung bestätigt: ${event}`,
+    [
+      greeting(d.locale, d.firstName, d.lastName),
+      '',
+      en ? `your registration for ${event} has been cancelled.` : `Ihre Anmeldung zu ${event} wurde storniert.`,
+      ...(lines.length ? ['', ...lines] : []),
+    ],
+    d.locale,
+    d.organizer,
+    d.creditNote ? [d.creditNote.attachment] : undefined
+  );
+}
+
+export type RefundMailData = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  locale: Locale;
+  eventName: LocalizedText;
+  amountCents: number;
+  method: 'stripe' | 'bank_transfer';
+  creditNote: { number: string; attachment: MailAttachment } | null;
+  organizer: MailOrganizer | null;
+};
+
+export function refundMail(d: RefundMailData): MailMessage {
+  const en = d.locale === 'en';
+  const event = localized(d.eventName, d.locale);
+  const amount = formatEuro(d.amountCents, d.locale);
+  return mail(
+    d.email,
+    en ? `Refund of ${amount}: ${event}` : `Erstattung über ${amount}: ${event}`,
+    [
+      greeting(d.locale, d.firstName, d.lastName),
+      '',
+      d.method === 'stripe'
+        ? en
+          ? `we have refunded ${amount} to your original payment method. Depending on your bank, it may take a few days to appear.`
+          : `wir haben ${amount} auf das ursprünglich verwendete Zahlungsmittel erstattet. Je nach Bank kann die Gutschrift einige Tage dauern.`
+        : en
+          ? `we have transferred ${amount} to your account.`
+          : `wir haben Ihnen ${amount} überwiesen.`,
+      d.creditNote ? (en ? `Please find credit note ${d.creditNote.number} attached.` : `Im Anhang finden Sie die Gutschrift ${d.creditNote.number}.`) : null,
+    ],
+    d.locale,
+    d.organizer,
+    d.creditNote ? [d.creditNote.attachment] : undefined
+  );
+}

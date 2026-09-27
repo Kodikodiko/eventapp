@@ -391,6 +391,8 @@ export const refunds = sqliteTable(
     decidedAt: text('decided_at'),
     executedAt: text('executed_at'),
     failureMessage: text('failure_message'),
+    /** Gutschrift, die bei Ausführung der Erstattung ausgestellt wurde */
+    creditNoteId: integer('credit_note_id').references((): AnySQLiteColumn => invoices.id, { onDelete: 'restrict' }),
   },
   (t) => [
     index('refunds_payment_idx').on(t.paymentId),

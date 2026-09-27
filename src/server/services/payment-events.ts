@@ -6,15 +6,26 @@ import { eq } from 'drizzle-orm';
 import type { Db } from '@/server/db/core';
 import { stripeEvents } from '@/server/db/schema';
 import { markCheckoutClosed, markCheckoutPaid } from './checkout';
+import { syncExternalRefund } from './refunds';
 
 export type ProviderEvent = {
   id: string;
   type: string;
-  object: { id: string; payment_status?: string | null; payment_intent?: string | { id: string } | null; amount_total?: number | null };
+  object: {
+    id: string;
+    payment_status?: string | null;
+    payment_intent?: string | { id: string } | null;
+    amount_total?: number | null;
+    /** bei charge.refunded: Gesamtbetrag aller Erstattungen der Zahlung */
+    amount_refunded?: number | null;
+  };
 };
 
-/** paidRegistrationId: Anmeldung, die durch dieses Ereignis bezahlt wurde (→ Rechnung + Bestätigung senden). */
-export type ProviderEventResult = { result: string; eventId: number | null; duplicate: boolean; paidRegistrationId: number | null };
+/**
+ * paidRegistrationId: Anmeldung, die durch dieses Ereignis bezahlt wurde (→ Rechnung + Bestätigung senden).
+ * syncedRefundId: aus Stripe übernommene Erstattung (→ E-Mail mit Gutschrift senden).
+ */
+export type ProviderEventResult = { result: string; eventId: number | null; duplicate: boolean; paidRegistrationId: number | null; syncedRefundId?: number | null };
 
 export function handleProviderEvent(db: Db, evt: ProviderEvent, now = new Date()): ProviderEventResult {
   const seen = db.select().from(stripeEvents).where(eq(stripeEvents.id, evt.id)).get();
@@ -26,6 +37,7 @@ export function handleProviderEvent(db: Db, evt: ProviderEvent, now = new Date()
   let result = 'ignored';
   let eventId: number | null = null;
   let paidRegistrationId: number | null = null;
+  let syncedRefundId: number | null = null;
   switch (evt.type) {
     case 'checkout.session.completed':
       if (o.payment_status === 'paid') {
@@ -44,6 +56,14 @@ export function handleProviderEvent(db: Db, evt: ProviderEvent, now = new Date()
       if (r.outcome === 'confirmed' || r.outcome === 'late') paidRegistrationId = r.registrationId;
       break;
     }
+    case 'charge.refunded': {
+      if (intent && typeof o.amount_refunded === 'number') {
+        const r = syncExternalRefund(db, intent, o.amount_refunded, now);
+        result = r ? `refund_synced:${r.id}` : 'refund_known';
+        syncedRefundId = r?.id ?? null;
+      }
+      break;
+    }
     case 'checkout.session.async_payment_failed':
     case 'checkout.session.expired': {
       const r = markCheckoutClosed(db, o.id, evt.type === 'checkout.session.expired' ? 'expired' : 'failed', now);
@@ -53,5 +73,5 @@ export function handleProviderEvent(db: Db, evt: ProviderEvent, now = new Date()
     }
   }
   db.update(stripeEvents).set({ processedAt: now.toISOString(), result }).where(eq(stripeEvents.id, evt.id)).run();
-  return { result, eventId, duplicate: false, paidRegistrationId };
+  return { result, eventId, duplicate: false, paidRegistrationId, syncedRefundId };
 }

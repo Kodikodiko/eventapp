@@ -30,6 +30,7 @@ import { publishLegalVersion } from '@/server/services/legal';
 import { notifyRegistration, sendDueReminders } from '@/server/services/notifications';
 import { saveOrganizerSettings, type OrganizerInput } from '@/server/services/organizer';
 import { registerPublic } from '@/server/services/public-registration';
+import { cancelRegistration } from '@/server/services/refunds';
 import { createPackage, createSponsor } from '@/server/services/sponsors';
 
 const actor = { userId: 'admin-1' };
@@ -37,12 +38,14 @@ const NOW = new Date('2027-02-01T10:00:00.000Z');
 const days = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
 
 let dir: string;
+let previousDir: string | undefined;
 beforeAll(() => {
+  previousDir = process.env.INVOICE_DIR;
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'eventflow-invoices-'));
   process.env.INVOICE_DIR = dir;
 });
 afterAll(() => {
-  delete process.env.INVOICE_DIR;
+  process.env.INVOICE_DIR = previousDir;
   fs.rmSync(dir, { recursive: true, force: true });
 });
 beforeEach(() => resetRateLimits());
@@ -406,7 +409,7 @@ describe('E-Mails und Zahlungserinnerungen', () => {
     cancelInvoice(db, actor, cancelled.id, 'x', NOW);
     const cancelledReg = register('c@example.org');
     issueRegistrationInvoice(db, actor, cancelledReg, NOW);
-    db.update(registrations).set({ status: 'cancelled' }).where(eq(registrations.id, cancelledReg)).run();
+    cancelRegistration(db, actor, cancelledReg, { reason: 'abgesagt', percent: 100, source: 'admin', now: NOW });
     expect(findDueReminders(db, days(30))).toHaveLength(0);
 
     const open = issueRegistrationInvoice(db, actor, register('d@example.org'), NOW);
@@ -418,7 +421,7 @@ describe('E-Mails und Zahlungserinnerungen', () => {
     const { mailer, sent } = capture();
     expect((await sendDueReminders(db, mailer, days(15))).sent).toBe(1);
     expect(sent[0].to).toBe('d@example.org');
-    expect(open.number).toBe('2027-0005');
+    expect(open.number).toBe('2027-0006');
   });
 
   it('Zeitplan holt fehlende Rechnungen zu Online-Zahlungen nach', async () => {
