@@ -1,5 +1,17 @@
 # Changelog
 
+## 27.09.2026 – Phase 5: Öffentliche Anmeldung
+
+- Öffentlicher Bereich mit eigener Kopf- und Fußzeile: Startseite mit kommenden Veranstaltungen, Eventseite `/de/events/<kurzname>` mit Termin, Ort, Beschreibung, Programm (Speaker nur mit bestätigtem Beitrag), Speakern, Sponsoren nach Paket, Preisen und Anmeldestatus („nur noch x Plätze“, „ausgebucht – Warteliste“, „öffnet am …“, „geschlossen“).
+- Anmeldeformular (DE/EN): Stammdaten, Mitgliedsnummer mit Live-Preisprüfung (Nummer + Nachname), Zahlungsart, bei Rechnung Pflicht für Firma und Adresse (Firma wird vorbelegt). Preis und Berechtigung bestimmt nur der Server; weicht der angezeigte Preis ab, wird nicht angemeldet, sondern neu angezeigt.
+- Rechnung → sofort bestätigt, Zahlung offen; kostenlos → bestätigt; Stripe → 30 Minuten reserviert (wird erst angeboten, wenn Stripe eingerichtet ist – Phase 6). Volles Event oder wartende Personen → Warteliste.
+- Keine Doppelanmeldung pro E-Mail und Event; eine bestehende Person wird wiederverwendet, ihre Daten aber nicht durch ungeprüfte Eingaben überschrieben.
+- Bestätigung direkt auf der Seite statt Weiterleitung auf die Teilnehmerliste (K2).
+- DSGVO: AGB- und Datenschutz-Fassung werden mit Zeitpunkt gespeichert (D2); Foto/Video und Newsletter als eigene, freiwillige Häkchen (D3); Seiten für Datenschutzerklärung, AGB je Event und Impressum; Entwurf einer Datenschutzerklärung als Vorlage (D1, Text vor Go-live prüfen lassen). Wurden AGB/Datenschutz zwischenzeitlich geändert, muss neu geladen werden.
+- Spamschutz: unsichtbares Honeypot-Feld und Begrenzung pro IP (10 Anmeldungen bzw. 40 Preisabfragen in 10 Minuten), ohne Captcha und ohne Speicherung.
+- Admin-Eventübersicht: Hinweis, warum die öffentliche Anmeldung noch nicht möglich ist (AGB, Datenschutz, Zahlungsart), und Link zur öffentlichen Seite.
+- 13 neue Tests (110 gesamt), Smoke-Test erweitert, im Browser (DE/EN) durchgespielt.
+
 ## 27.09.2026 – Phase 4e: Protokoll (D8)
 
 - Neue Seite „Protokoll“ im Admin-Bereich: alle Audit-Einträge, neueste zuerst, 50 pro Seite.

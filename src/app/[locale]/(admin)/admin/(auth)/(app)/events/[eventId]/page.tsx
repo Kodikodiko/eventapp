@@ -6,7 +6,9 @@ import { initLocale } from '@/i18n/page';
 import { formatEuro } from '@/lib/money';
 import { loadEvent, type EventParams } from '@/server/admin-pages';
 import { getCancellationRules, getEventStats, registrationState } from '@/server/services/events';
+import { isStripeConfigured } from '@/server/payments/config';
 import { currentTerms } from '@/server/services/legal';
+import { getAvailability } from '@/server/services/public-events';
 
 export default async function EventOverviewPage({ params }: EventParams) {
   const locale = await initLocale(params);
@@ -18,6 +20,7 @@ export default async function EventOverviewPage({ params }: EventParams) {
   const stats = getEventStats(db, event);
   const rules = getCancellationRules(db, event.id);
   const terms = currentTerms(db, event.id);
+  const availability = getAvailability(db, event, isStripeConfigured());
   const state = registrationState(event);
   const dt = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: 'medium', timeStyle: 'short' }) : t('notSet'));
   const usage = event.capacity > 0 ? Math.min(100, Math.round((stats.seatsTaken / event.capacity) * 100)) : 0;
@@ -25,11 +28,41 @@ export default async function EventOverviewPage({ params }: EventParams) {
 
   return (
     <div className="space-y-6">
-      {!terms && (
-        <p role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          {t('noTerms')}{' '}
-          <Link href={`/admin/events/${event.id}/terms`} className="underline">
-            {t('addTerms')}
+      {availability.issues.length > 0 && (
+        <div role="status" className="space-y-1 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="font-medium">{t('publicBlocked')}</p>
+          <ul className="list-disc pl-5">
+            {availability.issues.includes('noTerms') && (
+              <li>
+                {t('noTerms')}{' '}
+                <Link href={`/admin/events/${event.id}/terms`} className="underline">
+                  {t('addTerms')}
+                </Link>
+              </li>
+            )}
+            {availability.issues.includes('noPrivacy') && (
+              <li>
+                {t('noPrivacy')}{' '}
+                <Link href="/admin/settings" className="underline">
+                  {t('toSettings')}
+                </Link>
+              </li>
+            )}
+            {availability.issues.includes('noPaymentMethod') && (
+              <li>
+                {t('noPaymentMethod')}{' '}
+                <Link href={`/admin/events/${event.id}/settings`} className="underline">
+                  {t('toEventSettings')}
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+      {!event.archivedAt && (
+        <p className="text-sm">
+          <Link href={`/events/${event.slug}`} target="_blank" className="underline underline-offset-4">
+            {t('viewPublic')}
           </Link>
         </p>
       )}

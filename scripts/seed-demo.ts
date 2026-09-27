@@ -8,6 +8,7 @@ import { count, eq } from 'drizzle-orm';
 import { loadEnv } from './lib/env';
 import { backupDirFromEnv, databasePathFromEnv, openDatabase } from '../src/server/db/core';
 import * as s from '../src/server/db/schema';
+import { PRIVACY_NOTICE_DRAFT } from '../src/server/services/legal-templates';
 
 loadEnv();
 const dbPath = databasePathFromEnv();
@@ -46,10 +47,7 @@ db.transaction((tx) => {
       kind: 'privacy',
       version: 1,
       validFrom: iso('2026-09-01'),
-      content: {
-        de: 'Demo-Datenschutzerklärung. Der echte Text folgt vor dem Go-live.',
-        en: 'Demo privacy notice. The real text follows before go-live.',
-      },
+      content: PRIVACY_NOTICE_DRAFT,
     })
     .run();
 

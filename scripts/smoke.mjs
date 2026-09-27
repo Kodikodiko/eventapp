@@ -29,6 +29,10 @@ const checks = [
   { path: '/api/export/registrations?event=1', status: 403 },
   { path: '/de/admin/events/1/sponsors', status: 307, location: '/de/admin/login' },
   { path: '/de/admin/audit', status: 307, location: '/de/admin/login' },
+  { path: '/de/privacy', status: 200, contains: 'Datenschutz' },
+  { path: '/en/imprint', status: 200, contains: 'Imprint' },
+  { path: '/de/events/gibt-es-nicht', status: 404, contains: 'Seite nicht gefunden' },
+  { path: '/en/events/does-not-exist/register', status: 404, contains: 'Page not found' },
 ];
 
 const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-p', PORT, '-H', '127.0.0.1'], {

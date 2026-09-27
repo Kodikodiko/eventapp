@@ -7,7 +7,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 
 - [x] **K1 – Admin-Authentifizierung einführen.** *(erledigt in Phase 2: Better Auth, Admin-Login mit Pflicht-2FA, Rollenprüfung serverseitig in jedem Admin-Layout, Vorprüfung in proxy.ts, keine anonymen Sitzungen mehr)* Derzeit wird jeder Besucher anonym angemeldet und hat vollen Zugriff auf alle Daten; „Admin Login“ ist nur ein Link, „Logout“ ohne Funktion.
   Ziel: Login für Admins (Passwort + optional 2FA), Rollen admin / attendee / public, alle Admin-Seiten serverseitig geschützt.
-- [ ] **K2 – Weiterleitung nach der Registrierung korrigieren.** Nach dem Absenden landet der Teilnehmer auf `/attendees` (komplette Teilnehmerliste).
+- [x] **K2 – Weiterleitung nach der Registrierung korrigieren.** Nach dem Absenden landet der Teilnehmer auf `/attendees` (komplette Teilnehmerliste).
   Ziel: eigene Danke-Seite, bzw. Weiterleitung zu Stripe Checkout.
 - [x] **K3 – XSS in den Druckansichten beheben.** *(erledigt in Phase 4c: Programm-Druck als React-Seite; die alte Rechnungs-Druckfunktion ist entfallen, Rechnungen kommen in Phase 7 als PDF)* `invoice-view.tsx` und `print-schedule.tsx` schreiben Name, E-Mail, Firma und Session-Daten ungefiltert per `document.write`.
   Ziel: Druckansichten als normale React-Seite rendern oder alle Werte escapen; Tailwind-CDN-Script entfernen.
@@ -19,9 +19,9 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
 
 ## DSGVO (siehe Spezifikation, Abschnitt 7)
 
-- [ ] **D1 – Datenschutzerklärung** erstellen, versionieren und auf Registrierungsseite, im Portal und in allen E-Mails verlinken (7.1).
-- [ ] **D2 – Zustimmungen protokollieren.** AGB- und Datenschutz-Version samt Zeitpunkt je Registrierung speichern (7.3).
-- [ ] **D3 – Foto-/Video-Einwilligung aus den AGB herauslösen** (derzeit AGB-Punkt 7) und als eigene, freiwillige Opt-in-Checkbox umsetzen; ebenso Newsletter (7.3).
+- [ ] **D1 – Datenschutzerklärung** erstellen, versionieren und auf Registrierungsseite, im Portal und in allen E-Mails verlinken (7.1). *Stand Phase 5: Entwurf als Vorlage, versionierte Seite /privacy, auf Event- und Anmeldeseite verlinkt; Portal (Phase 9) und E-Mails (Phase 7) folgen; Text vor Go-live prüfen lassen.*
+- [x] **D2 – Zustimmungen protokollieren.** AGB- und Datenschutz-Version samt Zeitpunkt je Registrierung speichern (7.3).
+- [x] **D3 – Foto-/Video-Einwilligung aus den AGB herauslösen** (derzeit AGB-Punkt 7) und als eigene, freiwillige Opt-in-Checkbox umsetzen; ebenso Newsletter (7.3).
 - [ ] **D4 – Auskunft/Export vervollständigen.** Sponsor-Kontakte werden nie gefunden (Abfrage vergleicht ganzes Kontaktobjekt), Speaker fehlen, Suche ist case-sensitiv, Datum wird als Objekt exportiert (7.4).
 - [ ] **D5 – Löschung vs. Aufbewahrungspflicht.** Anonymisierung überschreibt derzeit auch Rechnungsdaten. Rechnungs-/Zahlungsdaten 7 Jahre aufbewahren (§ 132 BAO), stattdessen Verarbeitung einschränken (7.4, 7.5).
 - [ ] **D6 – Automatisches Löschkonzept** mit den Fristen aus 7.5 umsetzen (geplanter Job mit Protokoll); Backup-Rotation festlegen.

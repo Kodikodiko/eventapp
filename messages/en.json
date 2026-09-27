@@ -3,11 +3,6 @@
     "name": "EventFlow",
     "description": "Event management"
   },
-  "home": {
-    "title": "EventFlow",
-    "intro": "Migration to Next.js and SQLite is in progress. Public event pages follow in phase 5.",
-    "toAdmin": "Go to admin area"
-  },
   "localeSwitcher": {
     "label": "Choose language",
     "de": "DE",
@@ -107,7 +102,17 @@
     "duplicateContact": "This email address is already used by another contact person.",
     "date": "Please choose a valid date.",
     "packageInUse": "The package is still assigned to sponsors and cannot be deleted.",
-    "sponsorHasBookings": "This sponsor already has payments or invoices and cannot be deleted."
+    "sponsorHasBookings": "This sponsor already has payments or invoices and cannot be deleted.",
+    "termsRequired": "Please accept the terms and conditions.",
+    "privacyRequired": "Please confirm that you have read the privacy notice.",
+    "requiredForInvoice": "Required for payment by invoice.",
+    "choosePaymentMethod": "Please choose a payment method.",
+    "emailAlreadyRegistered": "There is already a registration for this event with this email address.",
+    "registrationClosed": "Registration is not (or no longer) possible.",
+    "legalChanged": "The terms or privacy notice have been updated in the meantime. Please reload the page and review them.",
+    "priceChanged": "The price has been recalculated based on your details. Please check it and submit again.",
+    "tooManyRequests": "Too many attempts. Please wait a few minutes.",
+    "registrationNotPossible": "Online registration is not possible with this email address. Please contact us."
   },
   "forms": {
     "german": "German",
@@ -218,7 +223,7 @@
   "eventOverview": {
     "archivedBadge": "Archived",
     "archivedNotice": "This event is archived and read-only.",
-    "noTerms": "No terms of service for this event yet – public registration requires them.",
+    "noTerms": "No terms of service for this event yet.",
     "addTerms": "Add terms",
     "seats": "Seats taken",
     "seatsFree": "{count, plural, =0 {No seats left} one {# seat left} other {# seats left}}",
@@ -246,7 +251,13 @@
     "terms": "Terms",
     "termsVersion": "Version {version} of {date}",
     "notSet": "–",
-    "registrationUntil": "until {date}"
+    "registrationUntil": "until {date}",
+    "publicBlocked": "Public registration is not possible yet:",
+    "noPrivacy": "No privacy notice has been published.",
+    "toSettings": "Go to settings",
+    "noPaymentMethod": "No usable payment method: invoice is disabled and online payment (Stripe) is not set up yet.",
+    "toEventSettings": "Change payment methods",
+    "viewPublic": "View public event page ↗"
   },
   "terms": {
     "title": "Terms of service",
@@ -648,6 +659,101 @@
       "seed": "Demo data created",
       "admin_created": "Admin created",
       "admin_password_reset": "Admin password reset"
+    }
+  },
+  "public": {
+    "skipToContent": "Skip to content",
+    "navLabel": "Main navigation",
+    "events": "Events",
+    "privacy": "Privacy",
+    "imprint": "Imprint",
+    "contact": "Contact",
+    "toAdmin": "Go to admin area",
+    "upcomingTitle": "Events",
+    "upcomingIntro": "Upcoming events and registration.",
+    "noEvents": "There are no upcoming events at the moment.",
+    "details": "Details and registration →",
+    "program": "Schedule",
+    "speakers": "Speakers",
+    "sponsors": "Sponsors",
+    "registration": "Registration",
+    "price": "Price",
+    "free": "free",
+    "priceNormal": "Regular price",
+    "priceMember": "Member price",
+    "waitlistOnly": "Sold out – waitlist",
+    "fewSeats": "{count, plural, one {Only # seat left} other {Only # seats left}}",
+    "joinWaitlist": "Join the waitlist",
+    "registerNow": "Register now",
+    "opensAt": "Registration opens on {date}.",
+    "closed": "Registration is closed.",
+    "unavailable": "Registration is currently not possible. Please try again later.",
+    "notOpenYet": "Registration is not open yet.",
+    "closesAt": "Registration closes: {date}",
+    "termsLink": "Terms and conditions",
+    "registerTitle": "Registration",
+    "versionInfo": "Version {version}, valid from {date}",
+    "legalMissing": "This text is not available yet.",
+    "termsTitle": "Terms and conditions",
+    "imprintOwner": "Owner and organizer",
+    "vatId": "VAT ID"
+  },
+  "publicForm": {
+    "waitlistTitle": "This event is sold out",
+    "waitlistHint": "You will be put on the waitlist. If a seat becomes available, we will send you an offer by email. No payment is needed now.",
+    "personTitle": "Your details",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "emailHint": "We will send the confirmation to this address.",
+    "companyOptional": "Company (optional)",
+    "ticketTitle": "Ticket",
+    "memberNumber": "Member number (optional)",
+    "memberNumberHint": "For the member price: number and last name must match the member list.",
+    "priceMember": "Member price",
+    "priceNormal": "Regular price",
+    "free": "free",
+    "memberValid": "Membership confirmed – the member price applies.",
+    "memberInvalid": "Member number not found or last name does not match – the regular price applies.",
+    "paymentTitle": "Payment",
+    "method": {
+      "stripe": "Pay online (card etc.)",
+      "invoice": "Pay by invoice",
+      "stripeHint": "You will be redirected to Stripe. Your seat is reserved for 30 minutes.",
+      "invoiceHint": "Registration confirmed immediately, invoice by email, payable within {days} days."
+    },
+    "billingCompany": "Invoice to (company)",
+    "billingAddress": "Billing address",
+    "billingAddressHint": "Street, postcode, city, country",
+    "consentTitle": "Terms and consents",
+    "acceptTerms": "I accept the <link>terms and conditions</link> of this event.",
+    "acceptPrivacy": "I have read the <link>privacy notice</link>.",
+    "optionalConsents": "Optional – can be withdrawn at any time and does not affect your registration:",
+    "photoConsent": "Photos and videos showing me may be used to promote the event.",
+    "newsletter": "I would like to receive emails about future events.",
+    "submitting": "Sending …",
+    "submitWaitlist": "Join the waitlist",
+    "submit": "Register now (binding)",
+    "done": {
+      "confirmed": {
+        "title": "Registration confirmed",
+        "text": "Thank you! You are registered for {event}."
+      },
+      "reserved": {
+        "title": "Seat reserved",
+        "text": "Your seat for {event} is reserved for 30 minutes. Please complete the payment."
+      },
+      "waitlisted": {
+        "title": "You are on the waitlist",
+        "text": "Thank you! You are on the waitlist for {event}."
+      },
+      "ticket": "Ticket",
+      "payment": "Payment",
+      "memberInvalid": "Your member number could not be confirmed, so the regular price applies. Please contact us if you have any questions.",
+      "invoiceNext": "You will receive the invoice by email. Please pay within {days} days.",
+      "waitlistNext": "If a seat becomes available, we will email you an offer. It is valid for 48 hours.",
+      "emailNote": "You will receive a confirmation by email.",
+      "back": "← Back to the event"
     }
   }
 }

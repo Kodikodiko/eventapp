@@ -3,11 +3,6 @@
     "name": "EventFlow",
     "description": "Eventverwaltung"
   },
-  "home": {
-    "title": "EventFlow",
-    "intro": "Die Migration auf Next.js und SQLite läuft. Öffentliche Eventseiten folgen in Phase 5.",
-    "toAdmin": "Zum Admin-Bereich"
-  },
   "localeSwitcher": {
     "label": "Sprache wählen",
     "de": "DE",
@@ -107,7 +102,17 @@
     "duplicateContact": "Diese E-Mail-Adresse kommt bereits bei einer anderen Ansprechperson vor.",
     "date": "Bitte ein gültiges Datum wählen.",
     "packageInUse": "Das Paket ist noch Sponsoren zugeordnet und kann nicht gelöscht werden.",
-    "sponsorHasBookings": "Für diesen Sponsor gibt es bereits Zahlungen oder Rechnungen – er kann nicht gelöscht werden."
+    "sponsorHasBookings": "Für diesen Sponsor gibt es bereits Zahlungen oder Rechnungen – er kann nicht gelöscht werden.",
+    "termsRequired": "Bitte die AGB akzeptieren.",
+    "privacyRequired": "Bitte bestätigen, dass Sie die Datenschutzerklärung gelesen haben.",
+    "requiredForInvoice": "Für den Kauf auf Rechnung erforderlich.",
+    "choosePaymentMethod": "Bitte eine Zahlungsart wählen.",
+    "emailAlreadyRegistered": "Mit dieser E-Mail-Adresse besteht bereits eine Anmeldung für diese Veranstaltung.",
+    "registrationClosed": "Die Anmeldung ist nicht (mehr) möglich.",
+    "legalChanged": "AGB oder Datenschutzerklärung wurden inzwischen aktualisiert. Bitte laden Sie die Seite neu und prüfen Sie die Bedingungen.",
+    "priceChanged": "Der Preis wurde anhand Ihrer Angaben neu berechnet. Bitte prüfen Sie ihn und senden Sie erneut ab.",
+    "tooManyRequests": "Zu viele Versuche. Bitte warten Sie einige Minuten.",
+    "registrationNotPossible": "Eine Anmeldung mit dieser E-Mail-Adresse ist online nicht möglich. Bitte kontaktieren Sie uns."
   },
   "forms": {
     "german": "Deutsch",
@@ -218,7 +223,7 @@
   "eventOverview": {
     "archivedBadge": "Archiviert",
     "archivedNotice": "Dieses Event ist archiviert und schreibgeschützt.",
-    "noTerms": "Für dieses Event sind noch keine AGB hinterlegt – ohne AGB ist keine öffentliche Anmeldung möglich.",
+    "noTerms": "Für dieses Event sind noch keine AGB hinterlegt.",
     "addTerms": "AGB erfassen",
     "seats": "Plätze belegt",
     "seatsFree": "{count, plural, =0 {Keine Plätze frei} one {# Platz frei} other {# Plätze frei}}",
@@ -246,7 +251,13 @@
     "terms": "AGB",
     "termsVersion": "Version {version} vom {date}",
     "notSet": "–",
-    "registrationUntil": "bis {date}"
+    "registrationUntil": "bis {date}",
+    "publicBlocked": "Die öffentliche Anmeldung ist noch nicht möglich:",
+    "noPrivacy": "Es ist keine Datenschutzerklärung veröffentlicht.",
+    "toSettings": "Zu den Einstellungen",
+    "noPaymentMethod": "Keine nutzbare Zahlungsart: Kauf auf Rechnung ist deaktiviert und die Online-Zahlung (Stripe) ist noch nicht eingerichtet.",
+    "toEventSettings": "Zahlungsarten ändern",
+    "viewPublic": "Öffentliche Eventseite ansehen ↗"
   },
   "terms": {
     "title": "Allgemeine Geschäftsbedingungen",
@@ -648,6 +659,101 @@
       "seed": "Demodaten angelegt",
       "admin_created": "Admin angelegt",
       "admin_password_reset": "Admin-Passwort neu gesetzt"
+    }
+  },
+  "public": {
+    "skipToContent": "Zum Inhalt springen",
+    "navLabel": "Hauptnavigation",
+    "events": "Veranstaltungen",
+    "privacy": "Datenschutz",
+    "imprint": "Impressum",
+    "contact": "Kontakt",
+    "toAdmin": "Zum Admin-Bereich",
+    "upcomingTitle": "Veranstaltungen",
+    "upcomingIntro": "Kommende Veranstaltungen und Anmeldung.",
+    "noEvents": "Derzeit sind keine Veranstaltungen geplant.",
+    "details": "Details und Anmeldung →",
+    "program": "Programm",
+    "speakers": "Speaker",
+    "sponsors": "Sponsoren",
+    "registration": "Anmeldung",
+    "price": "Preis",
+    "free": "kostenlos",
+    "priceNormal": "Normalpreis",
+    "priceMember": "Mitgliedspreis",
+    "waitlistOnly": "Ausgebucht – Warteliste",
+    "fewSeats": "{count, plural, one {Nur noch # Platz frei} other {Nur noch # Plätze frei}}",
+    "joinWaitlist": "Auf die Warteliste",
+    "registerNow": "Jetzt anmelden",
+    "opensAt": "Die Anmeldung öffnet am {date}.",
+    "closed": "Die Anmeldung ist geschlossen.",
+    "unavailable": "Die Anmeldung ist derzeit nicht möglich. Bitte versuchen Sie es später erneut.",
+    "notOpenYet": "Die Anmeldung ist noch nicht geöffnet.",
+    "closesAt": "Anmeldeschluss: {date}",
+    "termsLink": "Allgemeine Geschäftsbedingungen",
+    "registerTitle": "Anmeldung",
+    "versionInfo": "Version {version}, gültig ab {date}",
+    "legalMissing": "Dieser Text ist noch nicht verfügbar.",
+    "termsTitle": "Allgemeine Geschäftsbedingungen",
+    "imprintOwner": "Medieninhaber und Veranstalter",
+    "vatId": "UID-Nummer"
+  },
+  "publicForm": {
+    "waitlistTitle": "Die Veranstaltung ist ausgebucht",
+    "waitlistHint": "Sie kommen auf die Warteliste. Wird ein Platz frei, erhalten Sie ein Angebot per E-Mail. Jetzt ist keine Zahlung nötig.",
+    "personTitle": "Ihre Angaben",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "emailHint": "An diese Adresse senden wir die Bestätigung.",
+    "companyOptional": "Firma (optional)",
+    "ticketTitle": "Ticket",
+    "memberNumber": "Mitgliedsnummer (optional)",
+    "memberNumberHint": "Für den Mitgliedspreis: Nummer und Nachname müssen mit der Mitgliederliste übereinstimmen.",
+    "priceMember": "Mitgliedspreis",
+    "priceNormal": "Normalpreis",
+    "free": "kostenlos",
+    "memberValid": "Mitgliedschaft bestätigt – es gilt der Mitgliedspreis.",
+    "memberInvalid": "Mitgliedsnummer nicht gefunden oder Nachname passt nicht – es gilt der Normalpreis.",
+    "paymentTitle": "Zahlung",
+    "method": {
+      "stripe": "Online bezahlen (Karte u. a.)",
+      "invoice": "Kauf auf Rechnung",
+      "stripeHint": "Weiterleitung zu Stripe. Ihr Platz ist 30 Minuten reserviert.",
+      "invoiceHint": "Anmeldung sofort bestätigt, Rechnung per E-Mail, zahlbar innerhalb von {days} Tagen."
+    },
+    "billingCompany": "Rechnung an (Firma)",
+    "billingAddress": "Rechnungsadresse",
+    "billingAddressHint": "Straße, PLZ, Ort, Land",
+    "consentTitle": "Bedingungen und Einwilligungen",
+    "acceptTerms": "Ich akzeptiere die <link>Allgemeinen Geschäftsbedingungen</link> dieser Veranstaltung.",
+    "acceptPrivacy": "Ich habe die <link>Datenschutzerklärung</link> gelesen.",
+    "optionalConsents": "Freiwillig – jederzeit widerrufbar, ohne Einfluss auf Ihre Anmeldung:",
+    "photoConsent": "Fotos und Videos, auf denen ich zu sehen bin, dürfen für die Bewerbung der Veranstaltung verwendet werden.",
+    "newsletter": "Ich möchte per E-Mail über künftige Veranstaltungen informiert werden.",
+    "submitting": "Wird gesendet …",
+    "submitWaitlist": "Auf die Warteliste setzen",
+    "submit": "Verbindlich anmelden",
+    "done": {
+      "confirmed": {
+        "title": "Anmeldung bestätigt",
+        "text": "Danke! Sie sind für {event} angemeldet."
+      },
+      "reserved": {
+        "title": "Platz reserviert",
+        "text": "Ihr Platz für {event} ist 30 Minuten reserviert. Bitte schließen Sie die Zahlung ab."
+      },
+      "waitlisted": {
+        "title": "Sie stehen auf der Warteliste",
+        "text": "Danke! Sie stehen auf der Warteliste für {event}."
+      },
+      "ticket": "Ticket",
+      "payment": "Zahlung",
+      "memberInvalid": "Die Mitgliedsnummer konnte nicht bestätigt werden, daher gilt der Normalpreis. Bei Fragen melden Sie sich bitte bei uns.",
+      "invoiceNext": "Sie erhalten die Rechnung per E-Mail. Bitte bezahlen Sie innerhalb von {days} Tagen.",
+      "waitlistNext": "Wird ein Platz frei, schicken wir Ihnen ein Angebot per E-Mail. Es ist 48 Stunden gültig.",
+      "emailNote": "Eine Bestätigung erhalten Sie per E-Mail.",
+      "back": "← Zurück zur Veranstaltung"
     }
   }
 }

@@ -257,7 +257,7 @@ export function searchMembers(db: Db, query: string, limit = 200) {
  * Mitgliedschaft prüfen: Nummer und Nachname müssen übereinstimmen (Groß-/Kleinschreibung und
  * Leerzeichen egal); ist „gültig bis“ gesetzt, muss es am Stichtag (Wiener Kalendertag) noch gelten.
  */
-export function findValidMember(db: Db, memberNumber: string, lastName: string, onDate: string) {
+export function findValidMember(db: Db | Tx, memberNumber: string, lastName: string, onDate: string) {
   const number = memberNumber.trim();
   if (!number || !lastName.trim()) return undefined;
   const m = db

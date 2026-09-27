@@ -193,7 +193,7 @@ sudo systemctl enable --now eventflow
 journalctl -u eventflow -f
 ```
 
-Die App lauscht nur auf `127.0.0.1` und ist ausschließlich über Caddy erreichbar. Migrationen laufen beim Start automatisch, mit Sicherung vorher.
+Die App lauscht nur auf `127.0.0.1` und ist ausschließlich über Caddy erreichbar. Migrationen laufen beim Start automatisch, mit Sicherung vorher. Das ist auch für den Spamschutz wichtig: Die Begrenzung der Anmeldeversuche pro IP liest die Adresse aus `X-Forwarded-For`, das Caddy setzt – direkt erreichbar könnte ein Angreifer den Header fälschen. Die Begrenzung liegt im Speicher des Prozesses, es darf also nur **ein** Node-Prozess laufen.
 
 ### B.6 Caddy
 
