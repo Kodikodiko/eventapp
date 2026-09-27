@@ -1,5 +1,13 @@
 # Changelog
 
+## 27.09.2026 – Phase 4a: Teilnehmerverwaltung
+
+- Teilnehmerliste pro Event: Suche, Filter nach Rollen (alle müssen zutreffen) und Status (einer muss zutreffen), Badge-Klick filtert, mit Strg/Cmd Mehrfachauswahl, Sortierung nach Name und Anmeldedatum, Zähler „x von y“ (Spezifikation 2.3).
+- Anmeldung durch Admins: bestehende Person (E-Mail) wird wiederverwendet, keine Doppelanmeldung, Kapazitätsprüfung mit bewusster Überbuchung, Preis aus dem Event vorbelegt (Normal/Mitglied), Preis 0 = kostenlos.
+- Bearbeiten (Stammdaten, Rollen, Sprache, Rechnungsangaben; Preis nach Zahlung gesperrt), Stornieren mit Pflicht-Grund statt Löschen, Bestätigen von der Warteliste.
+- Excel-Export (exceljs) genau der gefilterten Zeilen, Spalten in der gewählten Sprache; jeder Export wird im Audit-Log vermerkt – ohne Suchbegriff, da dieser Namen enthalten kann.
+- 15 neue Tests (64 gesamt); im Browser durchgespielt.
+
 ## 27.09.2026 – Phase 3: Events & Einstellungen
 
 - Mehrere Events: Liste (mit Belegung, Warteliste, Anmeldestatus), Anlegen, Bearbeiten, Kopieren als Vorlage (Einstellungen, Stornobedingungen, AGB, Sponsorpakete), Archivieren (schreibgeschützt) und Wiederherstellen; Event-Umschalter in der Kopfzeile.

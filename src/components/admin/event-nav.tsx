@@ -11,6 +11,7 @@ export function EventNav({ eventId }: { eventId: number }) {
   const base = `/admin/events/${eventId}`;
   const items = [
     { href: base, label: t('overview'), exact: true },
+    { href: `${base}/attendees`, label: t('attendees') },
     { href: `${base}/settings`, label: t('settings') },
     { href: `${base}/terms`, label: t('terms') },
   ];

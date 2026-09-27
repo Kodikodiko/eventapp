@@ -39,7 +39,7 @@ export function getCancellationRules(db: Db, eventId: number): CancellationRuleR
 export type EventStats = { reserved: number; confirmed: number; waitlisted: number; cancelled: number; seatsTaken: number; seatsFree: number };
 
 /** Belegung: reserved (nicht abgelaufen) + confirmed zählen gegen die Kapazität. */
-export function getEventStats(db: Db, event: EventRow, now = new Date()): EventStats {
+export function getEventStats(db: Db | Tx, event: EventRow, now = new Date()): EventStats {
   const rows = db
     .select({ status: registrations.status, n: count() })
     .from(registrations)
