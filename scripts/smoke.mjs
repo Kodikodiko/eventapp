@@ -27,6 +27,7 @@ const checks = [
   { path: '/api/health', status: 200, contains: '"status":"ok"' },
   { path: '/de/admin/events/1/attendees', status: 307, location: '/de/admin/login' },
   { path: '/api/export/registrations?event=1', status: 403 },
+  { path: '/de/admin/events/1/sponsors', status: 307, location: '/de/admin/login' },
 ];
 
 const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-p', PORT, '-H', '127.0.0.1'], {

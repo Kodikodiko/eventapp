@@ -1,5 +1,14 @@
 # Changelog
 
+## 27.09.2026 – Phase 4d: Sponsoren
+
+- Sponsorpakete pro Event: zweisprachiger Name, Leistungen (eine pro Zeile), Bruttopreis, USt-Satz, Reihenfolge; Löschen nur, solange kein Sponsor das Paket gebucht hat.
+- Sponsoren mit Paket, Rabatt (Betrag = Paketpreis − Rabatt), Fälligkeit, Zahlungsstatus (offen/verrechnet/bezahlt/überfällig, vorerst manuell), Rechnungsadresse, Notizen und 1–10 Ansprechpersonen; Summen gesamt/bezahlt/offen.
+- Ansprechpersonen sind Personen (per E-Mail wiederverwendet); vorhandene Firma/Telefon werden nicht mehr durch leere Angaben überschrieben.
+- Sponsoren mit Zahlungen oder Rechnungen können nicht gelöscht werden (Aufbewahrungspflicht); Fehler für das ganze Formular erscheinen als verständliche Meldung.
+- Reine Datumsangaben werden lokalisiert angezeigt (31.03.2027 / 31 Mar 2027).
+- 10 neue Tests (91 gesamt); im Browser durchgespielt (DE/EN).
+
 ## 27.09.2026 – Phase 4c: Speaker und Programm
 
 - Speaker pro Event: Person wird über die E-Mail wiederverwendet, Status für Einreichung und Folien, Anzahl zugeordneter Programmpunkte; Entfernen behält die Person.

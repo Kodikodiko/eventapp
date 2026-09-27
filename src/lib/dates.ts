@@ -61,3 +61,8 @@ export function viennaInputToUtc(local: string | null | undefined): string | nul
 export function viennaDate(iso: string): string {
   return utcToViennaInput(iso).slice(0, 10);
 }
+
+/** Reines Datum (YYYY-MM-DD, ohne Uhrzeit) lokalisiert anzeigen, z. B. 31.03.2027. */
+export function formatDateOnly(day: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'de-AT', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${day}T00:00:00Z`));
+}

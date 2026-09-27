@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { utcToViennaInput, viennaDate, viennaInputToUtc } from '@/lib/dates';
+import { formatDateOnly, utcToViennaInput, viennaDate, viennaInputToUtc } from '@/lib/dates';
 
 describe('Wiener Ortszeit ↔ UTC', () => {
   it('rechnet im Winter mit +1 h', () => {
@@ -36,5 +36,12 @@ describe('Wiener Ortszeit ↔ UTC', () => {
 
   it('liefert den Wiener Kalendertag', () => {
     expect(viennaDate('2027-05-11T22:30:00.000Z')).toBe('2027-05-12');
+  });
+});
+
+describe('formatDateOnly', () => {
+  it('zeigt reine Daten ohne Zeitzonenverschiebung', () => {
+    expect(formatDateOnly('2027-03-31', 'de')).toBe('31.03.2027');
+    expect(formatDateOnly('2027-03-31', 'en')).toBe('31 Mar 2027');
   });
 });
