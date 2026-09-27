@@ -353,6 +353,8 @@ export const payments = sqliteTable(
     status: text('status', { enum: PAYMENT_RECORD_STATUSES }).notNull(),
     amountCents: integer('amount_cents').notNull(),
     stripeCheckoutSessionId: text('stripe_checkout_session_id').unique(),
+    /** zufällige Referenz für Rücksprung-URLs der Kasse (nicht erratbar, keine Personendaten) */
+    publicRef: text('public_ref').unique(),
     stripePaymentIntentId: text('stripe_payment_intent_id'),
     createdAt: createdAt(),
     paidAt: text('paid_at'),

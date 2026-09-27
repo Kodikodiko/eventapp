@@ -2,12 +2,12 @@
  * Events: anlegen, bearbeiten, kopieren, archivieren, lesen.
  * Alle Schreibvorgänge laufen in einer Transaktion und schreiben einen Audit-Eintrag.
  */
-import { and, asc, count, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { ServiceError } from '@/lib/action-result';
 import type { LocalizedText } from '@/lib/localized';
 import type { EventInput } from '@/lib/validation/forms';
 import type { Db } from '@/server/db/core';
-import { cancellationRules, events, legalDocuments, registrations, sponsorPackages } from '@/server/db/schema';
+import { cancellationRules, events, legalDocuments, registrations, sponsorPackages, waitlistOffers } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 
 export type EventRow = typeof events.$inferSelect;
@@ -36,9 +36,18 @@ export function getCancellationRules(db: Db, eventId: number): CancellationRuleR
     .all();
 }
 
-export type EventStats = { reserved: number; confirmed: number; waitlisted: number; cancelled: number; seatsTaken: number; seatsFree: number };
+export type EventStats = {
+  reserved: number;
+  confirmed: number;
+  waitlisted: number;
+  cancelled: number;
+  /** offene Wartelisten-Angebote (halten einen Platz) */
+  offered: number;
+  seatsTaken: number;
+  seatsFree: number;
+};
 
-/** Belegung: reserved (nicht abgelaufen) + confirmed zählen gegen die Kapazität. */
+/** Belegung: confirmed + reserved (nicht abgelaufen) + offene Wartelisten-Angebote zählen gegen die Kapazität. */
 export function getEventStats(db: Db | Tx, event: EventRow, now = new Date()): EventStats {
   const rows = db
     .select({ status: registrations.status, n: count() })
@@ -59,12 +68,28 @@ export function getEventStats(db: Db | Tx, event: EventRow, now = new Date()): E
         )
       )
       .get()?.n ?? 0;
-  const seatsTaken = (by.confirmed ?? 0) + activeReserved;
+  const offered =
+    db
+      .select({ n: count() })
+      .from(waitlistOffers)
+      .innerJoin(registrations, eq(registrations.id, waitlistOffers.registrationId))
+      .where(
+        and(
+          eq(registrations.eventId, event.id),
+          eq(registrations.status, 'waitlisted'),
+          isNull(waitlistOffers.acceptedAt),
+          isNull(waitlistOffers.closedAt),
+          gt(waitlistOffers.expiresAt, now.toISOString())
+        )
+      )
+      .get()?.n ?? 0;
+  const seatsTaken = (by.confirmed ?? 0) + activeReserved + offered;
   return {
     reserved: by.reserved ?? 0,
     confirmed: by.confirmed ?? 0,
     waitlisted: by.waitlisted ?? 0,
     cancelled: by.cancelled ?? 0,
+    offered,
     seatsTaken,
     seatsFree: Math.max(0, event.capacity - seatsTaken),
   };

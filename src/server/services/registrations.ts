@@ -209,8 +209,9 @@ export function updateRegistrationByAdmin(db: Db, actor: Actor, id: number, inpu
   });
 }
 
-export function cancelRegistrationByAdmin(db: Db, actor: Actor, id: number, reason: string): void {
-  db.transaction((tx) => {
+/** Storniert und liefert die Event-ID (damit der frei gewordene Platz angeboten werden kann). */
+export function cancelRegistrationByAdmin(db: Db, actor: Actor, id: number, reason: string): number {
+  return db.transaction((tx) => {
     const { reg } = loadRegistration(tx, id);
     if (reg.status === 'cancelled') throw new ServiceError('CONFLICT');
     tx.update(registrations)
@@ -224,6 +225,7 @@ export function cancelRegistrationByAdmin(db: Db, actor: Actor, id: number, reas
       eventId: reg.eventId,
       summary: `Storniert durch Admin (vorher ${reg.status})`,
     });
+    return reg.eventId;
   });
 }
 

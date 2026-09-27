@@ -6,7 +6,7 @@ import { initLocale } from '@/i18n/page';
 import { formatEuro } from '@/lib/money';
 import { loadEvent, type EventParams } from '@/server/admin-pages';
 import { getCancellationRules, getEventStats, registrationState } from '@/server/services/events';
-import { isStripeConfigured } from '@/server/payments/config';
+import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import { currentTerms } from '@/server/services/legal';
 import { getAvailability } from '@/server/services/public-events';
 
@@ -20,7 +20,7 @@ export default async function EventOverviewPage({ params }: EventParams) {
   const stats = getEventStats(db, event);
   const rules = getCancellationRules(db, event.id);
   const terms = currentTerms(db, event.id);
-  const availability = getAvailability(db, event, isStripeConfigured());
+  const availability = getAvailability(db, event, isOnlinePaymentEnabled());
   const state = registrationState(event);
   const dt = (iso: string | null) => (iso ? format.dateTime(new Date(iso), { dateStyle: 'medium', timeStyle: 'short' }) : t('notSet'));
   const usage = event.capacity > 0 ? Math.min(100, Math.round((stats.seatsTaken / event.capacity) * 100)) : 0;
@@ -89,6 +89,7 @@ export default async function EventOverviewPage({ params }: EventParams) {
           <CardContent>
             <p className="text-2xl font-semibold tabular-nums">{stats.confirmed}</p>
             <p className="text-xs text-muted-foreground">{t('reservedCount', { count: stats.reserved })}</p>
+            {stats.offered > 0 && <p className="text-xs text-muted-foreground">{t('offeredCount', { count: stats.offered })}</p>}
           </CardContent>
         </Card>
         <Card>

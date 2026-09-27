@@ -17,7 +17,8 @@
     "db:studio": "drizzle-kit studio",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "db:backup": "tsx scripts/db-backup.ts",
-    "admin:create": "tsx scripts/admin-create.ts"
+    "admin:create": "tsx scripts/admin-create.ts",
+    "jobs": "tsx scripts/jobs.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -57,6 +58,7 @@
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.89.0",
     "server-only": "^0.0.1",
+    "stripe": "^22.6.2",
     "tailwind-merge": "^3.7.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.6.5"

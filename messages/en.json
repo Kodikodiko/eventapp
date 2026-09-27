@@ -112,7 +112,11 @@
     "legalChanged": "The terms or privacy notice have been updated in the meantime. Please reload the page and review them.",
     "priceChanged": "The price has been recalculated based on your details. Please check it and submit again.",
     "tooManyRequests": "Too many attempts. Please wait a few minutes.",
-    "registrationNotPossible": "Online registration is not possible with this email address. Please contact us."
+    "registrationNotPossible": "Online registration is not possible with this email address. Please contact us.",
+    "checkoutClosed": "This payment can no longer be continued.",
+    "offerExpired": "The offer has expired.",
+    "offerClosed": "The offer is no longer valid.",
+    "onlinePaymentUnavailable": "Online payment is currently unavailable."
   },
   "forms": {
     "german": "German",
@@ -257,7 +261,8 @@
     "toSettings": "Go to settings",
     "noPaymentMethod": "No usable payment method: invoice is disabled and online payment (Stripe) is not set up yet.",
     "toEventSettings": "Change payment methods",
-    "viewPublic": "View public event page ↗"
+    "viewPublic": "View public event page ↗",
+    "offeredCount": "{count, plural, one {# open waitlist offer} other {# open waitlist offers}}"
   },
   "terms": {
     "title": "Terms of service",
@@ -658,7 +663,13 @@
       "sponsor_package_deleted": "Sponsor package deleted",
       "seed": "Demo data created",
       "admin_created": "Admin created",
-      "admin_password_reset": "Admin password reset"
+      "admin_password_reset": "Admin password reset",
+      "payment_succeeded": "Payment received",
+      "payment_failed": "Payment failed",
+      "reservation_expired": "Reservation expired",
+      "waitlist_offered": "Seat offered",
+      "waitlist_expired": "Offer expired",
+      "waitlist_accepted": "Offer accepted"
     }
   },
   "public": {
@@ -755,5 +766,69 @@
       "emailNote": "You will receive a confirmation by email.",
       "back": "← Back to the event"
     }
+  },
+  "checkout": {
+    "paid": {
+      "title": "Payment received",
+      "text": "Thank you! Your registration for {event} is confirmed."
+    },
+    "processing": {
+      "title": "Confirming payment …",
+      "text": "We are waiting for confirmation from the payment provider. This usually takes only a few seconds."
+    },
+    "open": {
+      "title": "Payment not completed",
+      "text": "The payment for {event} was cancelled. Your seat is still reserved for a short time."
+    },
+    "closed": {
+      "title": "Reservation expired",
+      "text": "No payment was received for this reservation, so the seat has been released."
+    },
+    "reservedUntil": "Reserved until {time}.",
+    "resume": "Pay now",
+    "registerAgain": "Register again",
+    "backToEvent": "← Back to the event",
+    "checking": "This page updates automatically …",
+    "stillProcessing": "Confirmation is taking longer than usual. You will receive an email once the payment has arrived."
+  },
+  "fakeCheckout": {
+    "banner": "TEST MODE – simulated checkout. No money is moved. (PAYMENT_PROVIDER=fake)",
+    "title": "Simulate payment",
+    "pay": "Payment succeeds",
+    "fail": "Payment fails",
+    "expire": "Let session expire",
+    "cancel": "Cancel and go back",
+    "done": "This session is closed (status: {status})."
+  },
+  "offer": {
+    "open": {
+      "title": "A seat is available",
+      "text": "You were on the waitlist for {event}. You can now accept the seat."
+    },
+    "accepted": {
+      "title": "Offer accepted",
+      "text": "You have accepted the seat for {event}."
+    },
+    "expired": {
+      "title": "Offer expired",
+      "text": "Unfortunately the offer has expired and the seat went to the next person."
+    },
+    "closed": {
+      "title": "Offer no longer valid",
+      "text": "This offer is no longer valid."
+    },
+    "price": "Price",
+    "payment": "Payment",
+    "validUntil": "Valid until",
+    "free": "free",
+    "method": {
+      "stripe": "Pay online",
+      "invoice": "Pay by invoice",
+      "free": "free"
+    },
+    "accept": "Accept seat (binding)",
+    "acceptAndPay": "Accept and pay",
+    "onlineUnavailable": "Online payment is currently unavailable. Please contact us.",
+    "backToEvent": "← Back to the event"
   }
 }

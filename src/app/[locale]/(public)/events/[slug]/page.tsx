@@ -10,7 +10,7 @@ import { viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
 import { formatEuro } from '@/lib/money';
 import { requestDb } from '@/server/db';
-import { isStripeConfigured } from '@/server/payments/config';
+import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import {
   getAvailability,
   getPublicEventBySlug,
@@ -39,7 +39,7 @@ export default async function PublicEventPage({ params }: Props) {
   if (!event) notFound();
   const t = await getTranslations('public');
   const format = await getFormatter();
-  const availability = getAvailability(db, event, isStripeConfigured());
+  const availability = getAvailability(db, event, isOnlinePaymentEnabled());
   const sessions = listPublicSessions(db, event.id);
   const speakers = listPublicSpeakers(db, event.id);
   const sponsors = listPublicSponsors(db, event.id);

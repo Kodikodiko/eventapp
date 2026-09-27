@@ -1,5 +1,16 @@
 # Changelog
 
+## 27.09.2026 – Phase 6: Online-Zahlung und Warteliste
+
+- Online-Zahlung über Stripe Checkout: Kassensitzung mit Serverpreis, Reservierung 30 Minuten (plus 1 Minute Puffer), Bestätigung ausschließlich über den Webhook (`/api/stripe/webhook`, Signaturprüfung, jede Ereignis-ID nur einmal). Ablauf oder Fehlschlag gibt den Platz frei; eine verspätete Zahlung wird angenommen und im Protokoll vermerkt.
+- Ohne Stripe-Konto: simulierte Kasse mit `PAYMENT_PROVIDER=fake` (deutlich als Testmodus gekennzeichnet, durchläuft dieselbe Logik). Echte Stripe-Anbindung ist gebaut, aber mangels Testschlüssel noch nicht gegen Stripe getestet.
+- Rücksprungseite `/checkout/<referenz>` (zufällige Referenz statt Personendaten): bestätigt, wird bestätigt (lädt automatisch neu), abgebrochen mit „Jetzt bezahlen“ oder abgelaufen.
+- Warteliste: Freie Plätze werden automatisch der Reihe nach angeboten (sofort beim Stornieren durch Admins, beim Ablauf von Reservierungen und im Zeitplan). Angebot per E-Mail, 48 Stunden gültig, hält den Platz; Annehmen unter `/offer/<token>` – Rechnung/kostenlos sofort bestätigt, Online-Zahlung über die Kasse. Nicht angenommene Angebote verfallen, die nächste Person ist dran.
+- `npm run jobs`: Reservierungen freigeben, Angebote verfallen lassen und neu vergeben (produktiv alle 5 Minuten per Timer).
+- E-Mails vorerst als .eml-Dateien in `data/mail-outbox/` (SMTP und weitere Vorlagen in Phase 7).
+- Belegung zählt offene Wartelisten-Angebote mit; Admin-Übersicht zeigt deren Anzahl. Migration `0003_payment_public_ref`.
+- 12 neue Tests (122 gesamt), Smoke-Test erweitert, im Browser durchgespielt: Online-Zahlung mit Abbruch und Fortsetzen, Nachrücken von der Warteliste mit Angebot und Zahlung.
+
 ## 27.09.2026 – Phase 5: Öffentliche Anmeldung
 
 - Öffentlicher Bereich mit eigener Kopf- und Fußzeile: Startseite mit kommenden Veranstaltungen, Eventseite `/de/events/<kurzname>` mit Termin, Ort, Beschreibung, Programm (Speaker nur mit bestätigtem Beitrag), Speakern, Sponsoren nach Paket, Preisen und Anmeldestatus („nur noch x Plätze“, „ausgebucht – Warteliste“, „öffnet am …“, „geschlossen“).

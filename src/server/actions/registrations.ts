@@ -14,6 +14,7 @@ import {
   createRegistrationByAdmin,
   updateRegistrationByAdmin,
 } from '@/server/services/registrations';
+import { fillFreeSeats } from '@/server/services/automation';
 import { runAdminAction } from './run';
 
 const idSchema = z.number().int().positive();
@@ -40,7 +41,11 @@ export async function cancelRegistrationAction(registrationId: number, values: u
   const parsed = cancelSchema.safeParse(values);
   if (!id.success) return fail('NOT_FOUND');
   if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
-  return runAdminAction(({ actor, db }) => cancelRegistrationByAdmin(db, actor, id.data, parsed.data.reason));
+  return runAdminAction(async ({ actor, db }) => {
+    const eventId = cancelRegistrationByAdmin(db, actor, id.data, parsed.data.reason);
+    // frei gewordenen Platz sofort der Warteliste anbieten
+    await fillFreeSeats(db, [eventId]);
+  });
 }
 
 export async function confirmWaitlistedAction(registrationId: number, overbook: boolean): Promise<ActionResult<void>> {

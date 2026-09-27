@@ -13,6 +13,7 @@ export type RateLimit = { limit: number; windowMs: number };
 export const RATE_LIMITS = {
   register: { limit: 10, windowMs: 10 * 60_000 },
   quote: { limit: 40, windowMs: 10 * 60_000 },
+  checkout: { limit: 30, windowMs: 10 * 60_000 },
 } satisfies Record<string, RateLimit>;
 
 /** Zählt einen Zugriff; false, wenn das Limit im Zeitfenster bereits erreicht ist. */

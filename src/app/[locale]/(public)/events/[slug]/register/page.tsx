@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { initLocale } from '@/i18n/page';
 import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
-import { isStripeConfigured } from '@/server/payments/config';
+import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import { getOrganizerSettings } from '@/server/services/organizer';
 import { getAvailability, getPublicEventBySlug } from '@/server/services/public-events';
 
@@ -27,7 +27,7 @@ export default async function RegisterPage({ params }: Props) {
   if (!event) notFound();
   const t = await getTranslations('public');
   const format = await getFormatter();
-  const availability = getAvailability(db, event, isStripeConfigured());
+  const availability = getAvailability(db, event, isOnlinePaymentEnabled());
   const organizer = getOrganizerSettings(db);
   const name = localized(event.name, locale);
 

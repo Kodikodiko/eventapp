@@ -44,6 +44,7 @@ Beim ersten Start legt die App `data\eventflow.db` an und führt alle Migratione
 | `BETTER_AUTH_URL` | `http://localhost:3000` | `https://<domain>` | |
 | `STRIPE_SECRET_KEY` | `sk_test_…` | `sk_live_…` | nur serverseitig |
 | `STRIPE_WEBHOOK_SECRET` | von `stripe listen` ausgegeben | aus dem Stripe-Dashboard | Signaturprüfung |
+| `PAYMENT_PROVIDER` | `fake` (nur ohne Stripe-Testschlüssel) | **nicht setzen** | simulierte Kasse unter `/pay/fake/…`; wird ignoriert, sobald `STRIPE_SECRET_KEY` gesetzt ist |
 | `MAIL_TRANSPORT` | `file` | `smtp` | `file` schreibt E-Mails nach `MAIL_OUTBOX_DIR` |
 | `MAIL_OUTBOX_DIR` | `data/mail-outbox` | – | |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | – | vom E-Mail-Anbieter | |
@@ -53,18 +54,24 @@ Veranstalterdaten für Rechnungen (Name, Anschrift, UID, Bank) stehen **nicht** 
 
 Ein Stripe-Publishable-Key wird nicht benötigt: Die App leitet direkt auf die von Stripe gelieferte Checkout-URL weiter.
 
-### A.4 Stripe lokal testen (ab Phase 5)
+### A.4 Zahlung lokal testen
+
+**Ohne Stripe-Konto:** `PAYMENT_PROVIDER=fake` in `.env.local`. Online-Zahlung wird dann angeboten und leitet auf eine deutlich als Testmodus markierte Seite um, auf der man „Zahlung erfolgreich“, „fehlgeschlagen“ oder „Sitzung ablaufen lassen“ wählt. Das durchläuft dieselbe Logik wie ein echter Stripe-Webhook (Bestätigung, Freigabe, Nachrücken von der Warteliste).
+
+**Mit Stripe-Testschlüssel (ab Phase 6):**
 
 ```powershell
 stripe login
 stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
-`stripe listen` gibt ein `whsec_…` aus → als `STRIPE_WEBHOOK_SECRET` in `.env.local` eintragen und `npm run dev` neu starten. Bezahlt wird mit den Testkarten aus der Stripe-Dokumentation. Einzelne Ereignisse lassen sich mit `stripe trigger checkout.session.completed` auslösen.
+`STRIPE_SECRET_KEY=sk_test_…` in `.env.local` eintragen (dann ist die simulierte Kasse automatisch aus). `stripe listen` gibt ein `whsec_…` aus → als `STRIPE_WEBHOOK_SECRET` in `.env.local` eintragen und den Server neu starten. Bezahlt wird mit den Testkarten aus der Stripe-Dokumentation. Einzelne Ereignisse lassen sich mit `stripe trigger checkout.session.completed` auslösen.
 
 ### A.5 E-Mails lokal
 
-Mit `MAIL_TRANSPORT=file` landen alle E-Mails als `.eml`-Dateien in `data\mail-outbox\` und lassen sich per Doppelklick in Outlook/Thunderbird öffnen. Es wird nichts verschickt.
+Mit `MAIL_TRANSPORT=file` landen alle E-Mails als `.eml`-Dateien in `data\mail-outbox\` und lassen sich per Doppelklick in Outlook/Thunderbird öffnen. Es wird nichts verschickt. (Bis Phase 7 ist das der einzige Versandweg; derzeit werden Wartelisten-Angebote verschickt.)
+
+Zeitgesteuerte Abläufe lokal von Hand: `npm run jobs` (gibt abgelaufene Reservierungen frei, schließt abgelaufene Wartelisten-Angebote und bietet freie Plätze an).
 
 ### A.6 Ordner `data\` (gitignored)
 

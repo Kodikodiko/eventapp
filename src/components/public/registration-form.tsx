@@ -121,6 +121,10 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
         values
       );
       if (res.ok) {
+        if (res.data.checkoutUrl) {
+          window.location.assign(res.data.checkoutUrl);
+          return;
+        }
         setResult(res.data);
         scrollToTop();
         return;

@@ -33,6 +33,10 @@ const checks = [
   { path: '/en/imprint', status: 200, contains: 'Imprint' },
   { path: '/de/events/gibt-es-nicht', status: 404, contains: 'Seite nicht gefunden' },
   { path: '/en/events/does-not-exist/register', status: 404, contains: 'Page not found' },
+  { path: '/de/checkout/kein-gueltiger-wert', status: 404 },
+  { path: '/de/offer/abcdefghijklmnopqrstuvwxyz', status: 404 },
+  { path: '/de/pay/fake/fake_cs_x', status: 404 },
+  { path: '/api/stripe/webhook', status: 405 },
 ];
 
 const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-p', PORT, '-H', '127.0.0.1'], {

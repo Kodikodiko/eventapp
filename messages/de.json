@@ -112,7 +112,11 @@
     "legalChanged": "AGB oder Datenschutzerklärung wurden inzwischen aktualisiert. Bitte laden Sie die Seite neu und prüfen Sie die Bedingungen.",
     "priceChanged": "Der Preis wurde anhand Ihrer Angaben neu berechnet. Bitte prüfen Sie ihn und senden Sie erneut ab.",
     "tooManyRequests": "Zu viele Versuche. Bitte warten Sie einige Minuten.",
-    "registrationNotPossible": "Eine Anmeldung mit dieser E-Mail-Adresse ist online nicht möglich. Bitte kontaktieren Sie uns."
+    "registrationNotPossible": "Eine Anmeldung mit dieser E-Mail-Adresse ist online nicht möglich. Bitte kontaktieren Sie uns.",
+    "checkoutClosed": "Diese Zahlung kann nicht mehr fortgesetzt werden.",
+    "offerExpired": "Das Angebot ist abgelaufen.",
+    "offerClosed": "Das Angebot ist nicht mehr gültig.",
+    "onlinePaymentUnavailable": "Die Online-Zahlung ist derzeit nicht verfügbar."
   },
   "forms": {
     "german": "Deutsch",
@@ -257,7 +261,8 @@
     "toSettings": "Zu den Einstellungen",
     "noPaymentMethod": "Keine nutzbare Zahlungsart: Kauf auf Rechnung ist deaktiviert und die Online-Zahlung (Stripe) ist noch nicht eingerichtet.",
     "toEventSettings": "Zahlungsarten ändern",
-    "viewPublic": "Öffentliche Eventseite ansehen ↗"
+    "viewPublic": "Öffentliche Eventseite ansehen ↗",
+    "offeredCount": "{count, plural, one {# offenes Wartelisten-Angebot} other {# offene Wartelisten-Angebote}}"
   },
   "terms": {
     "title": "Allgemeine Geschäftsbedingungen",
@@ -658,7 +663,13 @@
       "sponsor_package_deleted": "Sponsorpaket gelöscht",
       "seed": "Demodaten angelegt",
       "admin_created": "Admin angelegt",
-      "admin_password_reset": "Admin-Passwort neu gesetzt"
+      "admin_password_reset": "Admin-Passwort neu gesetzt",
+      "payment_succeeded": "Zahlung erhalten",
+      "payment_failed": "Zahlung fehlgeschlagen",
+      "reservation_expired": "Reservierung abgelaufen",
+      "waitlist_offered": "Platz angeboten",
+      "waitlist_expired": "Angebot verfallen",
+      "waitlist_accepted": "Angebot angenommen"
     }
   },
   "public": {
@@ -755,5 +766,69 @@
       "emailNote": "Eine Bestätigung erhalten Sie per E-Mail.",
       "back": "← Zurück zur Veranstaltung"
     }
+  },
+  "checkout": {
+    "paid": {
+      "title": "Zahlung erhalten",
+      "text": "Danke! Ihre Anmeldung für {event} ist bestätigt."
+    },
+    "processing": {
+      "title": "Zahlung wird bestätigt …",
+      "text": "Wir warten auf die Bestätigung des Zahlungsanbieters. Das dauert meist nur wenige Sekunden."
+    },
+    "open": {
+      "title": "Zahlung nicht abgeschlossen",
+      "text": "Die Zahlung für {event} wurde abgebrochen. Ihr Platz ist noch kurz reserviert."
+    },
+    "closed": {
+      "title": "Reservierung abgelaufen",
+      "text": "Für diese Reservierung ist keine Zahlung eingegangen, der Platz wurde freigegeben."
+    },
+    "reservedUntil": "Reserviert bis {time} Uhr.",
+    "resume": "Jetzt bezahlen",
+    "registerAgain": "Erneut anmelden",
+    "backToEvent": "← Zur Veranstaltung",
+    "checking": "Seite aktualisiert sich automatisch …",
+    "stillProcessing": "Die Bestätigung dauert länger als üblich. Sie erhalten eine E-Mail, sobald die Zahlung eingegangen ist."
+  },
+  "fakeCheckout": {
+    "banner": "TESTMODUS – simulierte Kasse. Es wird kein Geld bewegt. (PAYMENT_PROVIDER=fake)",
+    "title": "Zahlung simulieren",
+    "pay": "Zahlung erfolgreich",
+    "fail": "Zahlung fehlgeschlagen",
+    "expire": "Sitzung ablaufen lassen",
+    "cancel": "Abbrechen und zurück",
+    "done": "Diese Sitzung ist abgeschlossen (Status: {status})."
+  },
+  "offer": {
+    "open": {
+      "title": "Ein Platz ist frei",
+      "text": "Sie standen auf der Warteliste für {event}. Jetzt können Sie den Platz annehmen."
+    },
+    "accepted": {
+      "title": "Angebot angenommen",
+      "text": "Sie haben den Platz für {event} angenommen."
+    },
+    "expired": {
+      "title": "Angebot abgelaufen",
+      "text": "Das Angebot ist leider abgelaufen, der Platz ging an die nächste Person."
+    },
+    "closed": {
+      "title": "Angebot nicht mehr gültig",
+      "text": "Dieses Angebot ist nicht mehr gültig."
+    },
+    "price": "Preis",
+    "payment": "Zahlung",
+    "validUntil": "Gültig bis",
+    "free": "kostenlos",
+    "method": {
+      "stripe": "Online bezahlen",
+      "invoice": "Kauf auf Rechnung",
+      "free": "kostenlos"
+    },
+    "accept": "Platz verbindlich annehmen",
+    "acceptAndPay": "Annehmen und bezahlen",
+    "onlineUnavailable": "Die Online-Zahlung ist derzeit nicht verfügbar. Bitte kontaktieren Sie uns.",
+    "backToEvent": "← Zur Veranstaltung"
   }
 }
