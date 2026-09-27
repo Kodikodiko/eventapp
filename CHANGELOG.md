@@ -1,5 +1,14 @@
 # Changelog
 
+## 27.09.2026 – Phase 4c: Speaker und Programm
+
+- Speaker pro Event: Person wird über die E-Mail wiederverwendet, Status für Einreichung und Folien, Anzahl zugeordneter Programmpunkte; Entfernen behält die Person.
+- Programmpunkte mit zweisprachigem Titel, Raum, Art, Stream 1–4 und Speaker; Zeiten müssen im Eventzeitraum liegen, im selben Stream dürfen sich Programmpunkte nicht überschneiden.
+- Programmansicht nach Tagen und Zeitfenstern; Druckansicht als normale React-Seite (Kopfzeile/Navigation beim Drucken ausgeblendet) – ersetzt die alte Druckfunktion mit `document.write` (K3).
+- Gemeinsamer Personen-Service für Teilnehmende und Speaker; wiederverwendbarer Bestätigungsdialog.
+- Demodaten: Summit beginnt um 08:00 (passend zum Programm).
+- 7 neue Tests (81 gesamt).
+
 ## 27.09.2026 – Phase 4b: Mitgliederliste
 
 - Upload als CSV (Semikolon oder Komma, UTF-8 oder Windows-1252) oder Excel (.xlsx); Spalten werden an deutschen oder englischen Überschriften erkannt (Pflicht: Mitgliedsnummer, Nachname; optional Vorname, E-Mail, gültig bis).

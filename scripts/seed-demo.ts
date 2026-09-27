@@ -64,7 +64,8 @@ db.transaction((tx) => {
         en: 'A day full of talks and workshops on project management.',
       },
       location: 'Wien, Konferenzzentrum',
-      startsAt: iso('2027-05-12T07:00:00Z'),
+      // 08:00 Wiener Zeit – das Programm beginnt mit Registrierung & Frühstück
+      startsAt: iso('2027-05-12T06:00:00Z'),
       endsAt: iso('2027-05-12T16:00:00Z'),
       capacity: 40,
       registrationOpensAt: iso('2026-09-01T00:00:00Z'),

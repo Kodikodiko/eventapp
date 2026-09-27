@@ -98,14 +98,18 @@
     "alreadyRegistered": "This person is already registered for this event.",
     "emailInUse": "This email address belongs to another person.",
     "eventFull": "The event is full – choose the waitlist or allow overbooking.",
-    "priceLocked": "Price and ticket type cannot be changed after payment."
+    "priceLocked": "Price and ticket type cannot be changed after payment.",
+    "alreadySpeaker": "This person is already a speaker at this event.",
+    "sessionOutsideEvent": "The session must lie within the start and end of the event.",
+    "streamOverlap": "This stream already has a session at that time."
   },
   "forms": {
     "german": "German",
     "english": "English",
     "optional": "optional",
     "englishFallback": "Leave empty to show the German text.",
-    "saveFailed": "Saving failed"
+    "saveFailed": "Saving failed",
+    "cancel": "Cancel"
   },
   "actionErrors": {
     "INVALID": "Please check the highlighted fields.",
@@ -180,7 +184,9 @@
     "overview": "Overview",
     "settings": "Settings",
     "terms": "Terms",
-    "attendees": "Attendees"
+    "attendees": "Attendees",
+    "speakers": "Speakers",
+    "schedule": "Schedule"
   },
   "registrationState": {
     "archived": "Archived",
@@ -426,6 +432,81 @@
       "invalidDate": "Invalid date “{value}” in “{column}”.",
       "invalidEmail": "Invalid email address “{value}”.",
       "tooLong": "A value is too long."
+    }
+  },
+  "speakers": {
+    "title": "Speakers",
+    "add": "Add speaker",
+    "addTitle": "Add speaker",
+    "editTitle": "Edit speaker",
+    "edit": "Edit",
+    "remove": "Remove",
+    "removeTitle": "Remove {name} from the event?",
+    "removeHint": "The person stays stored; assigned sessions remain, but without a speaker.",
+    "removed": "Speaker removed",
+    "saved": "Speaker saved",
+    "cancel": "Cancel",
+    "save": "Save",
+    "empty": "No speakers yet.",
+    "actionsFor": "Actions for {name}",
+    "colName": "Name",
+    "colCompany": "Company",
+    "colProposal": "Proposal",
+    "colSlides": "Slides",
+    "colSessions": "Sessions",
+    "colActions": "Actions",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "company": "Company (optional)",
+    "locale": "Language",
+    "localeDe": "German",
+    "localeEn": "English",
+    "proposal": {
+      "pending": "Pending",
+      "confirmed": "Accepted",
+      "rejected": "Rejected"
+    },
+    "slides": {
+      "missing": "Missing",
+      "uploaded": "Uploaded",
+      "review": "In review"
+    }
+  },
+  "schedule": {
+    "title": "Schedule",
+    "add": "Add session",
+    "addTitle": "Add session",
+    "editTitle": "Edit session",
+    "editNamed": "Edit “{title}”",
+    "deleteNamed": "Delete “{title}”",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{title}”?",
+    "deleteHint": "The session will be deleted permanently.",
+    "deleted": "Session deleted",
+    "saved": "Session saved",
+    "cancel": "Cancel",
+    "save": "Save",
+    "empty": "No sessions yet.",
+    "print": "Print view",
+    "printNow": "Print",
+    "printHint": "Header and navigation are not printed.",
+    "time": "Time",
+    "streamN": "Stream {n}",
+    "titleLabel": "Title",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
+    "location": "Room",
+    "speaker": "Speaker",
+    "noSpeaker": "– no speaker –",
+    "tagLabel": "Type",
+    "stream": "Stream",
+    "streamHint": "Parallel sessions go in different streams.",
+    "tag": {
+      "general": "General",
+      "talk": "Talk",
+      "workshop": "Workshop",
+      "break": "Break"
     }
   }
 }

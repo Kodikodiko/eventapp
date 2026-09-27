@@ -24,7 +24,7 @@ export async function AdminShell({ locale, user, fullAccess, children }: Props) 
 
   return (
     <div className="min-h-screen">
-      <header className="border-b bg-background">
+      <header className="border-b bg-background print:hidden">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Link href="/admin" className="text-lg font-semibold">
             EventFlow
@@ -60,7 +60,7 @@ export async function AdminShell({ locale, user, fullAccess, children }: Props) 
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8 print:max-w-none print:p-0">{children}</main>
     </div>
   );
 }

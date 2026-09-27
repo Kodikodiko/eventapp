@@ -9,7 +9,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
   Ziel: Login für Admins (Passwort + optional 2FA), Rollen admin / attendee / public, alle Admin-Seiten serverseitig geschützt.
 - [ ] **K2 – Weiterleitung nach der Registrierung korrigieren.** Nach dem Absenden landet der Teilnehmer auf `/attendees` (komplette Teilnehmerliste).
   Ziel: eigene Danke-Seite, bzw. Weiterleitung zu Stripe Checkout.
-- [ ] **K3 – XSS in den Druckansichten beheben.** `invoice-view.tsx` und `print-schedule.tsx` schreiben Name, E-Mail, Firma und Session-Daten ungefiltert per `document.write`.
+- [x] **K3 – XSS in den Druckansichten beheben.** *(erledigt in Phase 4c: Programm-Druck als React-Seite; die alte Rechnungs-Druckfunktion ist entfallen, Rechnungen kommen in Phase 7 als PDF)* `invoice-view.tsx` und `print-schedule.tsx` schreiben Name, E-Mail, Firma und Session-Daten ungefiltert per `document.write`.
   Ziel: Druckansichten als normale React-Seite rendern oder alle Werte escapen; Tailwind-CDN-Script entfernen.
 - [ ] **K4 – Registrierung erst nach Zahlung bestätigen, Preis serverseitig.** Derzeit sofort „Confirmed“, Preis im Browser berechnet, jede PMI-Nummer gibt Rabatt.
   Ziel: Status „Reserved“ → Stripe Checkout → Webhook setzt „Confirmed“ (bzw. Kauf auf Rechnung, Spec 3.1); Preis und Mitgliedsprüfung gegen die Mitgliederliste nur auf dem Server.

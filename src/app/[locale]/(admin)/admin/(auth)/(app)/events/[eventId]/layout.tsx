@@ -15,7 +15,7 @@ export default async function EventLayout({ children, params }: EventParams & { 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-bold">{localized(event.name, locale)}</h1>
           <p className="text-sm text-muted-foreground">{event.slug}</p>
@@ -27,7 +27,7 @@ export default async function EventLayout({ children, params }: EventParams & { 
         </div>
       </div>
       {event.archivedAt && (
-        <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{t('archivedNotice')}</p>
+        <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 print:hidden">{t('archivedNotice')}</p>
       )}
       <EventNav eventId={event.id} />
       {children}

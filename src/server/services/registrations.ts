@@ -13,11 +13,12 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, inArray, ne } from 'drizzle-orm';
 import { ServiceError } from '@/lib/action-result';
 import type { RegistrationStatusKey } from '@/lib/registrations-filter';
-import type { RegistrationAdminInput, RegistrationPersonInput } from '@/lib/validation/registrations';
+import type { RegistrationAdminInput } from '@/lib/validation/registrations';
 import type { Db } from '@/server/db/core';
 import { events, people, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { getEventStats } from './events';
+import { updatePerson, upsertPerson } from './people';
 
 export type RegistrationListRow = {
   id: number;
@@ -113,25 +114,6 @@ function setRoles(tx: Tx, registrationId: number, roleIds: number[]) {
   tx.insert(registrationRoles).values(roleIds.map((roleId) => ({ registrationId, roleId }))).run();
 }
 
-/** Person zur E-Mail finden oder anlegen; Stammdaten werden mit den Admin-Angaben aktualisiert. */
-function upsertPerson(tx: Tx, input: RegistrationPersonInput): number {
-  const email = input.email.trim().toLowerCase();
-  const existing = tx.select().from(people).where(eq(people.email, email)).get();
-  const values = {
-    firstName: input.firstName,
-    lastName: input.lastName,
-    company: input.company,
-    locale: input.locale,
-    updatedAt: new Date().toISOString(),
-  };
-  if (existing) {
-    tx.update(people).set(values).where(eq(people.id, existing.id)).run();
-    return existing.id;
-  }
-  const [row] = tx.insert(people).values({ ...values, email }).returning().all();
-  return row.id;
-}
-
 function paymentFor(priceCents: number) {
   return priceCents === 0
     ? { paymentMethod: 'free' as const, paymentStatus: 'not_required' as const }
@@ -198,21 +180,7 @@ export function updateRegistrationByAdmin(db: Db, actor: Actor, id: number, inpu
   db.transaction((tx) => {
     const { reg } = loadRegistration(tx, id);
     const roleIds = resolveRoleIds(tx, input.roles);
-    const email = input.email.trim().toLowerCase();
-    const other = tx.select({ id: people.id }).from(people).where(eq(people.email, email)).get();
-    if (other && other.id !== reg.personId) throw new ServiceError('CONFLICT', { email: 'emailInUse' });
-
-    tx.update(people)
-      .set({
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email,
-        company: input.company,
-        locale: input.locale,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(people.id, reg.personId))
-      .run();
+    updatePerson(tx, reg.personId, input);
 
     const changed: string[] = [];
     const paymentLocked = reg.paymentStatus === 'paid' || reg.paymentStatus === 'partially_refunded' || reg.paymentStatus === 'refunded';

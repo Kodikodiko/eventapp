@@ -98,14 +98,18 @@
     "alreadyRegistered": "Diese Person ist für dieses Event bereits angemeldet.",
     "emailInUse": "Diese E-Mail-Adresse gehört bereits einer anderen Person.",
     "eventFull": "Das Event ist ausgebucht – Warteliste wählen oder Überbuchung erlauben.",
-    "priceLocked": "Preis und Tickettyp sind nach der Zahlung nicht mehr änderbar."
+    "priceLocked": "Preis und Tickettyp sind nach der Zahlung nicht mehr änderbar.",
+    "alreadySpeaker": "Diese Person ist bei diesem Event bereits Speaker.",
+    "sessionOutsideEvent": "Der Programmpunkt muss innerhalb von Beginn und Ende des Events liegen.",
+    "streamOverlap": "In diesem Stream gibt es zu dieser Zeit schon einen Programmpunkt."
   },
   "forms": {
     "german": "Deutsch",
     "english": "Englisch",
     "optional": "optional",
     "englishFallback": "Leer lassen: Deutsch wird angezeigt.",
-    "saveFailed": "Speichern fehlgeschlagen"
+    "saveFailed": "Speichern fehlgeschlagen",
+    "cancel": "Abbrechen"
   },
   "actionErrors": {
     "INVALID": "Bitte die markierten Felder prüfen.",
@@ -180,7 +184,9 @@
     "overview": "Überblick",
     "settings": "Einstellungen",
     "terms": "AGB",
-    "attendees": "Teilnehmende"
+    "attendees": "Teilnehmende",
+    "speakers": "Speaker",
+    "schedule": "Programm"
   },
   "registrationState": {
     "archived": "Archiviert",
@@ -426,6 +432,81 @@
       "invalidDate": "Ungültiges Datum „{value}“ bei „{column}“.",
       "invalidEmail": "Ungültige E-Mail-Adresse „{value}“.",
       "tooLong": "Ein Wert ist zu lang."
+    }
+  },
+  "speakers": {
+    "title": "Speaker",
+    "add": "Speaker hinzufügen",
+    "addTitle": "Speaker hinzufügen",
+    "editTitle": "Speaker bearbeiten",
+    "edit": "Bearbeiten",
+    "remove": "Entfernen",
+    "removeTitle": "{name} aus dem Event entfernen?",
+    "removeHint": "Die Person bleibt gespeichert; zugeordnete Programmpunkte bleiben bestehen, aber ohne Speaker.",
+    "removed": "Speaker entfernt",
+    "saved": "Speaker gespeichert",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "empty": "Noch keine Speaker.",
+    "actionsFor": "Aktionen für {name}",
+    "colName": "Name",
+    "colCompany": "Firma",
+    "colProposal": "Einreichung",
+    "colSlides": "Folien",
+    "colSessions": "Programmpunkte",
+    "colActions": "Aktionen",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "company": "Firma (optional)",
+    "locale": "Sprache",
+    "localeDe": "Deutsch",
+    "localeEn": "Englisch",
+    "proposal": {
+      "pending": "Offen",
+      "confirmed": "Angenommen",
+      "rejected": "Abgelehnt"
+    },
+    "slides": {
+      "missing": "Fehlen",
+      "uploaded": "Vorhanden",
+      "review": "In Prüfung"
+    }
+  },
+  "schedule": {
+    "title": "Programm",
+    "add": "Programmpunkt hinzufügen",
+    "addTitle": "Programmpunkt hinzufügen",
+    "editTitle": "Programmpunkt bearbeiten",
+    "editNamed": "„{title}“ bearbeiten",
+    "deleteNamed": "„{title}“ löschen",
+    "delete": "Löschen",
+    "deleteTitle": "„{title}“ löschen?",
+    "deleteHint": "Der Programmpunkt wird endgültig gelöscht.",
+    "deleted": "Programmpunkt gelöscht",
+    "saved": "Programmpunkt gespeichert",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "empty": "Noch keine Programmpunkte.",
+    "print": "Druckansicht",
+    "printNow": "Drucken",
+    "printHint": "Kopfzeile und Navigation erscheinen nicht im Ausdruck.",
+    "time": "Zeit",
+    "streamN": "Stream {n}",
+    "titleLabel": "Titel",
+    "startsAt": "Beginn",
+    "endsAt": "Ende",
+    "location": "Raum",
+    "speaker": "Speaker",
+    "noSpeaker": "– kein Speaker –",
+    "tagLabel": "Art",
+    "stream": "Stream",
+    "streamHint": "Parallele Programmpunkte in verschiedenen Streams.",
+    "tag": {
+      "general": "Allgemein",
+      "talk": "Vortrag",
+      "workshop": "Workshop",
+      "break": "Pause"
     }
   }
 }
