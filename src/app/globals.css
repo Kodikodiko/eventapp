@@ -5,7 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-plex), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --color-background: hsl(var(--background));
@@ -33,6 +34,10 @@
   --color-destructive-foreground: hsl(var(--destructive-foreground));
 
   --color-border: hsl(var(--border));
+  --color-canvas: hsl(var(--canvas));
+  --color-cta: hsl(var(--cta));
+  --color-cta-foreground: hsl(var(--cta-foreground));
+  --color-brand-soft: hsl(var(--brand-soft));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
@@ -96,39 +101,44 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 210 40% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 210 40% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 52% 47%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 17% 95%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 17% 95%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 231 99% 62%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 52% 47%;
-    --chart-1: 262 52% 47%;
-    --chart-2: 231 99% 62%;
+    /* Markenfarben (UI-Entwürfe 27.09.): Indigo #3A2B8F, Tinte #15172B, Off-White #F7F6F2, Orange #C2410C nur für Anmelde-CTAs */
+    --background: 48 22% 96%;
+    --foreground: 234 35% 13%;
+    --canvas: 60 11% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 234 35% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 234 35% 13%;
+    --primary: 249 54% 36%;
+    --primary-foreground: 0 0% 100%;
+    --brand-soft: 252 64% 95%;
+    --secondary: 45 15% 92%;
+    --secondary-foreground: 234 35% 13%;
+    --muted: 45 15% 92%;
+    --muted-foreground: 231 12% 38%;
+    --accent: 252 64% 95%;
+    --accent-foreground: 249 54% 30%;
+    --destructive: 4 76% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --cta: 17 88% 40%;
+    --cta-foreground: 0 0% 100%;
+    --border: 44 13% 88%;
+    --input: 45 13% 80%;
+    --ring: 249 54% 36%;
+    --chart-1: 249 54% 36%;
+    --chart-2: 250 58% 85%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-5: 17 88% 40%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 17% 95%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 234 35% 13%;
+    --sidebar-foreground: 236 15% 82%;
+    --sidebar-primary: 249 54% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 245 41% 28%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 234 26% 25%;
+    --sidebar-ring: 250 58% 75%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -137,21 +147,25 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 262 52% 47%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 250 58% 70%;
+    --primary-foreground: 234 35% 13%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215.4 16.3% 56.9%;
-    --accent: 231 99% 62%;
+    --accent: 249 40% 22%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262 52% 47%;
-    --chart-1: 262 52% 47%;
-    --chart-2: 231 99% 62%;
+    --ring: 250 58% 70%;
+    --canvas: 234 35% 8%;
+    --brand-soft: 249 40% 22%;
+    --cta: 17 88% 45%;
+    --cta-foreground: 0 0% 100%;
+    --chart-1: 250 58% 70%;
+    --chart-2: 249 40% 35%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
@@ -172,5 +186,11 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }

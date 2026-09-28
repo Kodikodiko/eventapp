@@ -24,3 +24,16 @@ export async function runAdminAction<T>(fn: (ctx: { actor: Actor; db: Db }) => T
     return fail('UNEXPECTED');
   }
 }
+
+/** Wie runAdminAction, aber nur lesend: ohne Neuaufbau der Seiten (für Suche und Detailansichten). */
+export async function runAdminQuery<T>(fn: (ctx: { db: Db }) => T | Promise<T>): Promise<ActionResult<T>> {
+  try {
+    await assertAdmin();
+    return ok(await fn({ db: getDb() }));
+  } catch (error) {
+    if (error instanceof ForbiddenError) return fail('FORBIDDEN');
+    if (error instanceof ServiceError) return fail(error.code, error.fieldErrors);
+    console.error('[query] Unerwarteter Fehler', error);
+    return fail('UNEXPECTED');
+  }
+}

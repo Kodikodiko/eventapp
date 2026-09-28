@@ -194,6 +194,16 @@ describe('Filter der Teilnehmerliste', () => {
     ]);
   });
 
+  it('filtert nach Zahlungsstatus, Zahlungsart, Ticket und Auswahl', () => {
+    const base = { roles: [], statuses: [], search: '' };
+    const sort = { key: 'name' as const, direction: 'asc' as const };
+    const rich = rows.map((r, i) => ({ ...r, id: i + 1, paymentStatus: i === 0 ? ('open' as const) : ('paid' as const), paymentMethod: 'invoice' as const, ticketType: i === 2 ? ('member' as const) : ('normal' as const) }));
+    expect(filterAndSort(rich, { ...base, payments: ['open'] }, sort).map((r) => r.id)).toEqual([1]);
+    expect(filterAndSort(rich, { ...base, tickets: ['member'] }, sort).map((r) => r.id)).toEqual([3]);
+    expect(filterAndSort(rich, { ...base, methods: ['stripe'] }, sort)).toEqual([]);
+    expect(filterAndSort(rich, { ...base, ids: [2, 3] }, sort).map((r) => r.id).sort()).toEqual([2, 3]);
+  });
+
   it('wählt per Badge-Klick einzeln oder mit Strg mehrfach', () => {
     expect(toggleSelection([], 'a', false)).toEqual(['a']);
     expect(toggleSelection(['a'], 'a', false)).toEqual([]);
@@ -205,8 +215,12 @@ describe('Filter der Teilnehmerliste', () => {
   it('übersteht den Weg über die URL', () => {
     const filter = { roles: ['speaker'], statuses: ['confirmed' as const], search: 'Anna' };
     const sort = { key: 'name' as const, direction: 'asc' as const };
-    expect(filterFromSearchParams(filterToSearchParams(filter, sort))).toEqual({ filter, sort });
+    const empty = { payments: [], methods: [], tickets: [], ids: [] };
+    expect(filterFromSearchParams(filterToSearchParams(filter, sort))).toEqual({ filter: { ...filter, ...empty }, sort });
     expect(filterFromSearchParams(new URLSearchParams('statuses=bogus&sort=x:y')).filter.statuses).toEqual([]);
+    const extended = { ...filter, payments: ['open' as const], methods: ['invoice' as const], tickets: ['member' as const], ids: [3, 7] };
+    expect(filterFromSearchParams(filterToSearchParams(extended, sort))).toEqual({ filter: extended, sort });
+    expect(filterFromSearchParams(new URLSearchParams('payments=open,bogus&ids=1,x,-2')).filter).toMatchObject({ payments: ['open'], ids: [1] });
   });
 });
 

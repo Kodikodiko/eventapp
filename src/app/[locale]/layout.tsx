@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { IBM_Plex_Sans, Plus_Jakarta_Sans } from 'next/font/google';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { Toaster } from '@/components/ui/toaster';
@@ -7,7 +7,8 @@ import { initLocale, type LocaleParams } from '@/i18n/page';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const plex = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-plex' });
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-jakarta' });
 
 type Props = LocaleParams & { children: React.ReactNode };
 
@@ -25,7 +26,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   const locale = await initLocale(params);
 
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={`${plex.variable} ${jakarta.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <NextIntlClientProvider>
           {children}

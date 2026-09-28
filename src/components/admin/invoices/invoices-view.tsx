@@ -31,7 +31,8 @@ const stateVariant: Record<InvoiceState, BadgeProps['variant']> = {
   credit_note: 'outline',
 };
 
-type Props = { rows: InvoiceListRow[]; organizerIncomplete: boolean; mailToFile: boolean };
+export type InvoiceStateFilter = 'all' | 'open' | 'overdue';
+type Props = { rows: InvoiceListRow[]; organizerIncomplete: boolean; mailToFile: boolean; initialQuery?: string; initialState?: InvoiceStateFilter };
 type DialogState = { kind: 'payment' | 'cancel'; row: InvoiceListRow } | null;
 
 /** Heutiges Datum in Wien als YYYY-MM-DD (Vorbelegung für den Zahlungseingang). */
@@ -39,7 +40,7 @@ function todayVienna(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Vienna' }).format(new Date());
 }
 
-export function InvoicesView({ rows, organizerIncomplete, mailToFile }: Props) {
+export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, initialQuery = '', initialState = 'all' }: Props) {
   const t = useTranslations('invoices');
   const locale = useLocale() as Locale;
   const format = useFormatter();
@@ -48,9 +49,17 @@ export function InvoicesView({ rows, organizerIncomplete, mailToFile }: Props) {
   const [, startTransition] = useTransition();
   const [dialog, setDialog] = useState<DialogState>(null);
   const fmt = (c: number) => formatEuro(c, locale);
+  const [query, setQuery] = useState(initialQuery);
+  const [stateFilter, setStateFilter] = useState<InvoiceStateFilter>(initialState);
+  const needle = query.trim().toLowerCase();
+  const rows = allRows.filter(
+    (r) =>
+      (stateFilter === 'all' || (stateFilter === 'overdue' ? r.state === 'overdue' : r.state === 'open' || r.state === 'overdue')) &&
+      (!needle || `${r.number} ${r.recipientName} ${r.recipientCompany ?? ''}`.toLowerCase().includes(needle))
+  );
 
-  const open = rows.filter((r) => r.state === 'open' || r.state === 'overdue');
-  const overdue = rows.filter((r) => r.state === 'overdue');
+  const open = allRows.filter((r) => r.state === 'open' || r.state === 'overdue');
+  const overdue = allRows.filter((r) => r.state === 'overdue');
   const sum = (list: InvoiceListRow[]) => list.reduce((s, r) => s + r.openCents, 0);
 
   function send(row: InvoiceListRow) {
@@ -74,10 +83,34 @@ export function InvoicesView({ rows, organizerIncomplete, mailToFile }: Props) {
       {mailToFile && <p className="text-sm text-muted-foreground">{t('mailToFileHint')}</p>}
 
       <p className="text-sm" aria-live="polite">
-        {t('summary', { count: rows.filter((r) => r.type === 'invoice').length, openCount: open.length, open: fmt(sum(open)), overdue: fmt(sum(overdue)) })}
+        {t('summary', { count: allRows.filter((r) => r.type === 'invoice').length, openCount: open.length, open: fmt(sum(open)), overdue: fmt(sum(overdue)) })}
       </p>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('search')}
+          className="h-9 w-64 bg-card"
+        />
+        <div role="group" aria-label={t('stateFilter')} className="flex rounded-lg border bg-card p-0.5">
+          {(['all', 'open', 'overdue'] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={stateFilter === s}
+              onClick={() => setStateFilter(s)}
+              className={`rounded-md px-3 py-1.5 text-sm ${stateFilter === s ? 'bg-primary font-semibold text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {t(`stateFilterOption.${s}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
             <tr>
@@ -167,7 +200,7 @@ export function InvoicesView({ rows, organizerIncomplete, mailToFile }: Props) {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={8} className="p-6 text-center text-muted-foreground">
-                  {t('empty')}
+                  {allRows.length === 0 ? t('empty') : t('noMatches')}
                 </td>
               </tr>
             )}
@@ -181,7 +214,7 @@ export function InvoicesView({ rows, organizerIncomplete, mailToFile }: Props) {
   );
 }
 
-function PaymentDialog({ row, onClose }: { row: InvoiceListRow; onClose: () => void }) {
+export function PaymentDialog({ row, onClose }: { row: InvoiceListRow; onClose: () => void }) {
   const t = useTranslations('invoices');
   const locale = useLocale() as Locale;
   const router = useRouter();

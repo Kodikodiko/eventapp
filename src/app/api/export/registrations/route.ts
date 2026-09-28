@@ -79,7 +79,11 @@ export async function GET(request: Request) {
     // ohne Suchtext – der kann Namen enthalten (keine Personendaten im Audit-Log)
     summary:
       `Excel-Export: ${rows.length} Zeilen; Rollen: ${filter.roles.join(',') || 'alle'}; ` +
-      `Status: ${filter.statuses.join(',') || 'alle'}${filter.search ? '; mit Suchbegriff' : ''}`,
+      `Status: ${filter.statuses.join(',') || 'alle'}` +
+      `${filter.payments?.length ? `; Zahlung: ${filter.payments.join(',')}` : ''}` +
+      `${filter.methods?.length ? `; Zahlungsart: ${filter.methods.join(',')}` : ''}` +
+      `${filter.tickets?.length ? `; Ticket: ${filter.tickets.join(',')}` : ''}` +
+      `${filter.ids?.length ? `; Auswahl: ${filter.ids.length}` : ''}${filter.search ? '; mit Suchbegriff' : ''}`,
   });
 
   const fileName = `${t('export.fileName')}-${event.slug}-${new Date().toISOString().slice(0, 10)}.xlsx`;

@@ -1,5 +1,17 @@
 # Changelog
 
+## 28.09.2026 – UI/UX: Admin-Rahmen, Cockpit, Teilnehmende
+
+- Neues Erscheinungsbild nach den UI-Entwürfen: Indigo #3A2B8F als Marke, Tinte #15172B, Off-White-Flächen, Orange nur für Anmelde-Aktionen; Schriften Plus Jakarta Sans (Überschriften) und IBM Plex Sans (Text).
+- Admin-Rahmen: dunkle Seitenleiste mit Event-Umschalter (inkl. archivierter Events und „Neues Event“), Bereichen „Event“ und „Organisation“, Zählern für Teilnehmende, überfällige Rechnungen und offene Erstattungsaufgaben; einklappbar auf eine Symbolleiste (Einstellung pro Browser), auf schmalen Bildschirmen als Menü. Ohne Event in der Adresse zeigt sie das nächste Event.
+- Kopfzeile: Schnellsuche (Strg+K) nach Personen, Rechnungs-/Gutschriftnummern, Events und Seiten; „Anmeldelink kopieren“ (direkter Link zum Anmeldeformular des Events); „+ Anmeldung“ öffnet den Anlegedialog.
+- Event-Seiten: Kopf mit Anmeldestatus und Countdown; die bisherige Reiter-Navigation entfällt (Seitenleiste).
+- Cockpit je Event: Belegung, Umsatz bezahlt (abzüglich Erstattungen, plus Sponsoring), offene/überfällige Rechnungen, Warteliste mit Angeboten; „Zu erledigen“ (gesperrte öffentliche Anmeldung, Erstattungen zur Freigabe, fehlgeschlagene Erstattungen, überfällige Rechnungen, Rücküberweisungen, Wartelisten-Angebote, Reservierungen, Speaker ohne Folien) mit Sprung zur Aufgabe; Anmeldungen pro Woche (8 Wochen) mit Anteil Mitgliederpreis/online bezahlt; letzte Aktivität aus dem Protokoll; Eckdaten und Anmeldelink.
+- Teilnehmende: Ansichten mit Zählern (Alle, Bestätigt, Zahlung offen, Warteliste, Reserviert, Storniert) und eigene gespeicherte Ansichten (pro Browser); Suche, Filter-Chips und zusätzliche Filter nach Zahlungsstatus, Zahlungsart und Ticket; Mehrfachauswahl mit Sammelaktionen (E-Mail an alle in BCC, Adressen kopieren, Rechnungen erstellen, Rolle zuweisen, Auswahl exportieren); Tastatur (↑ ↓, Enter, Leertaste, Esc); Detailpanel mit Stammdaten, Zustimmungen, Belegen (Ansehen/PDF), Verlauf aus dem Protokoll und passender Hauptaktion (Zahlung verbuchen, Bestätigen, Rechnung erstellen). Überfällige Rechnungen sind in der Liste markiert.
+- Rechnungen: Suche und Statusfilter (Alle/Offen/Überfällig), auch per Link aus Cockpit und Schnellsuche.
+- Excel-Export berücksichtigt die neuen Filter und eine Auswahl; das Protokoll vermerkt sie.
+- 7 neue Tests (170 gesamt), im Browser durchgespielt (DE/EN, Desktop und mobil).
+
 ## 27.09.2026 – Phase 9: Teilnehmerportal
 
 - „Meine Anmeldungen“ (`/de/portal`, Link in der Kopfzeile und in jeder Bestätigung): Anmeldung ohne Passwort per Link an die E-Mail-Adresse der Anmeldung (Better-Auth-Plugin „magic link“, 15 Minuten gültig, einmal verwendbar, Token nur als Hash gespeichert).

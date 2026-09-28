@@ -470,6 +470,8 @@ export type InvoiceListRow = {
   recipientName: string;
   recipientCompany: string | null;
   kind: 'registration' | 'sponsor';
+  registrationId: number | null;
+  sponsorId: number | null;
   grossCents: number;
   creditedCents: number;
   paidCents: number;
@@ -530,6 +532,8 @@ export function listInvoices(db: Db, eventId: number, now = new Date()): Invoice
         recipientName: inv.recipient.name,
         recipientCompany: inv.recipient.company ?? null,
         kind: inv.registrationId ? 'registration' : 'sponsor',
+        registrationId: inv.registrationId,
+        sponsorId: inv.sponsorId,
         grossCents: inv.grossCents,
         creditedCents: creditedC,
         paidCents: paidC,
@@ -541,17 +545,22 @@ export function listInvoices(db: Db, eventId: number, now = new Date()): Invoice
     .sort((a, b) => b.number.localeCompare(a.number));
 }
 
-/** Aktive Rechnungen je Anmeldung eines Events (für die Teilnehmerliste). */
-export function activeInvoiceNumbersByRegistration(db: Db, eventId: number): Map<number, string> {
+/** Aktive (nicht vollständig gutgeschriebene) Rechnungen je Anmeldung eines Events: Nummer und Fälligkeit. */
+export function activeInvoicesByRegistration(db: Db, eventId: number): Map<number, { number: string; dueAt: string | null }> {
   const rows = db
     .select({ inv: invoices })
     .from(invoices)
     .innerJoin(registrations, eq(registrations.id, invoices.registrationId))
     .where(and(eq(registrations.eventId, eventId), eq(invoices.type, 'invoice')))
     .all();
-  const result = new Map<number, string>();
-  for (const { inv } of rows) if (creditedCents(db, inv.id) < inv.grossCents) result.set(inv.registrationId!, inv.number);
+  const result = new Map<number, { number: string; dueAt: string | null }>();
+  for (const { inv } of rows) if (creditedCents(db, inv.id) < inv.grossCents) result.set(inv.registrationId!, { number: inv.number, dueAt: inv.dueAt });
   return result;
+}
+
+/** Aktive Rechnungen je Anmeldung eines Events (für die Teilnehmerliste). */
+export function activeInvoiceNumbersByRegistration(db: Db, eventId: number): Map<number, string> {
+  return new Map([...activeInvoicesByRegistration(db, eventId)].map(([id, inv]) => [id, inv.number]));
 }
 
 export function activeInvoiceNumbersBySponsor(db: Db, eventId: number): Map<number, string> {

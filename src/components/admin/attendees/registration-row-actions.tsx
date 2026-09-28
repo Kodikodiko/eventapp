@@ -29,40 +29,62 @@ import { useActionFeedback } from '../use-action-feedback';
 
 export type RowDialog = 'edit' | 'cancel' | 'confirm' | 'invoice' | 'refund';
 
+/** Rechnung kann ausgestellt werden: bestätigt, kostenpflichtig, noch keine gültige Rechnung. */
+export function canIssueInvoice(row: Pick<RegistrationListRow, 'status' | 'paymentMethod' | 'priceCents' | 'invoiceNumber'>): boolean {
+  return row.status === 'confirmed' && row.paymentMethod !== 'free' && row.priceCents > 0 && !row.invoiceNumber;
+}
+
 /** Aktionsmenü einer Zeile – öffnet die gemeinsamen Dialoge der Tabelle. */
-export function RegistrationRowMenu({ row, onAction }: { row: RegistrationListRow; onAction: (dialog: RowDialog) => void }) {
+export function RegistrationRowMenu({
+  row,
+  onAction,
+  trigger,
+  exclude = [],
+}: {
+  row: RegistrationListRow;
+  onAction: (dialog: RowDialog) => void;
+  /** eigener Auslöser (z. B. „Weitere Aktionen“ im Detailpanel) */
+  trigger?: React.ReactNode;
+  /** Aktionen, die anderswo schon als Knopf sichtbar sind */
+  exclude?: RowDialog[];
+}) {
   const t = useTranslations('attendees');
+  const show = (d: RowDialog) => !exclude.includes(d);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('actionsFor', { name: `${row.firstName} ${row.lastName}` })}>
-          <MoreHorizontal aria-hidden className="size-4" />
-        </Button>
+        {trigger ?? (
+          <Button variant="ghost" size="icon" aria-label={t('actionsFor', { name: `${row.firstName} ${row.lastName}` })}>
+            <MoreHorizontal aria-hidden className="size-4" />
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {show('edit') && (
         <DropdownMenuItem onSelect={() => onAction('edit')}>
           <Pencil aria-hidden className="size-4" />
           {t('edit')}
         </DropdownMenuItem>
-        {row.status === 'waitlisted' && (
+        )}
+        {show('confirm') && row.status === 'waitlisted' && (
           <DropdownMenuItem onSelect={() => onAction('confirm')}>
             <UserCheck aria-hidden className="size-4" />
             {t('confirmWaitlisted')}
           </DropdownMenuItem>
         )}
-        {row.status === 'confirmed' && row.paymentMethod !== 'free' && row.priceCents > 0 && !row.invoiceNumber && (
+        {show('invoice') && canIssueInvoice(row) && (
           <DropdownMenuItem onSelect={() => onAction('invoice')}>
             <FileText aria-hidden className="size-4" />
             {t('issueInvoice')}
           </DropdownMenuItem>
         )}
-        {row.refundableCents > 0 && (
+        {show('refund') && row.refundableCents > 0 && (
           <DropdownMenuItem onSelect={() => onAction('refund')}>
             <Undo2 aria-hidden className="size-4" />
             {t('refund')}
           </DropdownMenuItem>
         )}
-        {row.status !== 'cancelled' && (
+        {show('cancel') && row.status !== 'cancelled' && (
           <DropdownMenuItem onSelect={() => onAction('cancel')} className="text-destructive">
             <Ban aria-hidden className="size-4" />
             {t('cancelRegistration')}

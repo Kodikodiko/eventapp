@@ -18,7 +18,8 @@ import type { Db } from '@/server/db/core';
 import { events, people, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { getEventStats } from './events';
-import { activeInvoiceNumbersByRegistration, activeInvoiceOf } from './invoices';
+import { viennaDate } from '@/lib/dates';
+import { activeInvoiceOf, activeInvoicesByRegistration } from './invoices';
 import { updatePerson, upsertPerson } from './people';
 import { cancelRegistration, refundableByRegistration } from './refunds';
 
@@ -46,11 +47,14 @@ export type RegistrationListRow = {
   cancelReason: string | null;
   /** Nummer der gültigen (nicht stornierten) Rechnung */
   invoiceNumber: string | null;
+  invoiceDueAt: string | null;
+  /** Zahlung offen und Rechnung über dem Fälligkeitsdatum */
+  invoiceOverdue: boolean;
   /** noch erstattbarer, bezahlter Betrag */
   refundableCents: number;
 };
 
-export function listRegistrations(db: Db, eventId: number): RegistrationListRow[] {
+export function listRegistrations(db: Db, eventId: number, now = new Date()): RegistrationListRow[] {
   const rows = db
     .select({ r: registrations, p: people })
     .from(registrations)
@@ -64,12 +68,15 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     .innerJoin(registrations, eq(registrations.id, registrationRoles.registrationId))
     .where(eq(registrations.eventId, eventId))
     .all();
-  const invoiceNumbers = activeInvoiceNumbersByRegistration(db, eventId);
+  const activeInvoices = activeInvoicesByRegistration(db, eventId);
+  const today = viennaDate(now.toISOString());
   const refundable = refundableByRegistration(db, eventId);
   const rolesByReg = new Map<number, string[]>();
   for (const rr of roleRows) rolesByReg.set(rr.registrationId, [...(rolesByReg.get(rr.registrationId) ?? []), rr.key]);
 
-  return rows.map(({ r, p }) => ({
+  return rows.map(({ r, p }) => {
+    const inv = activeInvoices.get(r.id);
+    return {
     id: r.id,
     personId: p.id,
     firstName: p.firstName,
@@ -91,9 +98,12 @@ export function listRegistrations(db: Db, eventId: number): RegistrationListRow[
     confirmedAt: r.confirmedAt,
     cancelledAt: r.cancelledAt,
     cancelReason: r.cancelReason,
-    invoiceNumber: invoiceNumbers.get(r.id) ?? null,
+    invoiceNumber: inv?.number ?? null,
+    invoiceDueAt: inv?.dueAt ?? null,
+    invoiceOverdue: r.paymentStatus === 'open' && r.status !== 'cancelled' && Boolean(inv?.dueAt && inv.dueAt < today),
     refundableCents: refundable.get(r.id) ?? 0,
-  }));
+  };
+  });
 }
 
 export function listRoles(db: Db) {
@@ -245,4 +255,40 @@ export function confirmWaitlistedByAdmin(db: Db, actor: Actor, id: number, overb
     },
     { behavior: 'immediate' }
   );
+}
+
+/**
+ * Sammelaktion: eine Rolle zu mehreren Anmeldungen hinzufügen (vorhandene Rollen bleiben).
+ * Alle Anmeldungen müssen zum selben, nicht archivierten Event gehören. Liefert die Anzahl geänderter Anmeldungen.
+ */
+export function addRoleToRegistrations(db: Db, actor: Actor, ids: number[], roleKey: string): number {
+  return db.transaction((tx) => {
+    const [roleId] = resolveRoleIds(tx, [roleKey]);
+    const regs = tx.select().from(registrations).where(inArray(registrations.id, ids)).all();
+    if (regs.length !== new Set(ids).size) throw new ServiceError('NOT_FOUND');
+    const eventIds = new Set(regs.map((r) => r.eventId));
+    if (eventIds.size !== 1) throw new ServiceError('INVALID');
+    loadWritableEvent(tx, regs[0].eventId);
+    const existing = new Set(
+      tx
+        .select({ registrationId: registrationRoles.registrationId })
+        .from(registrationRoles)
+        .where(and(inArray(registrationRoles.registrationId, ids), eq(registrationRoles.roleId, roleId)))
+        .all()
+        .map((r) => r.registrationId)
+    );
+    const missing = regs.filter((r) => !existing.has(r.id));
+    if (missing.length === 0) return 0;
+    tx.insert(registrationRoles).values(missing.map((r) => ({ registrationId: r.id, roleId }))).run();
+    for (const r of missing) {
+      writeAudit(tx, actor, {
+        action: 'registration.updated',
+        entity: 'registration',
+        entityId: r.id,
+        eventId: r.eventId,
+        summary: `Rolle „${roleKey}“ hinzugefügt (Sammelaktion)`,
+      });
+    }
+    return missing.length;
+  });
 }
