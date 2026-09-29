@@ -4,12 +4,14 @@ import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { redirect } from '@/i18n/navigation';
 import { initLocale, type LocaleParams } from '@/i18n/page';
+import { requestDb } from '@/server/db';
 import { getSession, isAdmin } from '@/server/auth/session';
 
 type Props = LocaleParams & { searchParams: Promise<{ error?: string }> };
 
 export default async function AdminLoginPage({ params, searchParams }: Props) {
   const locale = await initLocale(params);
+  await requestDb();
   const session = await getSession();
   if (isAdmin(session) && session.user.twoFactorEnabled) redirect({ href: '/admin', locale });
 
