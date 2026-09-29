@@ -1,0 +1,29 @@
+# Settings to manage and configure a Firebase App Hosting backend.
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  maxInstances: 1
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: APP_URL
+    value: https://eventapp--studio-5220824955-4eaf3.europe-west4.hosted.app
+  - variable: BETTER_AUTH_URL
+    value: https://eventapp--studio-5220824955-4eaf3.europe-west4.hosted.app
+  - variable: BETTER_AUTH_SECRET
+    value: 7f8c9b2a1e3d4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a
+  - variable: DATABASE_PATH
+    value: /tmp/eventflow.db
+  - variable: BACKUP_DIR
+    value: /tmp/backups
+  - variable: INVOICE_DIR
+    value: /tmp/invoices
+  - variable: PAYMENT_PROVIDER
+    value: fake
+  - variable: MAIL_TRANSPORT
+    value: file
+  - variable: MAIL_OUTBOX_DIR
+    value: /tmp/mail-outbox
+  - variable: AUTO_SEED
+    value: "true"
