@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { hashPassword } from 'better-auth/crypto';
 import { and, eq } from 'drizzle-orm';
 import type { Db } from '@/server/db/core';
-import { auditLog, authAccounts, authUsers } from '@/server/db/schema';
+import { auditLog, authAccounts, authSessions, authTwoFactors, authUsers } from '@/server/db/schema';
 import { MIN_PASSWORD_LENGTH } from './config';
 
 export type AdminInput = { email: string; name: string; password: string };
@@ -71,4 +71,20 @@ export async function upsertAdmin(
     tx.insert(auditLog).values({ action: 'admin.created', entity: 'auth_user', entityId: userId, summary: 'Admin per Skript angelegt' }).run();
   });
   return 'created';
+}
+
+/**
+ * Zwei-Faktor-Anmeldung eines Admins entfernen (verlorenes Gerät, lokale Entwicklung) und alle Sitzungen beenden.
+ * Ohne DEV_ADMIN_WITHOUT_2FA muss der Admin sie bei der nächsten Anmeldung neu einrichten.
+ */
+export function resetAdminTwoFactor(db: Db, emailInput: string): void {
+  const email = emailInput.trim().toLowerCase();
+  const user = db.select().from(authUsers).where(eq(authUsers.email, email)).get();
+  if (!user || user.role !== 'admin') throw new Error(`Kein Admin-Konto mit ${email}.`);
+  db.transaction((tx) => {
+    tx.delete(authTwoFactors).where(eq(authTwoFactors.userId, user.id)).run();
+    tx.delete(authSessions).where(eq(authSessions.userId, user.id)).run();
+    tx.update(authUsers).set({ twoFactorEnabled: false, updatedAt: new Date() }).where(eq(authUsers.id, user.id)).run();
+    tx.insert(auditLog).values({ action: 'admin.two_factor_reset', entity: 'auth_user', entityId: user.id, summary: 'Zwei-Faktor-Anmeldung per Skript entfernt' }).run();
+  });
 }

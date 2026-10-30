@@ -2,10 +2,10 @@ import { base32 } from '@better-auth/utils/base32';
 import { createOTP } from '@better-auth/utils/otp';
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { upsertAdmin, validateAdminInput } from '@/server/auth/admin-users';
+import { resetAdminTwoFactor, upsertAdmin, validateAdminInput } from '@/server/auth/admin-users';
 import { createAuth } from '@/server/auth/config';
 import { openDatabase } from '@/server/db/core';
-import { auditLog, authUsers } from '@/server/db/schema';
+import { auditLog, authSessions, authTwoFactors, authUsers } from '@/server/db/schema';
 
 const PASSWORD = 'ein-sehr-geheimes-passwort';
 
@@ -59,6 +59,25 @@ describe('Admin-Konten', () => {
     );
     expect((await signIn(auth, 'anna@example.org', PASSWORD)).status).toBe(401);
     expect((await signIn(auth, 'anna@example.org', neu)).status).toBe(200);
+  });
+
+  it('Zwei-Faktor zurücksetzen: Eintrag und Sitzungen weg, Anmeldung wieder nur mit Passwort', async () => {
+    const { db, auth } = setup();
+    await upsertAdmin(db, { email: 'anna@example.org', name: 'Anna', password: PASSWORD });
+    const user = db.select().from(authUsers).get()!;
+    db.update(authUsers).set({ twoFactorEnabled: true }).where(eq(authUsers.id, user.id)).run();
+    db.insert(authTwoFactors).values({ id: 'tf1', secret: 's', backupCodes: 'b', userId: user.id }).run();
+    expect(((await (await signIn(auth, 'anna@example.org', PASSWORD)).json()) as { twoFactorRedirect?: boolean }).twoFactorRedirect).toBe(true);
+
+    resetAdminTwoFactor(db, 'Anna@Example.org');
+    expect(db.select().from(authUsers).get()!.twoFactorEnabled).toBe(false);
+    expect(db.select().from(authTwoFactors).all()).toHaveLength(0);
+    expect(db.select().from(authSessions).all()).toHaveLength(0);
+    expect(db.select().from(auditLog).where(eq(auditLog.action, 'admin.two_factor_reset')).all()).toHaveLength(1);
+    const res = await signIn(auth, 'anna@example.org', PASSWORD);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { twoFactorRedirect?: boolean }).twoFactorRedirect).toBeUndefined();
+    expect(() => resetAdminTwoFactor(db, 'niemand@example.org')).toThrow(/Kein Admin/);
   });
 });
 
