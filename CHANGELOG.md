@@ -1,5 +1,12 @@
 # Changelog
 
+## 30.10.2026 – Firebase-Reste entfernt, hostingneutral
+
+- Entfernt: `apphosting.yaml` (Firebase App Hosting), der Ordner `legacy/` (alter Firebase-Stand inkl. Firebase-Konfiguration) und die veraltete `COST_ANALYSIS.md`.
+- Node.js wieder 24 (`.nvmrc`, `engines`). `@emnapi/core`/`@emnapi/runtime` bleiben als devDependencies: ohne sie scheitert `npm ci` generell (nicht nur bei Firebase), weil das WebAssembly-Paket von Tailwind sie als Peer erwartet.
+- `AUTO_SEED` (Demodaten + Demo-Admin) ist in `.env.example` dokumentiert und ausdrücklich nur für Demo-Umgebungen gedacht.
+- Doku ohne Firebase-/Vercel-Bezüge (README, DEPLOYMENT, STRIPE_INTEGRATION, TODO).
+
 ## 28.09.2026 – UI/UX: Admin-Rahmen, Cockpit, Teilnehmende
 
 - Neues Erscheinungsbild nach den UI-Entwürfen: Indigo #3A2B8F als Marke, Tinte #15172B, Off-White-Flächen, Orange nur für Anmelde-Aktionen; Schriften Plus Jakarta Sans (Überschriften) und IBM Plex Sans (Text).
