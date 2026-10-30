@@ -46,3 +46,6 @@ next-env.d.ts
 
 # lokale Daten (Datenbank, Sicherungen, E-Mails, Rechnungen)
 /data/
+
+# lokale Werkzeuge (z. B. Stripe-CLI)
+*.exe
