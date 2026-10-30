@@ -32,3 +32,7 @@ Hinweis: Die Architektur wurde von Firebase auf Next.js + SQLite umgestellt (abg
 ## Rechtliches außerhalb der DSGVO
 
 - [x] **R1 – Rechnungen nach § 11 UStG:** *(erledigt in Phase 7: Nummernkreis je Jahr ohne Lücken, Rechnung/Gutschrift als PDF de/en mit allen Pflichtangaben, Kleinunternehmer-Hinweis bzw. Netto/USt je Satz, Empfänger- und Veranstalterdaten als unveränderliche Momentaufnahme, Aufbewahrung bis 31.12. + 7 Jahre)* fortlaufende Rechnungsnummer (serverseitig vergeben), Name/Anschrift und UID des Veranstalters, Leistungsdatum, Netto/Steuersatz/Steuerbetrag, Kleinunternehmer-Hinweis falls zutreffend. Platzhalter „EventFlow Inc.“, „Tech Conference 2024“, „$99.00“ und fixes „Paid“ entfernen.
+
+## Finanzen
+
+- [ ] **F1 – Erfolgsrechnung je Event.** Einnahmen (Tickets, Sponsoren, abzüglich Erstattungen und Gutschriften) den Ausgaben je Kostengruppe gegenüberstellen, getrennt nach bezahlt/geplant; Grundlage sind die Ausgaben und Kostengruppen (Event → Ausgaben, seit 30.10.2026).

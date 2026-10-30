@@ -22,8 +22,10 @@ const nextConfig: NextConfig = {
   // natives Modul bzw. Paket mit Schriftdateien (pdfkit) – nicht bündeln
   serverExternalPackages: ['better-sqlite3', 'pdfkit'],
   experimental: {
-    // Upload der Mitgliederliste (max. 2 MB Datei, Vorschau-Daten zurück)
-    serverActions: { bodySizeLimit: '4mb' },
+    // Uploads: Mitgliederliste (max. 2 MB, Vorschau-Daten zurück) und Belege zu Ausgaben (max. 10 MB)
+    serverActions: { bodySizeLimit: '12mb' },
+    // proxy.ts puffert den Anfrageinhalt (Standard 10 MB) – für Belege etwas mehr erlauben
+    proxyClientMaxBodySize: '12mb',
   },
 };
 

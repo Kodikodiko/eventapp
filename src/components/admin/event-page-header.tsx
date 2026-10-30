@@ -15,12 +15,13 @@ type Props = {
   actions: React.ReactNode;
 };
 
-const SECTIONS = ['attendees', 'speakers', 'schedule', 'sponsors', 'invoices', 'refunds', 'settings', 'terms'] as const;
+const SECTIONS = ['attendees', 'speakers', 'schedule', 'sponsors', 'expenses', 'invoices', 'refunds', 'settings', 'terms'] as const;
 const SECTION_LABEL = {
   attendees: 'attendees',
   speakers: 'speakers',
   schedule: 'schedule',
   sponsors: 'sponsors',
+  expenses: 'expenses',
   invoices: 'invoices',
   refunds: 'refunds',
   settings: 'eventSettings',

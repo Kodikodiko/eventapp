@@ -15,9 +15,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Receipt,
   ScrollText,
   Settings,
   ShieldCheck,
+  Tags,
   Undo2,
   Users,
   type LucideIcon,
@@ -78,6 +80,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
         { href: `${base}/speakers`, label: t('speakers'), icon: Mic },
         { href: `${base}/schedule`, label: t('schedule'), icon: CalendarDays },
         { href: `${base}/sponsors`, label: t('sponsors'), icon: Handshake },
+        { href: `${base}/expenses`, label: t('expenses'), icon: Receipt },
         {
           href: `${base}/invoices`,
           label: t('invoices'),
@@ -101,6 +104,8 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
     { href: '/admin/settings', label: t('organizer'), icon: Building2 },
     { href: '/admin/security', label: t('security'), icon: ShieldCheck },
   ];
+
+  const financeItems: Item[] = [{ href: '/admin/cost-groups', label: t('costGroups'), icon: Tags }];
 
   const isActive = (item: Item) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`));
   const activeEvents = events.filter((e) => !e.archived);
@@ -236,6 +241,8 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
             <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{eventItems.map(renderItem)}</ul>
           </>
         )}
+        {sectionLabel(t('sectionFinance'))}
+        <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{financeItems.map(renderItem)}</ul>
         {sectionLabel(t('sectionOrg'))}
         <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{orgItems.map(renderItem)}</ul>
       </nav>

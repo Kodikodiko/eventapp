@@ -71,6 +71,7 @@ export function AdminFrame({ events, defaultEventId, user, children }: Props) {
       { href: '/admin/events', label: t('allEvents'), group: org },
       { href: '/admin/events/new', label: t('newEvent'), group: org },
       { href: '/admin/members', label: t('members'), group: org },
+      { href: '/admin/cost-groups', label: t('costGroups'), group: t('sectionFinance') },
       { href: '/admin/audit', label: t('audit'), group: org },
       { href: '/admin/settings', label: t('organizer'), group: org },
       { href: '/admin/security', label: t('security'), group: org },
@@ -87,6 +88,7 @@ export function AdminFrame({ events, defaultEventId, user, children }: Props) {
         { href: `${base}/speakers`, label: t('speakers'), group: g },
         { href: `${base}/schedule`, label: t('schedule'), group: g },
         { href: `${base}/sponsors`, label: t('sponsors'), group: g },
+        { href: `${base}/expenses`, label: t('expenses'), group: g },
         { href: `${base}/settings`, label: t('eventSettings'), group: g },
         { href: `${base}/terms`, label: t('terms'), group: g }
       );
