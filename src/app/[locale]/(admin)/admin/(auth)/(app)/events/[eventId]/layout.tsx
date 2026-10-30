@@ -1,10 +1,9 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { ArchiveToggle, CopyEventDialog } from '@/components/admin/event-actions';
 import { EventPageHeader } from '@/components/admin/event-page-header';
-import { initLocale } from '@/i18n/page';
 import { localized } from '@/lib/localized';
 import { copySuggestion } from '@/lib/validation/event-values';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { registrationState } from '@/server/services/events';
 
 const DAY_MS = 24 * 60 * 60_000;
@@ -19,7 +18,7 @@ function eventPhase(startsAt: string, endsAt: string): { phase: 'upcoming' | 'ru
 }
 
 export default async function EventLayout({ children, params }: EventParams & { children: React.ReactNode }) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const { eventId } = await params;
   const { event } = await loadEvent(eventId);
   const t = await getTranslations('eventOverview');

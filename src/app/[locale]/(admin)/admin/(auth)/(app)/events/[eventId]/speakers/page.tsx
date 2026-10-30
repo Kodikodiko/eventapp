@@ -1,11 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { SpeakersTable } from '@/components/admin/program/speakers-table';
-import { initLocale } from '@/i18n/page';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { listSpeakers } from '@/server/services/program';
 
 export default async function SpeakersPage({ params }: EventParams) {
-  await initLocale(params);
+  await initAdminPage(params);
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('speakers');

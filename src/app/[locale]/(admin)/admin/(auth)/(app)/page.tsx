@@ -1,12 +1,13 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { initLocale, type LocaleParams } from '@/i18n/page';
+import type { LocaleParams } from '@/i18n/page';
+import { initAdminPage } from '@/server/admin-pages';
 import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
 import { getEventStats, listEvents } from '@/server/services/events';
 
 export default async function AdminDashboardPage({ params }: LocaleParams) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const t = await getTranslations('dashboard');
   const format = await getFormatter();
   const db = await requestDb();

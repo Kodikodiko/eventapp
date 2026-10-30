@@ -3,7 +3,8 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { initLocale, type LocaleParams } from '@/i18n/page';
+import type { LocaleParams } from '@/i18n/page';
+import { initAdminPage } from '@/server/admin-pages';
 import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
 import { getEventStats, listEvents, registrationState } from '@/server/services/events';
@@ -11,7 +12,7 @@ import { getEventStats, listEvents, registrationState } from '@/server/services/
 type Props = LocaleParams & { searchParams: Promise<{ archived?: string }> };
 
 export default async function EventsPage({ params, searchParams }: Props) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const showArchived = (await searchParams).archived === '1';
   const t = await getTranslations('events');
   const tState = await getTranslations('registrationState');
