@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from '@/i18n/navigation';
 import { authClient } from '@/lib/auth-client';
+import { devSignInAction } from '@/server/actions/dev-login';
 
 type Step = 'credentials' | 'totp' | 'backup';
 
-export function LoginForm() {
+/** devLogin: lokal mit DEV_LOGIN – statt einer E-Mail-Adresse geht auch der Benutzername. */
+export function LoginForm({ devLogin = false }: { devLogin?: boolean }) {
   const t = useTranslations('auth');
   const router = useRouter();
   const [step, setStep] = useState<Step>('credentials');
@@ -30,6 +32,12 @@ export function LoginForm() {
     setPending(true);
     setError(null);
     try {
+      if (devLogin && !email.includes('@')) {
+        const result = await devSignInAction({ username: email, password });
+        if (result.ok) finish();
+        else setError(t('invalidCredentials'));
+        return;
+      }
       const { data, error: signInError } = await authClient.signIn.email({ email, password });
       if (signInError) {
         setError(signInError.status === 429 ? t('tooManyAttempts') : t('invalidCredentials'));
@@ -72,8 +80,15 @@ export function LoginForm() {
     return (
       <form onSubmit={submitCredentials} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">{t('email')}</Label>
-          <Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Label htmlFor="email">{devLogin ? t('userOrEmail') : t('email')}</Label>
+          <Input
+            id="email"
+            type={devLogin ? 'text' : 'email'}
+            autoComplete="username"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">{t('password')}</Label>
@@ -91,6 +106,7 @@ export function LoginForm() {
             {error}
           </p>
         )}
+        {devLogin && <p className="text-xs text-muted-foreground">{t('devHint')}</p>}
         <Button type="submit" className="w-full" disabled={pending}>
           {pending ? t('submitting') : t('submit')}
         </Button>
