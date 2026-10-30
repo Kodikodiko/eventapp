@@ -1,7 +1,7 @@
 # EventFlow – To-do
 
 Stand: 26.09.2026. Grundlage: Prüfbericht vom 26.09.2026 (Commit `e33f365`).
-Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadurch erledigen oder anders lösen, sind markiert.
+Hinweis: Die Architektur wurde von Firebase auf Next.js + SQLite umgestellt (abgeschlossen); Punkte, die sich dadurch erledigt haben, sind markiert.
 
 ## Kritisch – vor jedem Einsatz mit echten Daten
 
@@ -13,7 +13,7 @@ Hinweis: Die Architektur wird von Firebase weg umgestellt. Punkte, die sich dadu
   Ziel: Druckansichten als normale React-Seite rendern oder alle Werte escapen; Tailwind-CDN-Script entfernen.
 - [x] **K4 – Registrierung erst nach Zahlung bestätigen, Preis serverseitig.** Derzeit sofort „Confirmed“, Preis im Browser berechnet, jede PMI-Nummer gibt Rabatt. *Stand Phase 6: Preis und Mitgliedschaft serverseitig (Phase 5), Online-Zahlung bestätigt erst über Webhook; mit simulierter Kasse getestet – Test mit echtem Stripe-Testschlüssel steht noch aus.*
   Ziel: Status „Reserved“ → Stripe Checkout → Webhook setzt „Confirmed“ (bzw. Kauf auf Rechnung, Spec 3.1); Preis und Mitgliedsprüfung gegen die Mitgliederliste nur auf dem Server.
-- [x] **K5 – Build-Fehler nicht mehr ignorieren.** *(erledigt in Phase 1: Flags entfernt, Typecheck/Lint/Build grün; die betroffenen alten Seiten liegen in `legacy/` und werden neu geschrieben)* `ignoreBuildErrors` und `ignoreDuringBuilds` in `next.config.ts` entfernen; Typ- und Lint-Fehler beheben (bekannt: `padding="checkbox"` auf TableHead/TableCell).
+- [x] **K5 – Build-Fehler nicht mehr ignorieren.** *(erledigt in Phase 1: Flags entfernt, Typecheck/Lint/Build grün; die betroffenen alten Seiten wurden neu geschrieben, die Vorlagen sind entfernt)* `ignoreBuildErrors` und `ignoreDuringBuilds` in `next.config.ts` entfernen; Typ- und Lint-Fehler beheben (bekannt: `padding="checkbox"` auf TableHead/TableCell).
 - [x] **K6 – Zugriffsregeln nachvollziehbar im Repo.** *(erledigt: Firestore entfernt; Rechteprüfung serverseitig in `src/server/auth/session.ts` – `requireAdmin`/`requireAdminWith2fa` für Seiten, `assertAdmin` für Aktionen – mit Tests)* `firestore.rules` ist in `firebase.json` nicht eingebunden.
   *Mit dem Firebase-Ausstieg:* entfällt als Firestore-Thema; ersetzt durch Rechteprüfung in jeder Server Action / Route (siehe K1) plus Tests dafür.
 

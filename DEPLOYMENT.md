@@ -1,6 +1,6 @@
 # EventFlow – Entwicklung & Deployment
 
-Stand: 26.09.2026 · Status: **Entwurf 2 zur Diskussion** – beschreibt den Zielzustand nach der Migration (siehe `MIGRATIONSPLAN.md`). Ersetzt die bisherige `DEPLOYMENT.md` (Vercel/Firebase) und `HOMELAB_DEPLOYMENT.md`.
+Stand: 26.09.2026 · Status: **Entwurf 2 zur Diskussion** – beschreibt den Zielzustand nach der Migration (siehe `MIGRATIONSPLAN.md`). Ersetzt die früheren Deployment-Anleitungen.
 
 Kurzfassung:
 - **Jetzt bis zur Fertigstellung:** rein lokal unter Windows mit `npm run dev`, SQLite-Datei im Projektordner, Stripe im Testmodus, E-Mails als Dateien.

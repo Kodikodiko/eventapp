@@ -1,8 +1,7 @@
 /**
- * Auto-Seeding für Cloud-/Demo-Umgebungen (wie Firebase App Hosting).
+ * Auto-Seeding für Demo-Umgebungen.
  * Wird nur ausgeführt, wenn AUTO_SEED === 'true' und die events-Tabelle noch leer ist.
  */
-import { randomUUID } from 'node:crypto';
 import { count, eq } from 'drizzle-orm';
 import type { Db } from './core';
 import * as s from './schema';
@@ -119,19 +118,12 @@ export async function seedIfNeeded(db: Db): Promise<void> {
       ['M-1007', 'Moser', 'Lena'], ['M-1008', 'Mayer', 'Paul'], ['M-1009', 'Hofer', 'Emma'],
       ['M-1010', 'Leitner', 'David'], ['M-1011', 'Berger', 'Julia', '2026-12-31'], ['M-1012', 'Fuchs', 'Tobias', '2025-12-31'],
     ] as const;
-    const insertedMembers = tx
-      .insert(s.members)
+    tx.insert(s.members)
       .values(memberRows.map(([memberNumber, lastName, firstName, validUntil]) => ({ memberNumber, lastName, firstName, validUntil })))
-      .returning()
-      .all();
+      .run();
     tx.insert(s.memberImports)
       .values({ fileName: 'demo-mitglieder.csv', rowCount: memberRows.length, addedCount: memberRows.length, updatedCount: 0, removedCount: 0 })
       .run();
-    const memberByNumber = new Map(insertedMembers.map((m) => [m.memberNumber, m]));
-
-    const roleRows = tx.select().from(s.roles).all();
-    const roleId = (key: string) => roleRows.find((r) => r.key === key)!.id;
-
     // Speaker und Programm
     const speakerPeople = [
       { first: 'Evelyn', last: 'Reed', company: 'Reed Advisory' },
@@ -160,11 +152,9 @@ export async function seedIfNeeded(db: Db): Promise<void> {
       .run();
 
     // Sponsoring
-    const [gold] = tx
-      .insert(s.sponsorPackages)
+    tx.insert(s.sponsorPackages)
       .values({ eventId: summit.id, name: { de: 'Gold', en: 'Gold' }, benefits: { de: ['Logo auf allen Unterlagen', 'Stand im Foyer', '4 Tickets'], en: ['Logo on all materials', 'Booth in the foyer', '4 tickets'] }, priceCents: 300000, sortOrder: 1 })
-      .returning()
-      .all();
+      .run();
     tx.insert(s.sponsorPackages)
       .values({ eventId: summit.id, name: { de: 'Silber', en: 'Silver' }, benefits: { de: ['Logo auf der Website', '2 Tickets'], en: ['Logo on the website', '2 tickets'] }, priceCents: 150000, sortOrder: 2 })
       .run();

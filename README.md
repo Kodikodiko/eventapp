@@ -4,8 +4,8 @@ Eventverwaltung für Veranstalter: mehrere Events, öffentliche Anmeldung mit Mi
 oder Rechnung, Warteliste, Storno und Erstattung, Speaker, Sponsoren, Programm – zweisprachig (Deutsch/Englisch)
 und DSGVO-konform.
 
-> **Status:** Migration von Firebase auf Next.js + SQLite läuft (Branch `migration/sqlite`).
-> Plan und Fortschritt: [`MIGRATIONSPLAN.md`](MIGRATIONSPLAN.md) · offene Punkte: [`TODO.md`](TODO.md) ·
+> **Status:** Next.js + SQLite, hostingneutral (läuft überall, wo Node.js 24 und eine beschreibbare Festplatte
+> verfügbar sind). Plan und Fortschritt: [`MIGRATIONSPLAN.md`](MIGRATIONSPLAN.md) · offene Punkte: [`TODO.md`](TODO.md) ·
 > Änderungen: [`CHANGELOG.md`](CHANGELOG.md)
 
 **Technik:** Next.js 16 (App Router, Server Actions) · React 19 · TypeScript · Tailwind CSS 4 · ShadCN UI ·
@@ -44,7 +44,6 @@ npm run build; npm run smoke                       # Produktions-Build prüfen
 | `drizzle/` | SQL-Migrationen (von `npm run db:generate` erzeugt) |
 | `scripts/` | Kommandozeilen-Skripte (Demodaten, Sicherung, Smoke-Test) |
 | `tests/` | Vitest-Tests |
-| `legacy/` | alter Firebase-Stand als Vorlage für die Portierung – wird am Ende gelöscht |
 
 ## Wichtige Regeln
 

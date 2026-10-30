@@ -43,7 +43,7 @@ Once you receive the API keys from the CFO, they must be stored as environment v
 
 **For Production Deployment:**
 
-When you deploy your application to a hosting provider (like Vercel or Firebase App Hosting), you will **not** use the `.env.local` file. Instead, you will configure these same environment variables in your hosting provider's web dashboard. This ensures your keys remain secure in the live environment.
+When you deploy your application to a hosting provider, you will **not** use the `.env.local` file. Instead, you will configure these same environment variables in your hosting environment (e.g. the env file on the server or the provider dashboard). This ensures your keys remain secure in the live environment.
 
 ---
 
