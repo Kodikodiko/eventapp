@@ -182,8 +182,8 @@ function insertInvoice(
 // ---------------------------------------------------------------------------
 
 const TICKET_LABEL = {
-  de: { normal: 'Ticket', member: 'Mitgliedsticket' },
-  en: { normal: 'Ticket', member: 'Member ticket' },
+  de: { normal: 'Ticket', member: 'Mitgliedsticket', special: 'Ticket (Sonderpreis)' },
+  en: { normal: 'Ticket', member: 'Member ticket', special: 'Ticket (special price)' },
 } as const;
 
 /** Rechnung zu einer bestätigten, kostenpflichtigen Anmeldung. */

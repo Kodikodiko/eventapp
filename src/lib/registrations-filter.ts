@@ -10,7 +10,7 @@ export const PAYMENT_STATUS_KEYS = ['open', 'paid', 'partially_refunded', 'refun
 export type PaymentStatusKey = (typeof PAYMENT_STATUS_KEYS)[number];
 export const PAYMENT_METHOD_KEYS = ['stripe', 'invoice', 'free'] as const;
 export type PaymentMethodKey = (typeof PAYMENT_METHOD_KEYS)[number];
-export const TICKET_TYPE_KEYS = ['normal', 'member'] as const;
+export const TICKET_TYPE_KEYS = ['normal', 'member', 'special'] as const;
 export type TicketTypeKey = (typeof TICKET_TYPE_KEYS)[number];
 
 export type RegistrationFilterRow = {
@@ -28,7 +28,7 @@ export type RegistrationFilterRow = {
 };
 
 export type RegistrationFilter = {
-  /** Teilnehmende müssen ALLE gewählten Rollen haben */
+  /** Teilnehmende müssen MINDESTENS EINE der gewählten Rollen haben */
   roles: string[];
   /** Teilnehmende müssen EINEN der gewählten Status haben */
   statuses: RegistrationStatusKey[];
@@ -54,7 +54,7 @@ const collator = new Intl.Collator('de', { sensitivity: 'base' });
 export function filterAndSort<T extends RegistrationFilterRow>(rows: T[], filter: RegistrationFilter, sort: RegistrationSort): T[] {
   const needle = filter.search.trim().toLowerCase();
   const filtered = rows.filter((r) => {
-    if (filter.roles.length > 0 && !filter.roles.every((role) => r.roles.includes(role))) return false;
+    if (filter.roles.length > 0 && !filter.roles.some((role) => r.roles.includes(role))) return false;
     if (filter.statuses.length > 0 && !filter.statuses.includes(r.status)) return false;
     if (filter.payments?.length && !(r.paymentStatus && filter.payments.includes(r.paymentStatus))) return false;
     if (filter.methods?.length && !(r.paymentMethod && filter.methods.includes(r.paymentMethod))) return false;

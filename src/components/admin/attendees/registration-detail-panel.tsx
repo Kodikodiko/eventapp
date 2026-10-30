@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Eye, FileText, Landmark, MoreHorizontal, Pencil, UserCheck, X } from 'lucide-react';
+import { Download, Eye, FileText, Landmark, MoreHorizontal, Pencil, UserCheck, Wallet, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import type { InvoiceListRow } from '@/server/services/invoices';
 import type { RegistrationDetail } from '@/server/services/registration-detail';
 import type { RegistrationListRow } from '@/server/services/registrations';
 import { PaymentDialog } from '../invoices/invoices-view';
-import { canIssueInvoice, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
+import { canChangePayment, canIssueInvoice, RegistrationRowMenu, type RowDialog } from './registration-row-actions';
 import { paymentTone, Pill, statusTone, type PillTone } from './status-pill';
 
 type Props = {
@@ -23,6 +23,8 @@ type Props = {
   readOnly: boolean;
   onAction: (dialog: RowDialog) => void;
   onClose: () => void;
+  /** Klick auf ein Tag filtert die Liste nach diesem Wert */
+  onFilter?: (key: 'roles' | 'statuses' | 'payments' | 'tickets', value: string) => void;
   /** Kennung des Datenstands: ändert sich nach jeder Aktion, damit das Panel neu lädt */
   version: unknown;
   headingId: string;
@@ -37,8 +39,19 @@ function historyTone(action: string): string {
   return 'bg-primary';
 }
 
+/** Tag mit Erklärung (Tooltip); klickbar, wenn die Liste danach gefiltert werden kann. */
+function TagButton({ label, onClick, children }: { label: string; onClick?: () => void; children: React.ReactNode }) {
+  const t = useTranslations('attendees');
+  if (!onClick) return <span title={label}>{children}</span>;
+  return (
+    <button type="button" onClick={onClick} title={`${label} – ${t('detail.tagClick')}`} className="rounded-full hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+      {children}
+    </button>
+  );
+}
+
 /** Detailpanel einer Anmeldung: Stammdaten, Belege, Verlauf und die wichtigsten Aktionen. */
-export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, onClose, version, headingId }: Props) {
+export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, onClose, onFilter, version, headingId }: Props) {
   const t = useTranslations('attendees');
   const tInv = useTranslations('invoices');
   const locale = useLocale() as Locale;
@@ -72,6 +85,7 @@ export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, on
     if (openInvoice) primary = { label: t('detail.recordPayment'), icon: <Landmark aria-hidden />, run: () => setPayment(openInvoice) };
     else if (row.status === 'waitlisted') primary = { label: t('detail.confirm'), icon: <UserCheck aria-hidden />, run: () => onAction('confirm'), dialog: 'confirm' };
     else if (canIssueInvoice(row)) primary = { label: t('detail.issueInvoice'), icon: <FileText aria-hidden />, run: () => onAction('invoice'), dialog: 'invoice' };
+    else if (row.paymentStatus === 'open' && canChangePayment(row)) primary = { label: t('detail.markPaid'), icon: <Wallet aria-hidden />, run: () => onAction('payment'), dialog: 'payment' };
   }
 
   return (
@@ -94,9 +108,19 @@ export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, on
           </Button>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <Pill tone={statusTone[row.status]}>{t(`status.${row.status}`)}</Pill>
-          {pTone && <Pill tone={pTone}>{row.invoiceOverdue ? t('detail.overdueBadge') : t(`payment.${row.paymentStatus}`)}</Pill>}
-          {row.ticketType === 'member' && <Pill tone="grey">{t('detail.member')}</Pill>}
+          <TagButton label={t('detail.tagStatus')} onClick={onFilter && (() => onFilter('statuses', row.status))}>
+            <Pill tone={statusTone[row.status]}>{t(`status.${row.status}`)}</Pill>
+          </TagButton>
+          {pTone && (
+            <TagButton label={t('detail.tagPayment')} onClick={onFilter && (() => onFilter('payments', row.paymentStatus))}>
+              <Pill tone={pTone}>{row.invoiceOverdue ? t('detail.overdueBadge') : t(`payment.${row.paymentStatus}`)}</Pill>
+            </TagButton>
+          )}
+          {row.ticketType !== 'normal' && (
+            <TagButton label={t('detail.tagTicket')} onClick={onFilter && (() => onFilter('tickets', row.ticketType))}>
+              <Pill tone="grey">{row.ticketType === 'member' ? t('detail.member') : t(`ticket.${row.ticketType}`)}</Pill>
+            </TagButton>
+          )}
         </div>
         {!readOnly && (
           <div className="flex flex-wrap gap-2">
@@ -129,7 +153,15 @@ export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, on
           <dt className="text-muted-foreground">{t('detail.email')}</dt>
           <dd className="min-w-0 break-words">{row.email ? <a href={`mailto:${row.email}`} className="text-primary hover:underline">{row.email}</a> : '–'}</dd>
           <dt className="text-muted-foreground">{t('detail.roles')}</dt>
-          <dd>{row.roles.map(roleLabel).join(', ') || '–'}</dd>
+          <dd className="flex flex-wrap gap-1">
+            {row.roles.length === 0
+              ? '–'
+              : row.roles.map((k) => (
+                  <TagButton key={k} label={t('detail.tagRole')} onClick={onFilter && (() => onFilter('roles', k))}>
+                    <Pill tone="grey">{roleLabel(k)}</Pill>
+                  </TagButton>
+                ))}
+          </dd>
           <dt className="text-muted-foreground">{t('detail.ticket')}</dt>
           <dd>
             {t(`ticket.${row.ticketType}`)} · {formatEuro(row.priceCents, locale)}

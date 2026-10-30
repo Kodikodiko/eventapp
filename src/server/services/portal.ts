@@ -71,7 +71,7 @@ export type PortalRegistration = {
   status: (typeof registrations.$inferSelect)['status'];
   paymentStatus: (typeof registrations.$inferSelect)['paymentStatus'];
   paymentMethod: (typeof registrations.$inferSelect)['paymentMethod'];
-  ticketType: 'normal' | 'member';
+  ticketType: 'normal' | 'member' | 'special';
   priceCents: number;
   createdAt: string;
   cancelledAt: string | null;

@@ -2,7 +2,8 @@
  * Abläufe rund um Storno und Erstattung, die Datenbank, Kasse und E-Mail verbinden.
  * Fachliche Regeln liegen in ./refunds.ts; hier: Reihenfolge, Versand, Fehlertoleranz.
  */
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
+import { viennaDate } from '@/lib/dates';
 import type { Db } from '@/server/db/core';
 import { events, invoices, payments, people, refunds, registrations } from '@/server/db/schema';
 import { invoicePdf } from '@/server/invoices/storage';
@@ -12,7 +13,7 @@ import type { Refunder } from '@/server/payments/refunds';
 import { writeAudit, type Actor } from './audit';
 import { activeInvoiceOf, markInvoiceSent } from './invoices';
 import { mailOrganizer } from './notifications';
-import { cancelRegistration, executeRefund, type CancelOutcome, type RefundRow } from './refunds';
+import { cancelRegistration, createManualRefund, executeRefund, recordRefundTransfer, type CancelOutcome, type RefundRow } from './refunds';
 
 type Options = { mailer?: Mailer; refunder?: Refunder; now?: Date };
 
@@ -68,6 +69,57 @@ export async function executeRefundAndNotify(db: Db, actor: Actor, refundId: num
   return result;
 }
 
+/**
+ * Freigegebene Überweisungs-Erstattungen sofort als rücküberwiesen verbuchen (der Admin hat schon überwiesen)
+ * und die Erstattungs-E-Mail senden. Liefert die Anzahl verbuchter Erstattungen.
+ */
+export async function bookTransfersNow(db: Db, actor: Actor, refundIds: number[], options: Options = {}): Promise<number> {
+  const now = options.now ?? new Date();
+  const open = refundIds
+    .map((id) => db.select({ r: refunds, p: payments }).from(refunds).innerJoin(payments, eq(payments.id, refunds.paymentId)).where(eq(refunds.id, id)).get())
+    .filter((x) => x && x.r.status === 'approved' && x.p.method === 'bank_transfer');
+  const byRegistration = new Map<number, number>();
+  for (const x of open) if (x && !byRegistration.has(x.p.registrationId!)) byRegistration.set(x.p.registrationId!, x.r.id);
+  let booked = 0;
+  for (const firstId of byRegistration.values()) {
+    // verbucht alle freigegebenen Überweisungs-Erstattungen dieser Anmeldung gemeinsam
+    const done = recordRefundTransfer(db, actor, firstId, viennaDate(now.toISOString()), now);
+    await sendRefundMail(db, done, options.mailer, now);
+    booked += done.length;
+  }
+  return booked;
+}
+
+export type RefundProcessResult = { status: 'executed' | 'failed' | 'approved'; refundIds: number[] };
+
+/**
+ * Erstattung ohne Storno (Teil-/Kulanzerstattung): anlegen, Online-Zahlungen sofort über die Kasse erstatten,
+ * Überweisungen auf Wunsch gleich als rücküberwiesen verbuchen.
+ */
+export async function refundAndProcess(
+  db: Db,
+  actor: Actor,
+  registrationId: number,
+  input: { amountCents: number; reason: string; transferDone: boolean },
+  options: Options = {}
+): Promise<RefundProcessResult> {
+  const created = createManualRefund(db, actor, registrationId, { amountCents: input.amountCents, reason: input.reason, now: options.now });
+  let failed = false;
+  let executed = false;
+  for (const r of created) {
+    const payment = db.select().from(payments).where(eq(payments.id, r.paymentId)).get()!;
+    if (payment.method !== 'stripe') continue;
+    const out = await executeRefundAndNotify(db, actor, r.id, options);
+    if (out.status === 'failed') failed = true;
+    else executed = true;
+  }
+  if (input.transferDone && (await bookTransfersNow(db, actor, created.map((r) => r.id), options)) > 0) executed = true;
+  const ids = created.map((r) => r.id);
+  // noch freigegeben = Überweisung wartet auf „Rücküberweisung verbuchen“
+  const pendingTransfer = db.select({ status: refunds.status }).from(refunds).where(inArray(refunds.id, ids)).all().some((r) => r.status === 'approved');
+  return { status: failed ? 'failed' : pendingTransfer || !executed ? 'approved' : 'executed', refundIds: ids };
+}
+
 export type CancelProcessResult = CancelOutcome & { mailed: boolean; failedRefunds: number };
 
 /**
@@ -78,7 +130,7 @@ export async function cancelAndProcess(
   db: Db,
   actor: Actor,
   registrationId: number,
-  input: { reason: string; percent?: number | null; source: 'admin' | 'attendee'; notify: boolean },
+  input: { reason: string; percent?: number | null; source: 'admin' | 'attendee'; notify: boolean; transferDone?: boolean },
   options: Options = {}
 ): Promise<CancelProcessResult> {
   const now = options.now ?? new Date();
@@ -131,5 +183,6 @@ export async function cancelAndProcess(
     const r = await executeRefundAndNotify(db, actor, id, options);
     if (r.status === 'failed') failedRefunds++;
   }
+  if (input.transferDone && input.source === 'admin') await bookTransfersNow(db, actor, outcome.refundIds, options);
   return { ...outcome, mailed, failedRefunds };
 }

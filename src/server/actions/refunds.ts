@@ -5,18 +5,19 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { fail, issuesToFieldErrors, type ActionResult } from '@/lib/action-result';
 import { parseEuroToCents } from '@/lib/money';
-import { approveRefundSchema, manualRefundSchema, refundTransferSchema, rejectRefundSchema } from '@/lib/validation/refunds';
+import { approveRefundSchema, bulkRefundSchema, manualRefundSchema, refundTransferSchema, rejectRefundSchema } from '@/lib/validation/refunds';
 import { payments } from '@/server/db/schema';
-import { executeRefundAndNotify, sendRefundMail } from '@/server/services/cancellation';
+import { fillFreeSeats } from '@/server/services/automation';
+import { previewBulkRefund, runBulkRefund, type BulkRefundInput, type BulkRefundPreview, type BulkRefundResult } from '@/server/services/bulk-refunds';
+import { executeRefundAndNotify, refundAndProcess, sendRefundMail } from '@/server/services/cancellation';
 import {
   approveRefund,
-  createManualRefund,
   quoteCancellation,
   recordRefundTransfer,
   rejectRefund,
   type CancellationQuote,
 } from '@/server/services/refunds';
-import { runAdminAction } from './run';
+import { runAdminAction, runAdminQuery } from './run';
 
 const idSchema = z.number().int().positive();
 
@@ -34,15 +35,12 @@ export async function manualRefundAction(registrationId: number, values: unknown
   if (!id.success) return fail('NOT_FOUND');
   if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
   return runAdminAction(async ({ actor, db }) => {
-    const created = createManualRefund(db, actor, id.data, { amountCents: parseEuroToCents(parsed.data.amount)!, reason: parsed.data.reason });
-    let status: RefundActionResult['status'] = 'approved';
-    for (const r of created) {
-      const payment = db.select().from(payments).where(eq(payments.id, r.paymentId)).get()!;
-      if (payment.method !== 'stripe') continue;
-      const out = await executeRefundAndNotify(db, actor, r.id);
-      status = out.status === 'failed' ? 'failed' : status === 'approved' ? 'executed' : status;
-    }
-    return { status };
+    const r = await refundAndProcess(db, actor, id.data, {
+      amountCents: parseEuroToCents(parsed.data.amount)!,
+      reason: parsed.data.reason,
+      transferDone: parsed.data.transferDone,
+    });
+    return { status: r.status };
   });
 }
 
@@ -81,5 +79,32 @@ export async function recordRefundTransferAction(refundId: number, values: unkno
   return runAdminAction(async ({ actor, db }) => {
     const done = recordRefundTransfer(db, actor, id.data, parsed.data.transferredOn);
     await sendRefundMail(db, done);
+  });
+}
+
+const bulkIdsSchema = z.array(idSchema).min(1).max(1000);
+
+function bulkInput(ids: unknown, values: unknown): BulkRefundInput | ActionResult<never> {
+  const idList = bulkIdsSchema.safeParse(ids);
+  const parsed = bulkRefundSchema.safeParse(values);
+  if (!idList.success) return fail('INVALID');
+  if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
+  return { ids: idList.data, ...parsed.data, percent: Number(parsed.data.percent) };
+}
+
+/** Vorschau der Sammel-Erstattung: Beträge je Anmeldung und Summe (ändert nichts). */
+export async function previewBulkRefundAction(ids: unknown, values: unknown): Promise<ActionResult<BulkRefundPreview>> {
+  const input = bulkInput(ids, values);
+  if ('ok' in input) return input;
+  return runAdminQuery(({ db }) => previewBulkRefund(db, input));
+}
+
+export async function bulkRefundAction(ids: unknown, values: unknown): Promise<ActionResult<BulkRefundResult>> {
+  const input = bulkInput(ids, values);
+  if ('ok' in input) return input;
+  return runAdminAction(async ({ actor, db }) => {
+    const result = await runBulkRefund(db, actor, input);
+    if (input.cancel) await fillFreeSeats(db, [result.eventId]);
+    return result;
   });
 }

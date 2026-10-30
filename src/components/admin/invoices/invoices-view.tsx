@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ban, Download, Eye, Landmark, MoreHorizontal, Send } from 'lucide-react';
+import { Ban, Download, Eye, Landmark, MoreHorizontal, Send, Undo2, Wallet } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -21,6 +21,7 @@ import { cancelInvoiceAction, recordPaymentAction, sendInvoiceAction } from '@/s
 import type { InvoiceListRow, InvoiceState } from '@/server/services/invoices';
 import { Field, fieldError } from '../form-fields';
 import { useActionFeedback } from '../use-action-feedback';
+import { PaymentStatusDialog, RefundDialog } from '../attendees/registration-row-actions';
 import { useIssueFeedback } from './use-issue-feedback';
 
 const stateVariant: Record<InvoiceState, BadgeProps['variant']> = {
@@ -33,7 +34,7 @@ const stateVariant: Record<InvoiceState, BadgeProps['variant']> = {
 
 export type InvoiceStateFilter = 'all' | 'open' | 'overdue';
 type Props = { rows: InvoiceListRow[]; organizerIncomplete: boolean; mailToFile: boolean; initialQuery?: string; initialState?: InvoiceStateFilter };
-type DialogState = { kind: 'payment' | 'cancel'; row: InvoiceListRow } | null;
+type DialogState = { kind: 'payment' | 'cancel' | 'status' | 'refund'; row: InvoiceListRow } | null;
 
 /** Heutiges Datum in Wien als YYYY-MM-DD (Vorbelegung für den Zahlungseingang). */
 function todayVienna(): string {
@@ -176,6 +177,20 @@ export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, i
                           <Send aria-hidden className="size-4" />
                           {r.sentAt ? t('resend') : t('send')}
                         </DropdownMenuItem>
+                        {r.type === 'invoice' && r.registrationId != null && r.state !== 'cancelled' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            {/* gleiche Dialoge wie unter „Teilnehmende“ – Rechnungs- und Zahlungsstatus bleiben gleich */}
+                            <DropdownMenuItem onSelect={() => setDialog({ kind: 'status', row: r })}>
+                              <Wallet aria-hidden className="size-4" />
+                              {t('changeStatus')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setDialog({ kind: 'refund', row: r })}>
+                              <Undo2 aria-hidden className="size-4" />
+                              {t('refund')}
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         {payable && (
                           <>
                             <DropdownMenuSeparator />
@@ -210,6 +225,24 @@ export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, i
 
       {dialog?.kind === 'payment' && <PaymentDialog key={`p-${dialog.row.id}`} row={dialog.row} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'cancel' && <CancelInvoiceDialog key={`c-${dialog.row.id}`} row={dialog.row} onClose={() => setDialog(null)} />}
+      {dialog?.kind === 'status' && dialog.row.registrationId != null && (
+        <PaymentStatusDialog
+          key={`s-${dialog.row.id}`}
+          registrationId={dialog.row.registrationId}
+          name={dialog.row.recipientName ?? dialog.row.number}
+          open
+          onOpenChange={(o) => !o && setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'refund' && dialog.row.registrationId != null && (
+        <RefundDialog
+          key={`r-${dialog.row.id}`}
+          registrationId={dialog.row.registrationId}
+          name={dialog.row.recipientName ?? dialog.row.number}
+          open
+          onOpenChange={(o) => !o && setDialog(null)}
+        />
+      )}
     </div>
   );
 }

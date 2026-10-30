@@ -1,8 +1,8 @@
 'use client';
 
-import { ArrowDown, ArrowUp, ArrowUpDown, Copy, FileDown, FileText, Mail, Tag, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Copy, FileDown, FileText, Mail, Tag, Undo2, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
@@ -10,11 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { centsToInput, formatEuro } from '@/lib/money';
+import { companySuggestions, GROUP_BY_KEYS, groupRows, type GroupBy } from '@/lib/registration-groups';
 import {
   DEFAULT_SORT,
   EMPTY_FILTER,
   filterAndSort,
   filterToSearchParams,
+  type PaymentStatusKey,
+  type RegistrationStatusKey,
+  toggleSelection,
   type RegistrationFilter,
   type RegistrationSort,
 } from '@/lib/registrations-filter';
@@ -25,6 +29,7 @@ import type { RegistrationListRow } from '@/server/services/registrations';
 import { ConfirmDialog } from '../confirm-dialog';
 import { useActionFeedback } from '../use-action-feedback';
 import { AttendeesToolbar, type ViewTab } from './attendees-toolbar';
+import { BulkRefundDialog } from './bulk-refund-dialog';
 import { RegistrationDetailPanel } from './registration-detail-panel';
 import { RegistrationFormDialog } from './registration-form-dialog';
 import {
@@ -32,6 +37,7 @@ import {
   canIssueInvoice,
   ConfirmWaitlistedDialog,
   IssueInvoiceDialog,
+  PaymentStatusDialog,
   RefundDialog,
   RegistrationRowMenu,
   type RowDialog,
@@ -70,6 +76,7 @@ const BUILT_IN: BuiltInView[] = [
 ];
 
 const SAVED_KEY = 'eventflow.attendeeViews';
+const GROUP_KEY = 'eventflow.attendeeGroupBy';
 const sameList = (a: readonly string[] = [], b: readonly string[] = []) => a.length === b.length && [...a].sort().join('|') === [...b].sort().join('|');
 const sameFilter = (a: ViewFilter, b: ViewFilter) =>
   sameList(a.roles, b.roles) && sameList(a.statuses, b.statuses) && sameList(a.payments, b.payments) && sameList(a.methods, b.methods) && sameList(a.tickets, b.tickets);
@@ -111,6 +118,31 @@ const savedViewsStore = {
   },
 };
 
+/** Gruppierung pro Browser merken (localStorage, nur Bequemlichkeit). */
+const groupListeners = new Set<() => void>();
+const groupByStore = {
+  subscribe(listener: () => void) {
+    groupListeners.add(listener);
+    return () => groupListeners.delete(listener);
+  },
+  get(): GroupBy {
+    try {
+      const saved = window.localStorage.getItem(GROUP_KEY);
+      return saved && (GROUP_BY_KEYS as readonly string[]).includes(saved) ? (saved as GroupBy) : 'none';
+    } catch {
+      return 'none';
+    }
+  },
+  set(next: GroupBy) {
+    try {
+      window.localStorage.setItem(GROUP_KEY, next);
+    } catch {
+      /* ohne Speicher gilt die Wahl nur bis zum Neuladen nicht */
+    }
+    groupListeners.forEach((l) => l());
+  },
+};
+
 function SortIcon({ sort, k }: { sort: RegistrationSort; k: RegistrationSort['key'] }) {
   if (sort.key !== k) return <ArrowUpDown aria-hidden className="size-3.5 opacity-50" />;
   return sort.direction === 'asc' ? <ArrowUp aria-hidden className="size-3.5" /> : <ArrowDown aria-hidden className="size-3.5" />;
@@ -149,6 +181,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
   const [createOpen, setCreateOpen] = useState(Boolean(openCreate) && !readOnly);
   const [active, setActive] = useState<{ row: RegistrationListRow; dialog: RowDialog } | null>(null);
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
+  const [bulkRefundOpen, setBulkRefundOpen] = useState(false);
   const [bulkPending, startBulk] = useTransition();
 
   // Neue Anweisung aus der URL bei schon geöffneter Seite (z. B. zweite Suche): Zustand anpassen
@@ -169,6 +202,31 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
   }, [initialView, openId, openCreate, intentKey]);
 
   const visible = useMemo(() => filterAndSort(rows, filter, sort), [rows, filter, sort]);
+  const groupBy = useSyncExternalStore(groupByStore.subscribe, groupByStore.get, () => 'none' as GroupBy);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  function setGroupBy(next: GroupBy) {
+    groupByStore.set(next);
+    setCollapsed(new Set());
+  }
+  const roleOrder = useMemo(() => roles.map((r) => r.key), [roles]);
+  const companies = useMemo(() => companySuggestions(rows.flatMap((r) => [r.company, r.billingCompany])), [rows]);
+  const groups = useMemo(() => groupRows(visible, groupBy, roleOrder), [visible, groupBy, roleOrder]);
+  const indexOf = useMemo(() => new Map(visible.map((r, i) => [r.id, i])), [visible]);
+  const toggleGroup = (key: string) =>
+    setCollapsed((c) => {
+      const next = new Set(c);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  // Anzahl je Rolle: über alle aktuell gefilterten Zeilen, nur der Rollenfilter selbst bleibt außen vor
+  const roleCounts = useMemo(() => {
+    const base = filterAndSort(rows, { ...filter, roles: [] }, sort);
+    const counts = new Map<string, number>();
+    for (const r of base) for (const k of r.roles) counts.set(k, (counts.get(k) ?? 0) + 1);
+    return counts;
+  }, [rows, filter, sort]);
   const byId = useMemo(() => new Map(rows.map((r) => [r.id, r])), [rows]);
   const detailRow = detailId != null ? (byId.get(detailId) ?? null) : null;
   const roleLabel = useCallback((key: string) => roles.find((r) => r.key === key)?.label ?? key, [roles]);
@@ -262,17 +320,19 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
   useEffect(() => {
     if (detailId == null) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key !== 'Escape' || e.defaultPrevented || active || createOpen || bulkInvoiceOpen) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || active || createOpen || bulkInvoiceOpen || bulkRefundOpen) return;
       if (document.querySelector('[role="dialog"][data-state="open"], [role="menu"]')) return;
       setDetailId(null);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [detailId, active, createOpen, bulkInvoiceOpen]);
+  }, [detailId, active, createOpen, bulkInvoiceOpen, bulkRefundOpen]);
 
   // Sammelaktionen
   const emails = selectedRows.map((r) => r.email).filter((e): e is string => Boolean(e));
   const invoiceable = selectedRows.filter(canIssueInvoice);
+  // Sammel-Erstattung/-Storno: alles außer bereits stornierten ohne erstattbaren Betrag
+  const refundCandidates = selectedRows.filter((r) => r.status !== 'cancelled' || r.refundableCents > 0);
   async function copyEmails() {
     try {
       await navigator.clipboard.writeText(emails.join(', '));
@@ -308,6 +368,10 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
 
   const openDialog = (row: RegistrationListRow, dialog: RowDialog) => setActive({ row, dialog });
 
+  /** Klick auf ein Tag (Rolle, Status, Zahlung, Ticket): Wert zum Filter hinzufügen bzw. wieder entfernen */
+  const toggleFilter = (key: 'roles' | 'statuses' | 'payments' | 'tickets', value: string) =>
+    setFilter((f) => ({ ...f, [key]: toggleSelection(((f[key] as string[] | undefined) ?? []) as string[], value, true) }));
+
   const panel = detailRow && (
     <RegistrationDetailPanel
       key={detailRow.id}
@@ -316,10 +380,92 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
       readOnly={readOnly}
       onAction={(dialog) => openDialog(detailRow, dialog)}
       onClose={() => setDetailId(null)}
+      onFilter={toggleFilter}
       version={rows}
       headingId={panelHeadingId}
     />
   );
+
+  const renderRow = (r: RegistrationListRow, index: number, rowKey: string | number, alsoIn?: string[]) => {
+      const name = `${r.firstName} ${r.lastName}`.trim();
+      const isOpen = r.id === detailId;
+      const isSelected = selected.has(r.id);
+      const pTone = paymentTone(r);
+      return (
+        <tr
+          key={rowKey}
+          data-index={index}
+          tabIndex={index === focusIndex ? 0 : -1}
+          onFocus={() => setFocusIndex(index)}
+          onKeyDown={(e) => onRowKeyDown(e, index, r)}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest('button, a, input, [role="checkbox"], [role="menuitem"]')) return;
+            setDetailId(r.id);
+          }}
+          aria-selected={isOpen}
+          aria-label={t('openDetails', { name })}
+          className={cn(
+            'cursor-pointer border-t align-top outline-none focus-visible:bg-accent/60 focus-visible:shadow-[inset_3px_0_0_hsl(var(--primary))]',
+            isOpen ? 'bg-brand-soft/70' : isSelected ? 'bg-brand-soft/40' : 'hover:bg-muted/40'
+          )}
+        >
+          <td className="py-2.5 pr-1 pl-3.5">
+            <Checkbox checked={isSelected} onCheckedChange={() => toggleRow(r.id)} aria-label={t('selectRow', { name })} tabIndex={-1} />
+          </td>
+          <td className="px-3 py-2.5">
+            <div className="font-semibold">
+              {r.lastName}, {r.firstName}
+            </div>
+            <div className="text-[13px] text-muted-foreground">{r.email}</div>
+            {alsoIn && alsoIn.length > 0 && <div className="mt-0.5 text-[11px] text-muted-foreground italic">{t('groupAlsoIn', { roles: alsoIn.map(roleLabel).join(', ') })}</div>}
+            {r.roles.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {r.roles.map((k) => {
+                  const on = filter.roles.includes(k);
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => toggleFilter('roles', k)}
+                      aria-pressed={on}
+                      title={on ? t('roleTagRemove', { role: roleLabel(k) }) : t('roleTagFilter', { role: roleLabel(k) })}
+                      className={cn(
+                        'rounded px-1.5 py-px text-[11px] font-medium',
+                        on ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-brand-soft hover:text-primary'
+                      )}
+                    >
+                      {roleLabel(k)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </td>
+          <td className={cn('px-3 py-2.5', !r.company && 'text-muted-foreground', panel && wide && 'hidden 2xl:table-cell')}>{r.company || '–'}</td>
+          <td className="px-3 py-2.5">
+            <Pill tone={statusTone[r.status]}>{t(`status.${r.status}`)}</Pill>
+          </td>
+          <td className="px-3 py-2.5">
+            {pTone ? <Pill tone={pTone}>{r.invoiceOverdue ? t('paymentOverdue') : t(`payment.${r.paymentStatus}`)}</Pill> : <span className="text-muted-foreground">{t(`method.${r.paymentMethod}`)}</span>}
+            {pTone && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                {r.invoiceNumber ? r.invoiceNumber : r.paymentMethod === 'invoice' ? t('noInvoice') : t(`method.${r.paymentMethod}`)}
+              </div>
+            )}
+          </td>
+          <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
+            {formatEuro(r.priceCents, locale)}
+            {r.ticketType !== 'normal' && <div className="text-xs text-muted-foreground">{t(`ticket.${r.ticketType}`)}</div>}
+          </td>
+          <td className={cn('px-3 py-2.5 whitespace-nowrap text-muted-foreground', panel && wide && 'hidden')}>
+            {format.dateTime(new Date(r.createdAt), { dateStyle: 'short', timeStyle: 'short' })}
+          </td>
+          <td className="px-2 py-1.5 text-right">
+            {!readOnly && <RegistrationRowMenu row={r} onAction={(dialog) => openDialog(r, dialog)} />}
+          </td>
+        </tr>
+      );
+  };
 
   return (
     <div className={cn('grid items-start gap-5', panel && wide && 'grid-cols-[minmax(0,1fr)_420px]')}>
@@ -333,6 +479,56 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
           exportHref={exportParams(filter)}
           exportDisabled={visible.length === 0}
         />
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <span className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t('roleCountsLabel')}>
+            <span className="text-muted-foreground">{t('roleCountsLabel')}:</span>
+            {roles.map((role) => {
+              const on = filter.roles.includes(role.key);
+              const count = roleCounts.get(role.key) ?? 0;
+              return (
+                <button
+                  key={role.key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleFilter('roles', role.key)}
+                  title={on ? t('roleTagRemove', { role: role.label }) : t('roleTagFilter', { role: role.label })}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-medium',
+                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card hover:border-primary hover:text-primary',
+                    count === 0 && !on && 'opacity-50'
+                  )}
+                >
+                  {role.label}
+                  <span className="tabular-nums">{count}</span>
+                </button>
+              );
+            })}
+          </span>
+          <label className="ml-auto flex items-center gap-2">
+            <span className="text-muted-foreground">{t('groupBy')}</span>
+            <select value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)} className="h-8 rounded-md border border-input bg-card px-2 text-sm">
+              {GROUP_BY_KEYS.map((k) => (
+                <option key={k} value={k}>
+                  {t(`groupByOption.${k}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {groupBy !== 'none' && groups.length > 1 && (
+            <button
+              type="button"
+              className="text-primary underline-offset-4 hover:underline"
+              onClick={() => setCollapsed(collapsed.size === groups.length ? new Set() : new Set(groups.map((g) => g.key)))}
+            >
+              {collapsed.size === groups.length ? t('groupExpandAll') : t('groupCollapseAll')}
+            </button>
+          )}
+          <span className="font-semibold" aria-live="polite">
+            {t('shownCount', { visible: visible.length, total: rows.length })}
+          </span>
+          {groupBy === 'role' && <span className="basis-full text-xs text-muted-foreground">{t('groupRoleHint')}</span>}
+        </div>
 
         {selectedRows.length > 0 && (
           <div role="region" aria-label={t('selected', { count: selectedRows.length })} className="sticky top-[68px] z-20 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg bg-[#1C1A3F] px-3.5 py-2 text-sm text-white shadow-md">
@@ -351,6 +547,12 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
               <button type="button" onClick={() => setBulkInvoiceOpen(true)} disabled={bulkPending} className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline">
                 <FileText aria-hidden className="size-4" />
                 {t('bulkInvoices', { count: invoiceable.length })}
+              </button>
+            )}
+            {!readOnly && refundCandidates.length > 0 && (
+              <button type="button" onClick={() => setBulkRefundOpen(true)} disabled={bulkPending} className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline">
+                <Undo2 aria-hidden className="size-4" />
+                {t('bulkRefund', { count: refundCandidates.length })}
               </button>
             )}
             {!readOnly && (
@@ -414,74 +616,40 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
                 </tr>
               </thead>
               <tbody ref={tbodyRef}>
-                {visible.map((r, index) => {
-                  const name = `${r.firstName} ${r.lastName}`.trim();
-                  const isOpen = r.id === detailId;
-                  const isSelected = selected.has(r.id);
-                  const pTone = paymentTone(r);
-                  return (
-                    <tr
-                      key={r.id}
-                      data-index={index}
-                      tabIndex={index === focusIndex ? 0 : -1}
-                      onFocus={() => setFocusIndex(index)}
-                      onKeyDown={(e) => onRowKeyDown(e, index, r)}
-                      onClick={(e) => {
-                        if ((e.target as HTMLElement).closest('button, a, input, [role="checkbox"], [role="menuitem"]')) return;
-                        setDetailId(r.id);
-                      }}
-                      aria-selected={isOpen}
-                      aria-label={t('openDetails', { name })}
-                      className={cn(
-                        'cursor-pointer border-t align-top outline-none focus-visible:bg-accent/60 focus-visible:shadow-[inset_3px_0_0_hsl(var(--primary))]',
-                        isOpen ? 'bg-brand-soft/70' : isSelected ? 'bg-brand-soft/40' : 'hover:bg-muted/40'
-                      )}
-                    >
-                      <td className="py-2.5 pr-1 pl-3.5">
-                        <Checkbox checked={isSelected} onCheckedChange={() => toggleRow(r.id)} aria-label={t('selectRow', { name })} tabIndex={-1} />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="font-semibold">
-                          {r.lastName}, {r.firstName}
-                        </div>
-                        <div className="text-[13px] text-muted-foreground">{r.email}</div>
-                        {r.roles.length > 0 && !(r.roles.length === 1 && r.roles[0] === 'attendee') && (
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {r.roles
-                              .filter((k) => k !== 'attendee')
-                              .map((k) => (
-                                <span key={k} className="rounded bg-muted px-1.5 py-px text-[11px] font-medium text-muted-foreground">
-                                  {roleLabel(k)}
+                {groupBy === 'none'
+                  ? visible.map((r, index) => renderRow(r, index, r.id))
+                  : groups.map((g) => {
+                      const open = !collapsed.has(g.key);
+                      const title =
+                        groupBy === 'company'
+                          ? (g.label ?? t('groupNoCompany'))
+                          : groupBy === 'role'
+                            ? g.key
+                              ? roleLabel(g.key)
+                              : t('groupNoRole')
+                            : groupBy === 'status'
+                              ? t(`status.${g.key as RegistrationStatusKey}`)
+                              : t(`payment.${g.key as PaymentStatusKey}`);
+                      return (
+                        <Fragment key={`g-${g.key}`}>
+                          <tr className="border-t bg-muted/50">
+                            <td colSpan={8} className="px-3.5 py-2">
+                              <button type="button" aria-expanded={open} onClick={() => toggleGroup(g.key)} className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-left">
+                                <ChevronRight aria-hidden className={cn('size-4 transition-transform', open && 'rotate-90')} />
+                                <span className="font-semibold">{title}</span>
+                                <span className="text-muted-foreground">
+                                  {t('groupStats', { count: g.rows.length, active: g.active, paid: g.paid, open: g.open, sum: formatEuro(g.sumCents, locale) })}
                                 </span>
-                              ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className={cn('px-3 py-2.5', !r.company && 'text-muted-foreground', panel && wide && 'hidden 2xl:table-cell')}>{r.company || '–'}</td>
-                      <td className="px-3 py-2.5">
-                        <Pill tone={statusTone[r.status]}>{t(`status.${r.status}`)}</Pill>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        {pTone ? <Pill tone={pTone}>{r.invoiceOverdue ? t('paymentOverdue') : t(`payment.${r.paymentStatus}`)}</Pill> : <span className="text-muted-foreground">{t(`method.${r.paymentMethod}`)}</span>}
-                        {pTone && (
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {r.invoiceNumber ? r.invoiceNumber : r.paymentMethod === 'invoice' ? t('noInvoice') : t(`method.${r.paymentMethod}`)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
-                        {formatEuro(r.priceCents, locale)}
-                        {r.ticketType === 'member' && <div className="text-xs text-muted-foreground">{t('ticket.member')}</div>}
-                      </td>
-                      <td className={cn('px-3 py-2.5 whitespace-nowrap text-muted-foreground', panel && wide && 'hidden')}>
-                        {format.dateTime(new Date(r.createdAt), { dateStyle: 'short', timeStyle: 'short' })}
-                      </td>
-                      <td className="px-2 py-1.5 text-right">
-                        {!readOnly && <RegistrationRowMenu row={r} onAction={(dialog) => openDialog(r, dialog)} />}
-                      </td>
-                    </tr>
-                  );
-                })}
+                              </button>
+                            </td>
+                          </tr>
+                          {open &&
+                            g.rows.map((r) =>
+                              renderRow(r, indexOf.get(r.id) ?? 0, `${g.key}-${r.id}`, groupBy === 'role' ? r.roles.filter((k) => k !== g.key) : undefined)
+                            )}
+                        </Fragment>
+                      );
+                    })}
                 {visible.length === 0 && (
                   <tr>
                     <td colSpan={8} className="p-8 text-center text-muted-foreground">
@@ -523,6 +691,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
           roles={roles}
           prices={prices}
           seatsFree={seatsFree}
+          companies={companies}
         />
       )}
 
@@ -535,6 +704,15 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
         onConfirm={issueInvoices}
       />
 
+      {!readOnly && (
+        <BulkRefundDialog
+          ids={refundCandidates.map((r) => r.id)}
+          open={bulkRefundOpen}
+          onOpenChange={setBulkRefundOpen}
+          onDone={() => setSelected(new Set())}
+        />
+      )}
+
       {active && (
         <>
           <RegistrationFormDialog
@@ -546,6 +724,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             roles={roles}
             prices={prices}
             seatsFree={seatsFree}
+            companies={companies}
             priceLocked={['paid', 'partially_refunded', 'refunded'].includes(active.row.paymentStatus) || active.row.invoiceNumber !== null}
             defaultValues={{
               firstName: active.row.firstName,
@@ -573,6 +752,13 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             name={`${active.row.firstName} ${active.row.lastName}`}
             refundableCents={active.row.refundableCents}
             open={active.dialog === 'refund'}
+            onOpenChange={(o) => !o && setActive(null)}
+          />
+          <PaymentStatusDialog
+            key={`payment-${active.row.id}`}
+            registrationId={active.row.id}
+            name={`${active.row.firstName} ${active.row.lastName}`}
+            open={active.dialog === 'payment'}
             onOpenChange={(o) => !o && setActive(null)}
           />
           <IssueInvoiceDialog

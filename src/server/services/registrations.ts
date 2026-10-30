@@ -34,7 +34,7 @@ export type RegistrationListRow = {
   status: RegistrationStatusKey;
   paymentStatus: (typeof registrations.$inferSelect)['paymentStatus'];
   paymentMethod: (typeof registrations.$inferSelect)['paymentMethod'];
-  ticketType: 'normal' | 'member';
+  ticketType: 'normal' | 'member' | 'special';
   priceCents: number;
   roles: string[];
   source: (typeof registrations.$inferSelect)['source'];

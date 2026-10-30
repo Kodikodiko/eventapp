@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       not_required: t('payment.not_required'),
     },
     paymentMethods: { stripe: t('method.stripe'), invoice: t('method.invoice'), free: t('method.free') },
-    ticketTypes: { normal: t('ticket.normal'), member: t('ticket.member') },
+    ticketTypes: { normal: t('ticket.normal'), member: t('ticket.member'), special: t('ticket.special') },
   };
   const buffer = await buildRegistrationsWorkbook(rows, labels);
 

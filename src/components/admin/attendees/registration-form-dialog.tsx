@@ -25,13 +25,15 @@ type Props = {
   roles: RoleOption[];
   prices: { normal: string; member: string };
   seatsFree: number;
+  /** vorhandene Firmennamen als Vorschläge beim Eintippen (einheitliche Schreibweise) */
+  companies?: string[];
 } & (
   | { mode: 'create'; eventId: number }
   | { mode: 'edit'; registrationId: number; defaultValues: Omit<RegistrationCreateValues, 'status' | 'overbook' | 'notify'>; priceLocked: boolean }
 );
 
 export function RegistrationFormDialog(props: Props) {
-  const { open, onOpenChange, roles, prices, seatsFree, mode } = props;
+  const { open, onOpenChange, roles, prices, seatsFree, mode, companies = [] } = props;
   const t = useTranslations('registrationForm');
   const message = useValidationMessage();
   const router = useRouter();
@@ -73,6 +75,7 @@ export function RegistrationFormDialog(props: Props) {
     formState: { errors },
   } = form;
   const status = useWatch({ control, name: 'status' });
+  const ticketType = useWatch({ control, name: 'ticketType' });
   const priceLocked = mode === 'edit' && props.priceLocked;
 
   function close(next: boolean) {
@@ -114,7 +117,7 @@ export function RegistrationFormDialog(props: Props) {
                   <Input id="reg-email" type="email" autoComplete="off" {...register('email')} />
                 </Field>
                 <Field id="reg-company" label={t('company')} error={fieldError(errors, 'company')}>
-                  <Input id="reg-company" {...register('company')} />
+                  <Input id="reg-company" list="reg-company-list" autoComplete="off" {...register('company')} />
                 </Field>
                 <Field id="reg-locale" label={t('locale')} hint={t('localeHint')} error={fieldError(errors, 'locale')}>
                   <select id="reg-locale" className={selectClass} {...register('locale')}>
@@ -148,23 +151,30 @@ export function RegistrationFormDialog(props: Props) {
                     className={selectClass}
                     disabled={priceLocked}
                     {...register('ticketType', {
-                      onChange: (e) => setValue('price', e.target.value === 'member' ? prices.member : prices.normal),
+                      // Sonderpreis startet mit 0 und wird von Hand eingetragen
+                      onChange: (e) => setValue('price', e.target.value === 'special' ? '0,00' : e.target.value === 'member' ? prices.member : prices.normal),
                     })}
                   >
                     <option value="normal">{t('ticketNormal')}</option>
                     <option value="member">{t('ticketMember')}</option>
+                    <option value="special">{t('ticketSpecial')}</option>
                   </select>
                 </Field>
                 <Field
                   id="reg-price"
                   label={t('price')}
-                  hint={priceLocked ? t('priceLocked') : t('priceHint')}
+                  hint={priceLocked ? t('priceLocked') : ticketType === 'special' ? t('priceSpecialHint') : t('priceHint')}
                   error={fieldError(errors, 'price')}
                 >
                   <Input id="reg-price" inputMode="decimal" readOnly={priceLocked} {...register('price')} />
                 </Field>
                 <Field id="reg-billing-company" label={t('billingCompany')} error={fieldError(errors, 'billingCompany')}>
-                  <Input id="reg-billing-company" {...register('billingCompany')} />
+                  <Input id="reg-billing-company" list="reg-company-list" autoComplete="off" {...register('billingCompany')} />
+                  <datalist id="reg-company-list">
+                    {companies.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
                 </Field>
                 <Field id="reg-billing-address" label={t('billingAddress')} error={fieldError(errors, 'billingAddress')}>
                   <Textarea id="reg-billing-address" rows={3} {...register('billingAddress')} />

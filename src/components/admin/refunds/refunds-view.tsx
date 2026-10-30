@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, Landmark, MoreHorizontal, RotateCcw, X } from 'lucide-react';
+import { Check, Landmark, MoreHorizontal, Plus, RotateCcw, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -26,6 +26,7 @@ import { approveRefundAction, recordRefundTransferAction, rejectRefundAction, re
 import type { RefundListRow } from '@/server/services/refunds';
 import { Field, fieldError } from '../form-fields';
 import { useActionFeedback } from '../use-action-feedback';
+import { NewRefundDialog, type RefundCandidate } from './new-refund-dialog';
 
 const statusVariant: Record<RefundListRow['status'], BadgeProps['variant']> = {
   proposed: 'billed',
@@ -41,7 +42,7 @@ function todayVienna(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Vienna' }).format(new Date());
 }
 
-export function RefundsView({ rows, refundMode }: { rows: RefundListRow[]; refundMode: 'automatic' | 'approval' }) {
+export function RefundsView({ rows, refundMode, candidates, readOnly = false }: { rows: RefundListRow[]; refundMode: 'automatic' | 'approval'; candidates: RefundCandidate[]; readOnly?: boolean }) {
   const t = useTranslations('refunds');
   const locale = useLocale() as Locale;
   const format = useFormatter();
@@ -49,6 +50,7 @@ export function RefundsView({ rows, refundMode }: { rows: RefundListRow[]; refun
   const handle = useActionFeedback();
   const [, startTransition] = useTransition();
   const [dialog, setDialog] = useState<DialogState>(null);
+  const [newOpen, setNewOpen] = useState(false);
   const fmt = (c: number) => formatEuro(c, locale);
   const open = rows.filter((r) => r.status === 'proposed' || r.status === 'approved' || r.status === 'failed');
 
@@ -62,7 +64,15 @@ export function RefundsView({ rows, refundMode }: { rows: RefundListRow[]; refun
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{refundMode === 'automatic' ? t('modeAutomatic') : t('modeApproval')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{refundMode === 'automatic' ? t('modeAutomatic') : t('modeApproval')}</p>
+        {!readOnly && (
+          <Button onClick={() => setNewOpen(true)}>
+            <Plus aria-hidden />
+            {t('new')}
+          </Button>
+        )}
+      </div>
       <p className="text-sm" aria-live="polite">
         {t('summary', { open: open.length, total: rows.length })}
       </p>
@@ -151,6 +161,7 @@ export function RefundsView({ rows, refundMode }: { rows: RefundListRow[]; refun
           </tbody>
         </table>
       </div>
+      {!readOnly && <NewRefundDialog candidates={candidates} open={newOpen} onOpenChange={setNewOpen} />}
       {dialog?.kind === 'approve' && <ApproveDialog key={`a-${dialog.row.id}`} row={dialog.row} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'reject' && <RejectDialog key={`r-${dialog.row.id}`} row={dialog.row} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'transfer' && <TransferDialog key={`t-${dialog.row.id}`} row={dialog.row} onClose={() => setDialog(null)} />}

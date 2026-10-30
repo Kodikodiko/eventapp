@@ -9,6 +9,7 @@ import type { EventInput } from '@/lib/validation/forms';
 import type { Db } from '@/server/db/core';
 import { cancellationRules, events, legalDocuments, registrations, sponsorPackages, waitlistOffers } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
+import { copyEventCostGroups, instantiateTemplates } from './expenses';
 
 export type EventRow = typeof events.$inferSelect;
 export type CancellationRuleRow = typeof cancellationRules.$inferSelect;
@@ -132,6 +133,7 @@ export function createEvent(db: Db, actor: Actor, input: EventInput): EventRow {
     assertSlugFree(tx, input.slug);
     const [row] = tx.insert(events).values(eventValues(input)).returning().all();
     replaceRules(tx, row.id, input.cancellationRules);
+    instantiateTemplates(tx, row.id);
     writeAudit(tx, actor, { action: 'event.created', entity: 'event', entityId: row.id, eventId: row.id, summary: `Event ${row.slug} angelegt` });
     return row;
   });
@@ -166,7 +168,8 @@ export function updateEvent(db: Db, actor: Actor, id: number, input: EventInput)
 
 /**
  * Kopiert ein Event als Vorlage für die nächste Ausgabe: Einstellungen, Stornobedingungen,
- * aktuelle AGB (als Version 1) und Sponsorpakete. Anmeldungen, Speaker, Sponsoren und Programm nicht.
+ * aktuelle AGB (als Version 1), Sponsorpakete und aktive Kostengruppen. Anmeldungen, Speaker, Sponsoren, Programm
+ * und Ausgaben nicht.
  */
 export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug: string; name: LocalizedText }): EventRow {
   return db.transaction((tx) => {
@@ -205,6 +208,8 @@ export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug
         .values(packages.map(({ id: _pid, eventId: _e, ...p }) => ({ ...p, eventId: row.id })))
         .run();
     }
+
+    copyEventCostGroups(tx, sourceId, row.id);
 
     writeAudit(tx, actor, {
       action: 'event.copied',

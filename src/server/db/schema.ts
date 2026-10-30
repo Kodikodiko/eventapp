@@ -41,7 +41,7 @@ export const LEGAL_DOCUMENT_KINDS = ['terms', 'privacy'] as const;
 export const REGISTRATION_STATUSES = ['reserved', 'confirmed', 'waitlisted', 'cancelled'] as const;
 export const PAYMENT_STATUSES = ['open', 'paid', 'partially_refunded', 'refunded', 'not_required'] as const;
 export const PAYMENT_METHODS = ['stripe', 'invoice', 'free'] as const;
-export const TICKET_TYPES = ['normal', 'member'] as const;
+export const TICKET_TYPES = ['normal', 'member', 'special'] as const;
 export const SOURCES = ['public', 'portal', 'admin'] as const;
 export const CONSENT_KINDS = ['terms', 'privacy', 'photo', 'newsletter'] as const;
 export const PAYMENT_RECORD_METHODS = ['stripe', 'bank_transfer'] as const;
@@ -53,6 +53,7 @@ export const SLIDES_STATUSES = ['missing', 'uploaded', 'review'] as const;
 export const SESSION_TAGS = ['general', 'talk', 'workshop', 'break'] as const;
 export const SPONSOR_PAYMENT_STATUSES = ['open', 'invoiced', 'paid', 'overdue'] as const;
 export const DSR_TYPES = ['access', 'rectification', 'erasure', 'restriction'] as const;
+export const EXPENSE_STATUSES = ['new', 'planned', 'paid'] as const;
 
 // ---------------------------------------------------------------------------
 // Einstellungen und Events
@@ -534,6 +535,88 @@ export const sessions = sqliteTable(
     index('sessions_event_start_idx').on(t.eventId, t.startsAt),
     check('sessions_stream_range', sql`${t.stream} BETWEEN 1 AND 4`),
     check('sessions_time_order', sql`${t.endsAt} > ${t.startsAt}`),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// Ausgaben und Kostengruppen
+// ---------------------------------------------------------------------------
+
+/**
+ * Kostengruppen-Vorlagen (global). Neue Events übernehmen die aktiven Vorlagen als eigene Kostengruppen;
+ * spätere Änderungen an einer Vorlage wirken nicht auf bestehende Event-Kostengruppen.
+ */
+export const costGroupTemplates = sqliteTable(
+  'cost_group_templates',
+  {
+    id: id(),
+    name: text('name').notNull(),
+    /** Ausgaben dieser Gruppe können einem Speaker zugeordnet werden */
+    speakerLink: integer('speaker_link', { mode: 'boolean' }).notNull().default(false),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: createdAt(),
+    deactivatedAt: text('deactivated_at'),
+  },
+  (t) => [uniqueIndex('cost_group_templates_name_uq').on(sql`lower(${t.name})`)]
+);
+
+/** Kostengruppen eines Events (Kopie einer Vorlage oder eventeigen). Werden nie gelöscht, nur deaktiviert. */
+export const eventCostGroups = sqliteTable(
+  'event_cost_groups',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'restrict' }),
+    /** Herkunft (Vorlage), NULL bei eventeigenen Gruppen */
+    templateId: integer('template_id').references(() => costGroupTemplates.id, { onDelete: 'set null' }),
+    name: text('name').notNull(),
+    speakerLink: integer('speaker_link', { mode: 'boolean' }).notNull().default(false),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: createdAt(),
+    deactivatedAt: text('deactivated_at'),
+  },
+  (t) => [
+    index('event_cost_groups_event_idx').on(t.eventId),
+    uniqueIndex('event_cost_groups_event_name_uq').on(t.eventId, sql`lower(${t.name})`),
+  ]
+);
+
+/** Ausgaben eines Events (Beträge brutto, solange der Veranstalter nicht USt-pflichtig ist). */
+export const expenses = sqliteTable(
+  'expenses',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'restrict' }),
+    costGroupId: integer('cost_group_id')
+      .notNull()
+      .references(() => eventCostGroups.id, { onDelete: 'restrict' }),
+    /** Kalenderdatum der Ausgabe (YYYY-MM-DD) */
+    spentOn: text('spent_on').notNull(),
+    amountCents: integer('amount_cents').notNull(),
+    /** nur bei regulärer USt: Steuersatz des Betrags (Vorsteuer) */
+    vatRateBp: integer('vat_rate_bp'),
+    supplier: text('supplier'),
+    description: text('description').notNull(),
+    status: text('status', { enum: EXPENSE_STATUSES }).notNull().default('new'),
+    /** nur bei Kostengruppen mit Speaker-Zuordnung */
+    speakerId: integer('speaker_id').references(() => speakers.id, { onDelete: 'set null' }),
+    /** Beleg: Pfad relativ zu RECEIPT_DIR, Originalname, Medientyp, Größe in Byte */
+    receiptPath: text('receipt_path'),
+    receiptName: text('receipt_name'),
+    receiptType: text('receipt_type'),
+    receiptSize: integer('receipt_size'),
+    createdAt: createdAt(),
+    updatedAt: text('updated_at').notNull().default(NOW),
+    createdBy: text('created_by'),
+  },
+  (t) => [
+    index('expenses_event_idx').on(t.eventId, t.spentOn),
+    index('expenses_cost_group_idx').on(t.costGroupId),
+    index('expenses_speaker_idx').on(t.speakerId),
+    check('expenses_amount_positive', sql`${t.amountCents} > 0`),
   ]
 );
 

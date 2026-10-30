@@ -102,7 +102,7 @@ export type OfferView = {
   startsAt: string;
   endsAt: string;
   priceCents: number;
-  ticketType: 'normal' | 'member';
+  ticketType: 'normal' | 'member' | 'special';
   paymentMethod: 'stripe' | 'invoice' | 'free';
   expiresAt: string;
 };

@@ -173,8 +173,9 @@ describe('Filter der Teilnehmerliste', () => {
   ];
   const names = (r: typeof rows) => r.map((x) => x.firstName);
 
-  it('verlangt alle gewählten Rollen und einen der gewählten Status', () => {
-    expect(names(filterAndSort(rows, { roles: ['attendee', 'speaker'], statuses: [], search: '' }, { key: 'name', direction: 'asc' }))).toEqual(['Anna']);
+  it('verlangt eine der gewählten Rollen und einen der gewählten Status', () => {
+    expect(names(filterAndSort(rows, { roles: ['speaker'], statuses: [], search: '' }, { key: 'name', direction: 'asc' }))).toEqual(['Anna', 'Clara']);
+    expect(names(filterAndSort(rows, { roles: ['attendee', 'speaker'], statuses: [], search: '' }, { key: 'name', direction: 'asc' }))).toEqual(['Bernd', 'Anna', 'Clara']);
     expect(names(filterAndSort(rows, { roles: [], statuses: ['confirmed', 'cancelled'], search: '' }, { key: 'name', direction: 'asc' }))).toEqual([
       'Anna',
       'Clara',

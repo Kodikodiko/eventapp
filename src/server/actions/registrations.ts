@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { fail, issuesToFieldErrors, type ActionResult } from '@/lib/action-result';
 import {
   cancelSchema,
+  paymentStatusSchema,
   registrationCreateSchema,
   registrationUpdateSchema,
   toRegistrationInput,
@@ -16,7 +17,8 @@ import {
 import { fillFreeSeats } from '@/server/services/automation';
 import { cancelAndProcess } from '@/server/services/cancellation';
 import { notifyRegistration } from '@/server/services/notifications';
-import { runAdminAction } from './run';
+import { paymentStatusOptions, setPaymentStatusManually, type PaymentStatusOptions } from '@/server/services/payment-status';
+import { runAdminAction, runAdminQuery } from './run';
 
 const idSchema = z.number().int().positive();
 
@@ -57,6 +59,7 @@ export async function cancelRegistrationAction(
       percent: Number(parsed.data.percent),
       source: 'admin',
       notify: parsed.data.notify,
+      transferDone: parsed.data.transferDone,
     });
     // frei gewordenen Platz sofort der Warteliste anbieten
     await fillFreeSeats(db, [r.eventId]);
@@ -64,7 +67,7 @@ export async function cancelRegistrationAction(
       refundCents: r.amounts.refundCents,
       refundStatus: r.refundStatus,
       failedRefunds: r.failedRefunds,
-      awaitingTransfer: r.refundStatus === 'approved' && r.executeIds.length < r.refundIds.length,
+      awaitingTransfer: r.refundStatus === 'approved' && !parsed.data.transferDone && r.executeIds.length < r.refundIds.length,
     };
   });
 }
@@ -75,5 +78,22 @@ export async function confirmWaitlistedAction(registrationId: number, overbook: 
   return runAdminAction(async ({ actor, db }) => {
     confirmWaitlistedByAdmin(db, actor, id.data, overbook);
     await notifyRegistration(db, id.data, { actor });
+  });
+}
+
+export async function paymentStatusOptionsAction(registrationId: number): Promise<ActionResult<PaymentStatusOptions>> {
+  const id = idSchema.safeParse(registrationId);
+  if (!id.success) return fail('NOT_FOUND');
+  return runAdminQuery(({ db }) => paymentStatusOptions(db, id.data));
+}
+
+/** Zahlungsstatus von Hand ändern; die Notiz wird protokolliert. */
+export async function setPaymentStatusAction(registrationId: number, values: unknown): Promise<ActionResult<void>> {
+  const id = idSchema.safeParse(registrationId);
+  const parsed = paymentStatusSchema.safeParse(values);
+  if (!id.success) return fail('NOT_FOUND');
+  if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
+  return runAdminAction(({ actor, db }) => {
+    setPaymentStatusManually(db, actor, id.data, parsed.data);
   });
 }
