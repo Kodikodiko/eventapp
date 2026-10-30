@@ -30,7 +30,9 @@
     "verify": "Verify",
     "invalidCode": "The code is invalid or has expired.",
     "useBackupCode": "Use a backup code instead",
-    "useTotp": "Use the authenticator app instead"
+    "useTotp": "Use the authenticator app instead",
+    "userOrEmail": "Username or email",
+    "devHint": "Development mode: you can sign in with the user from DEV_LOGIN."
   },
   "adminNav": {
     "label": "Admin navigation",

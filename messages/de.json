@@ -30,7 +30,9 @@
     "verify": "Bestätigen",
     "invalidCode": "Der Code ist ungültig oder abgelaufen.",
     "useBackupCode": "Stattdessen einen Backup-Code verwenden",
-    "useTotp": "Stattdessen die Authenticator-App verwenden"
+    "useTotp": "Stattdessen die Authenticator-App verwenden",
+    "userOrEmail": "Benutzer oder E-Mail",
+    "devHint": "Entwicklungsmodus: Anmeldung mit dem Benutzer aus DEV_LOGIN möglich."
   },
   "adminNav": {
     "label": "Admin-Navigation",

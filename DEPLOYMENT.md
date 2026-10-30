@@ -42,6 +42,7 @@ Beim ersten Start legt die App `data\eventflow.db` an und führt alle Migratione
 | `BACKUP_DIR` | `data/backups` | `/var/lib/eventflow/backups` | lokale Sicherungen |
 | `BETTER_AUTH_SECRET` | zufällig, ≥ 32 Zeichen | eigener, anderer Wert | Signatur von Sitzungen |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | `https://<domain>` | |
+| `DEV_LOGIN` | optional `stefan:aaa` | **nicht setzen** | Entwickler-Login mit Benutzername und Passwort, ohne E-Mail und Zwei-Faktor; greift nur unter localhost |
 | `DEV_ADMIN_WITHOUT_2FA` | optional `true` | **nicht setzen** | Admin-Anmeldung nur mit Passwort, ohne Zwei-Faktor; greift nur, wenn `BETTER_AUTH_URL`/`APP_URL` auf localhost zeigt |
 | `STRIPE_SECRET_KEY` | `sk_test_…` | `sk_live_…` | nur serverseitig |
 | `STRIPE_WEBHOOK_SECRET` | von `stripe listen` ausgegeben | aus dem Stripe-Dashboard | Signaturprüfung |

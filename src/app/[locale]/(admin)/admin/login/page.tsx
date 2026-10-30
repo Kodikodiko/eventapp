@@ -6,7 +6,7 @@ import { redirect } from '@/i18n/navigation';
 import { initLocale, type LocaleParams } from '@/i18n/page';
 import { requestDb } from '@/server/db';
 import { getSession, isAdmin } from '@/server/auth/session';
-import { hasAdminSecondFactor } from '@/server/auth/two-factor-policy';
+import { devLoginConfig, hasAdminSecondFactor } from '@/server/auth/two-factor-policy';
 
 type Props = LocaleParams & { searchParams: Promise<{ error?: string }> };
 
@@ -34,7 +34,7 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
               {t('forbidden')}
             </p>
           )}
-          <LoginForm />
+          <LoginForm devLogin={devLoginConfig() !== null} />
         </CardContent>
       </Card>
     </main>
