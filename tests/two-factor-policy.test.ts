@@ -25,17 +25,17 @@ describe('Zwei-Faktor-Pflicht für Admins', () => {
 
 describe('Entwickler-Login (DEV_LOGIN)', () => {
   it('liest Benutzer und Passwort, nur unter localhost', () => {
-    expect(devLoginConfig({ DEV_LOGIN: 'Stefan:aaa' })).toEqual({ username: 'stefan', password: 'aaa' });
-    expect(devLoginConfig({ DEV_LOGIN: 'stefan:a:b', APP_URL: 'http://127.0.0.1:3000' })).toEqual({ username: 'stefan', password: 'a:b' });
-    expect(devLoginConfig({ DEV_LOGIN: 'stefan:aaa', BETTER_AUTH_URL: 'https://events.example.org' })).toBeNull();
+    expect(devLoginConfig({ DEV_LOGIN: 'Anna:xyz' })).toEqual({ username: 'anna', password: 'xyz' });
+    expect(devLoginConfig({ DEV_LOGIN: 'anna:a:b', APP_URL: 'http://127.0.0.1:3000' })).toEqual({ username: 'anna', password: 'a:b' });
+    expect(devLoginConfig({ DEV_LOGIN: 'anna:xyz', BETTER_AUTH_URL: 'https://events.example.org' })).toBeNull();
     expect(devLoginConfig({})).toBeNull();
-    expect(devLoginConfig({ DEV_LOGIN: 'stefan' })).toBeNull();
-    expect(devLoginConfig({ DEV_LOGIN: ':aaa' })).toBeNull();
-    expect(devLoginConfig({ DEV_LOGIN: 'ste fan:aaa' })).toBeNull();
+    expect(devLoginConfig({ DEV_LOGIN: 'anna' })).toBeNull();
+    expect(devLoginConfig({ DEV_LOGIN: ':xyz' })).toBeNull();
+    expect(devLoginConfig({ DEV_LOGIN: 'an na:xyz' })).toBeNull();
   });
 
   it('hebt lokal die Zwei-Faktor-Pflicht auf', () => {
-    expect(adminTwoFactorRequired({ DEV_LOGIN: 'stefan:aaa' })).toBe(false);
-    expect(adminTwoFactorRequired({ DEV_LOGIN: 'stefan:aaa', BETTER_AUTH_URL: 'https://events.example.org' })).toBe(true);
+    expect(adminTwoFactorRequired({ DEV_LOGIN: 'anna:xyz' })).toBe(false);
+    expect(adminTwoFactorRequired({ DEV_LOGIN: 'anna:xyz', BETTER_AUTH_URL: 'https://events.example.org' })).toBe(true);
   });
 });
