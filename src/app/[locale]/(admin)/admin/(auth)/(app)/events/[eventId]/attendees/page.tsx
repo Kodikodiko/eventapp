@@ -1,15 +1,14 @@
 import { AttendeesTable } from '@/components/admin/attendees/attendees-table';
-import { initLocale } from '@/i18n/page';
 import { localized } from '@/lib/localized';
 import { centsToInput } from '@/lib/money';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { getEventStats } from '@/server/services/events';
 import { listRegistrations, listRoles } from '@/server/services/registrations';
 
 type Props = EventParams & { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function AttendeesPage({ params, searchParams }: Props) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const { eventId } = await params;
   const sp = await searchParams;
   const one = (k: string) => (Array.isArray(sp[k]) ? sp[k][0] : sp[k]) ?? '';

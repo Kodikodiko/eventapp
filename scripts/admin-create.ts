@@ -3,15 +3,17 @@
  *
  *   npm run admin:create -- --email admin@example.org --name "Anna Admin"
  *   npm run admin:create -- --email admin@example.org --reset-password
+ *   npm run admin:create -- --email admin@example.org --reset-2fa
  *
  * Das Passwort wird verdeckt abgefragt (mindestens 12 Zeichen). Für automatisierte Abläufe kann es
  * stattdessen über die Umgebungsvariable ADMIN_PASSWORD übergeben werden.
  * Nach der ersten Anmeldung muss der Admin die Zwei-Faktor-Anmeldung einrichten.
+ * --reset-2fa entfernt sie (z. B. verlorenes Gerät oder lokale Entwicklung mit DEV_ADMIN_WITHOUT_2FA=true).
  */
 import readline from 'node:readline';
 import { parseArgs } from 'node:util';
 import { loadEnv } from './lib/env';
-import { upsertAdmin } from '../src/server/auth/admin-users';
+import { resetAdminTwoFactor, upsertAdmin } from '../src/server/auth/admin-users';
 import { backupDirFromEnv, databasePathFromEnv, openDatabase } from '../src/server/db/core';
 
 loadEnv();
@@ -21,6 +23,7 @@ const { values } = parseArgs({
     email: { type: 'string' },
     name: { type: 'string' },
     'reset-password': { type: 'boolean', default: false },
+    'reset-2fa': { type: 'boolean', default: false },
   },
 });
 
@@ -58,6 +61,11 @@ async function readPassword(): Promise<string> {
 async function main() {
   const db = openDatabase({ path: databasePathFromEnv(), backupDir: backupDirFromEnv() });
   try {
+    if (values['reset-2fa']) {
+      resetAdminTwoFactor(db, email);
+      console.log(`Zwei-Faktor-Anmeldung für ${email.toLowerCase()} entfernt, alle Sitzungen beendet.`);
+      return;
+    }
     const password = await readPassword();
     const result = await upsertAdmin(
       db,

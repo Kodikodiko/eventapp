@@ -1,6 +1,7 @@
 import { AdminShell } from '@/components/admin/admin-shell';
 import { initLocale, type LocaleParams } from '@/i18n/page';
 import { requireAdmin } from '@/server/auth/session';
+import { hasAdminSecondFactor } from '@/server/auth/two-factor-policy';
 
 /** Alles unterhalb erfordert einen angemeldeten Admin. */
 export default async function AdminAuthLayout({ children, params }: LocaleParams & { children: React.ReactNode }) {
@@ -10,7 +11,7 @@ export default async function AdminAuthLayout({ children, params }: LocaleParams
     <AdminShell
       locale={locale}
       user={{ name: session.user.name, email: session.user.email }}
-      fullAccess={Boolean(session.user.twoFactorEnabled)}
+      fullAccess={hasAdminSecondFactor(session.user)}
     >
       {children}
     </AdminShell>

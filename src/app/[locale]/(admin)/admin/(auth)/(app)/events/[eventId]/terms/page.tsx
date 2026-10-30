@@ -1,13 +1,12 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { LegalDocumentForm } from '@/components/admin/legal-document-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { initLocale } from '@/i18n/page';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { publishTermsAction } from '@/server/actions/events';
 import { listLegalVersions } from '@/server/services/legal';
 
 export default async function EventTermsPage({ params }: EventParams) {
-  await initLocale(params);
+  await initAdminPage(params);
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('terms');

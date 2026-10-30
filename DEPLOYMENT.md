@@ -42,6 +42,7 @@ Beim ersten Start legt die App `data\eventflow.db` an und führt alle Migratione
 | `BACKUP_DIR` | `data/backups` | `/var/lib/eventflow/backups` | lokale Sicherungen |
 | `BETTER_AUTH_SECRET` | zufällig, ≥ 32 Zeichen | eigener, anderer Wert | Signatur von Sitzungen |
 | `BETTER_AUTH_URL` | `http://localhost:3000` | `https://<domain>` | |
+| `DEV_ADMIN_WITHOUT_2FA` | optional `true` | **nicht setzen** | Admin-Anmeldung nur mit Passwort, ohne Zwei-Faktor; greift nur, wenn `BETTER_AUTH_URL`/`APP_URL` auf localhost zeigt |
 | `STRIPE_SECRET_KEY` | `sk_test_…` | `sk_live_…` | nur serverseitig |
 | `STRIPE_WEBHOOK_SECRET` | von `stripe listen` ausgegeben | aus dem Stripe-Dashboard | Signaturprüfung |
 | `PAYMENT_PROVIDER` | `fake` (nur ohne Stripe-Testschlüssel) | **nicht setzen** | simulierte Kasse unter `/pay/fake/…`; wird ignoriert, sobald `STRIPE_SECRET_KEY` gesetzt ist |
@@ -98,7 +99,7 @@ Echte Personendaten gehören nie ins Repository. Für Tests und Vorführungen nu
 | `smoke` | startet den Produktions-Build mit einer Wegwerf-Datenbank und prüft Seiten und `/api/health` (vorher `build`) |
 | `db:generate` | nach Änderungen an `src/server/db/schema.ts`: neue SQL-Migration in `drizzle/` erzeugen |
 | `db:studio` | Datenbank im Browser ansehen/bearbeiten (Drizzle Studio) |
-| `admin:create` | Admin anlegen: `npm run admin:create -- --email … --name "…"` (Passwort wird verdeckt abgefragt); mit `--reset-password` Passwort neu setzen. Bei der ersten Anmeldung wird die Zwei-Faktor-Anmeldung eingerichtet (Pflicht) |
+| `admin:create` | Admin anlegen: `npm run admin:create -- --email … --name "…"` (Passwort wird verdeckt abgefragt); mit `--reset-password` Passwort neu setzen. Mit `--reset-2fa` die Zwei-Faktor-Anmeldung entfernen (verlorenes Gerät, lokale Entwicklung). Bei der ersten Anmeldung wird die Zwei-Faktor-Anmeldung eingerichtet (Pflicht) |
 | `seed:demo` | Demodaten in eine **leere** Datenbank schreiben; verweigert bei vorhandenen Daten |
 | `db:backup` | konsistente Sicherung der laufenden Datenbank nach `BACKUP_DIR` |
 | `retention` | Löschfristen anwenden (Spec 7.5); `--dry-run` zeigt nur an, was passieren würde |

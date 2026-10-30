@@ -1,11 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { SponsorsView } from '@/components/admin/sponsors/sponsors-view';
-import { initLocale } from '@/i18n/page';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { listPackages, listSponsors, sponsorTotals } from '@/server/services/sponsors';
 
 export default async function SponsorsPage({ params }: EventParams) {
-  await initLocale(params);
+  await initAdminPage(params);
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('sponsors');

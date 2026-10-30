@@ -1,10 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import { EventForm } from '@/components/admin/event-form';
-import { initLocale, type LocaleParams } from '@/i18n/page';
+import type { LocaleParams } from '@/i18n/page';
+import { initAdminPage } from '@/server/admin-pages';
 import { emptyEventFormValues } from '@/lib/validation/event-values';
 
 export default async function NewEventPage({ params }: LocaleParams) {
-  await initLocale(params);
+  await initAdminPage(params);
   const t = await getTranslations('events');
   return (
     <div className="space-y-6">

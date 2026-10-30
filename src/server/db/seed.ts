@@ -162,9 +162,14 @@ export async function seedIfNeeded(db: Db): Promise<void> {
     tx.insert(s.auditLog).values({ action: 'seed', entity: 'database', summary: 'Auto-Seed: Demodaten angelegt' }).run();
   });
 
-  // Standard-Admin anlegen, falls noch keiner existiert
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.org';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'EventFlow2026!';
+  // Admin nur mit ausdrücklich gesetzten Zugangsdaten anlegen – nie mit einem Standardpasswort aus dem Code
+  // (sonst könnte sich jeder damit anmelden und die Zwei-Faktor-Anmeldung selbst einrichten).
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword) {
+    console.warn('[DB] Auto-Seed: kein Admin angelegt (ADMIN_EMAIL und ADMIN_PASSWORD setzen oder `npm run admin:create`).');
+    return;
+  }
   try {
     await upsertAdmin(db, {
       email: adminEmail,

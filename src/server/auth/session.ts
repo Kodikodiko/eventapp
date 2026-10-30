@@ -8,6 +8,7 @@ import { cache } from 'react';
 import { redirect } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { getAuth, type AuthSession } from './index';
+import { hasAdminSecondFactor } from './two-factor-policy';
 
 /** Aktuelle Sitzung oder null (pro Request zwischengespeichert). */
 export const getSession = cache(async (): Promise<AuthSession | null> => {
@@ -29,10 +30,10 @@ export async function requireAdmin(locale: Locale): Promise<AuthSession> {
   return session;
 }
 
-/** Für Seiten: Admin mit eingerichteter 2FA, sonst Weiterleitung zur Einrichtung. */
+/** Für Seiten: Admin mit eingerichteter 2FA (lokal abschaltbar, siehe two-factor-policy.ts), sonst Weiterleitung zur Einrichtung. */
 export async function requireAdminWith2fa(locale: Locale): Promise<AuthSession> {
   const session = await requireAdmin(locale);
-  if (!session.user.twoFactorEnabled) return redirect({ href: '/admin/security', locale });
+  if (!hasAdminSecondFactor(session.user)) return redirect({ href: '/admin/security', locale });
   return session;
 }
 
@@ -64,9 +65,9 @@ export async function assertAttendee(): Promise<AttendeeSession> {
   return session;
 }
 
-/** Für Server Actions und Route Handler: wirft, wenn kein Admin mit 2FA angemeldet ist. */
+/** Für Server Actions und Route Handler: wirft, wenn kein Admin mit 2FA angemeldet ist (lokal abschaltbar, siehe two-factor-policy.ts). */
 export async function assertAdmin(): Promise<AuthSession> {
   const session = await getSession();
-  if (!isAdmin(session) || !session.user.twoFactorEnabled) throw new ForbiddenError();
+  if (!isAdmin(session) || !hasAdminSecondFactor(session.user)) throw new ForbiddenError();
   return session;
 }

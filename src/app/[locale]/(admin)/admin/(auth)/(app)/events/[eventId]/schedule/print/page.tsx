@@ -1,9 +1,8 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { PrintButton } from '@/components/admin/print-button';
-import { initLocale } from '@/i18n/page';
 import { TIME_ZONE, viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { listSessions } from '@/server/services/program';
 
 /**
@@ -11,7 +10,7 @@ import { listSessions } from '@/server/services/program';
  * Kopfzeile und Navigation des Admin-Bereichs sind beim Drucken ausgeblendet (print:hidden).
  */
 export default async function SchedulePrintPage({ params }: EventParams) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('schedule');

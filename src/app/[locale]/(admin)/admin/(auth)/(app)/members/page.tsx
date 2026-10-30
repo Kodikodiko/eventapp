@@ -2,14 +2,15 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { MemberImport } from '@/components/admin/members/member-import';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { initLocale, type LocaleParams } from '@/i18n/page';
+import type { LocaleParams } from '@/i18n/page';
+import { initAdminPage } from '@/server/admin-pages';
 import { requestDb } from '@/server/db';
 import { countMembers, latestMemberImport, searchMembers } from '@/server/services/members';
 
 type Props = LocaleParams & { searchParams: Promise<{ q?: string }> };
 
 export default async function MembersPage({ params, searchParams }: Props) {
-  await initLocale(params);
+  await initAdminPage(params);
   const q = ((await searchParams).q ?? '').slice(0, 100);
   const t = await getTranslations('members');
   const format = await getFormatter();

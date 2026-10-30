@@ -6,6 +6,7 @@ import { redirect } from '@/i18n/navigation';
 import { initLocale, type LocaleParams } from '@/i18n/page';
 import { requestDb } from '@/server/db';
 import { getSession, isAdmin } from '@/server/auth/session';
+import { hasAdminSecondFactor } from '@/server/auth/two-factor-policy';
 
 type Props = LocaleParams & { searchParams: Promise<{ error?: string }> };
 
@@ -13,7 +14,7 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
   const locale = await initLocale(params);
   await requestDb();
   const session = await getSession();
-  if (isAdmin(session) && session.user.twoFactorEnabled) redirect({ href: '/admin', locale });
+  if (isAdmin(session) && hasAdminSecondFactor(session.user)) redirect({ href: '/admin', locale });
 
   const { error } = await searchParams;
   const t = await getTranslations('auth');

@@ -1,11 +1,10 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { CopyLinkField } from '@/components/admin/copy-link-field';
 import { Link } from '@/i18n/navigation';
-import { initLocale } from '@/i18n/page';
 import type { Locale } from '@/i18n/routing';
 import { formatEuro } from '@/lib/money';
 import { cn } from '@/lib/utils';
-import { loadEvent, type EventParams } from '@/server/admin-pages';
+import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import { getCockpit, type CockpitTask } from '@/server/services/admin-overview';
 import { getCancellationRules } from '@/server/services/events';
@@ -17,7 +16,7 @@ type TaskView = { key: string; tone: 'danger' | 'action' | 'warn' | 'muted'; tit
 const card = 'rounded-xl border bg-card';
 
 export default async function EventCockpitPage({ params }: EventParams) {
-  const locale = (await initLocale(params)) as Locale;
+  const locale = (await initAdminPage(params)) as Locale;
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('cockpit');

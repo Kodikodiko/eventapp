@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Link } from '@/i18n/navigation';
-import { initLocale, type LocaleParams } from '@/i18n/page';
+import type { LocaleParams } from '@/i18n/page';
+import { initAdminPage } from '@/server/admin-pages';
 import { auditFilterQuery, parseAuditFilter } from '@/lib/audit-filter';
 import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
@@ -14,7 +15,7 @@ type Props = LocaleParams & { searchParams: Promise<Record<string, string | stri
 const selectClass = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs';
 
 export default async function AuditPage({ params, searchParams }: Props) {
-  const locale = await initLocale(params);
+  const locale = await initAdminPage(params);
   const filter = parseAuditFilter(await searchParams);
   const t = await getTranslations('audit');
   const format = await getFormatter();
