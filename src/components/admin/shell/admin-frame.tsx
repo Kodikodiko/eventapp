@@ -83,14 +83,16 @@ export function AdminFrame({ events, defaultEventId, user, children }: Props) {
         { href: base, label: t('cockpit'), group: g },
         { href: `${base}/attendees`, label: t('attendees'), group: g },
         { href: `${base}/attendees?new=1`, label: `+ ${t('addRegistration')}`, group: g },
+        { href: `${base}/certificate`, label: t('certificate'), group: g },
         { href: `${base}/invoices`, label: t('invoices'), group: g },
         { href: `${base}/refunds`, label: t('refunds'), group: g },
         { href: `${base}/speakers`, label: t('speakers'), group: g },
         { href: `${base}/schedule`, label: t('schedule'), group: g },
         { href: `${base}/sponsors`, label: t('sponsors'), group: g },
         { href: `${base}/expenses`, label: t('expenses'), group: g },
+        { href: `${base}/pnl`, label: t('pnl'), group: g },
         { href: `${base}/settings`, label: t('eventSettings'), group: g },
-        { href: `${base}/terms`, label: t('terms'), group: g }
+        { href: `${base}/settings#terms`, label: t('terms'), group: g }
       );
     }
     return list;

@@ -52,6 +52,9 @@ const contactSchema = z.object({
 export const sponsorFormSchema = z.object({
   companyName: z.string().trim().min(1, 'required').max(200, 'tooLong'),
   packageId: z.string(),
+  /** nur ohne Paket: Betrag (Endpreis) und USt-Satz */
+  customPrice: z.string(),
+  customVatRateBp: z.enum(VAT_RATE_OPTIONS, 'required'),
   discount: euro,
   dueOn: z.string().refine((v) => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v), 'date'),
   paymentStatus: z.enum(SPONSOR_PAYMENT_STATUS_KEYS, 'required'),
@@ -70,6 +73,10 @@ export const sponsorFormSchema = z.object({
         seen.add(key);
       });
     }),
+}).superRefine((v, ctx) => {
+  if (v.packageId) return;
+  if (v.customPrice.trim() === '') ctx.addIssue({ code: 'custom', path: ['customPrice'], message: 'required' });
+  else if (parseEuroToCents(v.customPrice) === null) ctx.addIssue({ code: 'custom', path: ['customPrice'], message: 'amount' });
 });
 export type SponsorFormValues = z.infer<typeof sponsorFormSchema>;
 
@@ -85,6 +92,8 @@ export type SponsorContactInput = {
 export type SponsorInput = {
   companyName: string;
   packageId: number | null;
+  customPriceCents?: number | null;
+  customVatRateBp?: number | null;
   discountCents: number;
   dueOn: string | null;
   paymentStatus: (typeof SPONSOR_PAYMENT_STATUS_KEYS)[number];
@@ -98,6 +107,8 @@ export function toSponsorInput(v: SponsorFormValues): SponsorInput {
   return {
     companyName: v.companyName.trim(),
     packageId: v.packageId ? Number(v.packageId) : null,
+    customPriceCents: v.packageId ? null : parseEuroToCents(v.customPrice)!,
+    customVatRateBp: v.packageId ? null : Number(v.customVatRateBp),
     discountCents: parseEuroToCents(v.discount)!,
     dueOn: v.dueOn || null,
     paymentStatus: v.paymentStatus,

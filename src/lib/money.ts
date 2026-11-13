@@ -67,3 +67,18 @@ export function centsToInput(cents: number): string {
   const abs = Math.abs(cents);
   return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, '0')}`;
 }
+
+/** Betrag ohne Währungszeichen für Tabellen, z. B. 520000 → „5.200,00“ (de). */
+export function formatAmount(cents: number, locale: Locale): string {
+  assertCents(cents);
+  return new Intl.NumberFormat(INTL_LOCALE[locale], { style: 'currency', currency: 'EUR' })
+    .formatToParts(cents / 100)
+    .filter((p) => p.type !== 'currency' && p.type !== 'literal')
+    .map((p) => (p.type === 'minusSign' ? '−' : p.value))
+    .join('');
+}
+
+/** Wie formatAmount, aber immer mit Vorzeichen (+/−); 0 bleibt ohne. */
+export function formatSignedAmount(cents: number, locale: Locale): string {
+  return `${cents > 0 ? '+' : ''}${formatAmount(cents, locale)}`;
+}

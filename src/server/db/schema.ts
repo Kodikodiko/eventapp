@@ -115,6 +115,12 @@ export const events = sqliteTable(
     termsDocumentId: integer('terms_document_id').references((): AnySQLiteColumn => legalDocuments.id, {
       onDelete: 'set null',
     }),
+    /** null = USt-Modus aus den globalen Einstellungen */
+    vatMode: text('vat_mode', { enum: VAT_MODES }),
+    /** Anmeldung von Hand angehalten (zusätzlich zu Öffnet/Schließt am) */
+    registrationPaused: integer('registration_paused', { mode: 'boolean' }).notNull().default(false),
+    /** Folien-Links der Speaker im öffentlichen Programm und im Teilnehmerportal zeigen */
+    slidesPublic: integer('slides_public', { mode: 'boolean' }).notNull().default(false),
     createdAt: createdAt(),
     archivedAt: text('archived_at'),
   },
@@ -315,6 +321,9 @@ export const sponsors = sqliteTable(
       .references(() => events.id, { onDelete: 'restrict' }),
     companyName: text('company_name').notNull(),
     packageId: integer('package_id').references(() => sponsorPackages.id, { onDelete: 'restrict' }),
+    /** nur ohne Paket: vereinbarter Betrag (Endpreis wie bei Paketen) und USt-Satz */
+    customPriceCents: integer('custom_price_cents'),
+    customVatRateBp: integer('custom_vat_rate_bp'),
     billingAddress: text('billing_address').notNull().default(''),
     /** UID des Sponsors (Pflicht auf Rechnungen über 10.000 € brutto bei regulärer USt) */
     vatId: text('vat_id'),
@@ -511,10 +520,48 @@ export const speakers = sqliteTable(
       .references(() => people.id, { onDelete: 'restrict' }),
     proposalStatus: text('proposal_status', { enum: PROPOSAL_STATUSES }).notNull().default('pending'),
     slidesStatus: text('slides_status', { enum: SLIDES_STATUSES }).notNull().default('missing'),
+    /** Freigabelink zu den Folien (SharePoint, Nextcloud o. Ä.) */
+    slidesUrl: text('slides_url'),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('speakers_event_person_uq').on(t.eventId, t.personId)]
 );
+
+/** Streams (parallele Spuren) eines Events: Position 1–10 mit Namen, z. B. „Saal A“. */
+export const eventStreams = sqliteTable(
+  'event_streams',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull(),
+    name: text('name', { mode: 'json' }).$type<LocalizedText>().notNull(),
+  },
+  (t) => [
+    uniqueIndex('event_streams_event_position_uq').on(t.eventId, t.position),
+    check('event_streams_position_range', sql`${t.position} BETWEEN 1 AND 10`),
+  ]
+);
+
+/**
+ * Teilnahmebestätigung eines Events: Hintergrundbild (A4 quer, Ablage unter CERTIFICATE_DIR), Überschrift und Text
+ * mit Platzhaltern {name}, {event}, {datum}, {ort}. Ohne Eintrag gelten die Standardtexte.
+ */
+export const eventCertificates = sqliteTable('event_certificates', {
+  eventId: integer('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  heading: text('heading', { mode: 'json' }).$type<LocalizedText>().notNull(),
+  body: text('body', { mode: 'json' }).$type<LocalizedText>().notNull(),
+  /** Textfarbe als #rrggbb */
+  textColor: text('text_color').notNull().default('#1a1a1a'),
+  /** Hintergrundbild: Pfad relativ zu CERTIFICATE_DIR, Originalname, Medientyp */
+  imagePath: text('image_path'),
+  imageName: text('image_name'),
+  imageType: text('image_type'),
+  updatedAt: text('updated_at').notNull().default(NOW),
+});
 
 export const sessions = sqliteTable(
   'sessions',
@@ -528,12 +575,16 @@ export const sessions = sqliteTable(
     endsAt: text('ends_at').notNull(),
     location: text('location').notNull().default(''),
     tag: text('tag', { enum: SESSION_TAGS }).notNull().default('talk'),
+    /** erster Stream (Position) */
     stream: integer('stream').notNull().default(1),
+    /** letzter Stream bei Programmpunkten über mehrere Streams (z. B. Keynote); null = nur `stream` */
+    streamTo: integer('stream_to'),
     speakerId: integer('speaker_id').references(() => speakers.id, { onDelete: 'set null' }),
   },
   (t) => [
     index('sessions_event_start_idx').on(t.eventId, t.startsAt),
-    check('sessions_stream_range', sql`${t.stream} BETWEEN 1 AND 4`),
+    check('sessions_stream_range', sql`${t.stream} BETWEEN 1 AND 10`),
+    check('sessions_stream_to_range', sql`${t.streamTo} IS NULL OR (${t.streamTo} BETWEEN ${t.stream} AND 10)`),
     check('sessions_time_order', sql`${t.endsAt} > ${t.startsAt}`),
   ]
 );
@@ -618,6 +669,75 @@ export const expenses = sqliteTable(
     index('expenses_speaker_idx').on(t.speakerId),
     check('expenses_amount_positive', sql`${t.amountCents} > 0`),
   ]
+);
+
+// ---------------------------------------------------------------------------
+// Erfolgsrechnung: Plan je Variante und Vergleichs-Events
+// ---------------------------------------------------------------------------
+
+export const PLAN_VARIANTS = ['plan', 'min', 'best'] as const;
+
+/**
+ * Plan eines Events je Variante (Plan, Minimum, Best Case): erwartete Tickets je Tickettyp und Sponsoreneinnahmen.
+ * Preise sind optional: NULL bedeutet „Preis des Events“ (Sonderpreis: 0).
+ */
+export const eventPlans = sqliteTable(
+  'event_plans',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    variant: text('variant', { enum: PLAN_VARIANTS }).notNull(),
+    ticketsNormal: integer('tickets_normal').notNull().default(0),
+    ticketsMember: integer('tickets_member').notNull().default(0),
+    ticketsSpecial: integer('tickets_special').notNull().default(0),
+    ticketsFree: integer('tickets_free').notNull().default(0),
+    /** erwarteter Durchschnittspreis je Ticket; NULL = Preis des Events */
+    priceNormalCents: integer('price_normal_cents'),
+    priceMemberCents: integer('price_member_cents'),
+    priceSpecialCents: integer('price_special_cents'),
+    sponsorIncomeCents: integer('sponsor_income_cents').notNull().default(0),
+    updatedAt: text('updated_at').notNull().default(NOW),
+    updatedBy: text('updated_by'),
+  },
+  (t) => [
+    uniqueIndex('event_plans_event_variant_uq').on(t.eventId, t.variant),
+    check(
+      'event_plans_nonnegative',
+      sql`${t.ticketsNormal} >= 0 AND ${t.ticketsMember} >= 0 AND ${t.ticketsSpecial} >= 0 AND ${t.ticketsFree} >= 0 AND ${t.sponsorIncomeCents} >= 0`
+    ),
+  ]
+);
+
+/** Budget je Kostengruppe innerhalb einer Planvariante. */
+export const eventPlanBudgets = sqliteTable(
+  'event_plan_budgets',
+  {
+    planId: integer('plan_id')
+      .notNull()
+      .references(() => eventPlans.id, { onDelete: 'cascade' }),
+    costGroupId: integer('cost_group_id')
+      .notNull()
+      .references(() => eventCostGroups.id, { onDelete: 'cascade' }),
+    amountCents: integer('amount_cents').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.planId, t.costGroupId] }), check('event_plan_budgets_nonnegative', sql`${t.amountCents} >= 0`)]
+);
+
+/** Events, mit denen die Erfolgsrechnung eines Events verglichen wird (höchstens zwei, Reihenfolge über position). */
+export const eventComparisons = sqliteTable(
+  'event_comparisons',
+  {
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    compareEventId: integer('compare_event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.compareEventId] })]
 );
 
 // ---------------------------------------------------------------------------

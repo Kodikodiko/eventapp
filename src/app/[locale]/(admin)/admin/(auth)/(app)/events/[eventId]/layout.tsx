@@ -1,5 +1,5 @@
 import { getFormatter, getTranslations } from 'next-intl/server';
-import { ArchiveToggle, CopyEventDialog } from '@/components/admin/event-actions';
+import { ArchiveToggle, CopyEventDialog, PauseToggle } from '@/components/admin/event-actions';
 import { EventPageHeader } from '@/components/admin/event-page-header';
 import { localized } from '@/lib/localized';
 import { copySuggestion } from '@/lib/validation/event-values';
@@ -40,10 +40,11 @@ export default async function EventLayout({ children, params }: EventParams & { 
       <EventPageHeader
         eventId={event.id}
         eventName={localized(event.name, locale)}
-        state={{ label: tState(state), tone: state === 'open' ? 'open' : state === 'archived' ? 'archived' : 'neutral' }}
+        state={{ label: tState(state), tone: state === 'open' ? 'open' : state === 'archived' ? 'archived' : state === 'paused' ? 'paused' : 'neutral' }}
         timing={timing}
         actions={
           <>
+            {!event.archivedAt && <PauseToggle eventId={event.id} paused={event.registrationPaused} />}
             <CopyEventDialog eventId={event.id} suggestion={copySuggestion(event)} />
             <ArchiveToggle eventId={event.id} archived={Boolean(event.archivedAt)} />
           </>

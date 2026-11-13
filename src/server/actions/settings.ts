@@ -40,3 +40,13 @@ export async function publishPrivacyAction(values: unknown): Promise<ActionResul
     version: publishLegalVersion(db, actor, 'privacy', null, content).version,
   }));
 }
+
+/** Globale AGB: neue Version, gilt sofort für alle Events im Modus „globale AGB“. */
+export async function publishGlobalTermsAction(values: unknown): Promise<ActionResult<{ version: number }>> {
+  const parsed = legalDocumentFormSchema.safeParse(values);
+  if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
+  const content = parsed.data.content.en ? parsed.data.content : { de: parsed.data.content.de };
+  return runAdminAction(({ actor, db }) => ({
+    version: publishLegalVersion(db, actor, 'terms', null, content).version,
+  }));
+}

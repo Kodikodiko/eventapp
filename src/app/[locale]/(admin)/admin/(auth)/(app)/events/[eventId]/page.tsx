@@ -38,7 +38,7 @@ export default async function EventCockpitPage({ params }: EventParams) {
   const tasks: TaskView[] = [];
   if (!event.archivedAt) {
     const issueText = { noTerms: t('taskNoTerms'), noPrivacy: t('taskNoPrivacy'), noPaymentMethod: t('taskNoPayment') } as const;
-    const issueHref = { noTerms: `${base}/terms`, noPrivacy: '/admin/settings', noPaymentMethod: `${base}/settings` } as const;
+    const issueHref = { noTerms: `${base}/settings#terms`, noPrivacy: '/admin/settings', noPaymentMethod: `${base}/settings` } as const;
     for (const issue of availability.issues) {
       tasks.push({ key: issue, tone: 'danger', title: t('taskBlocked'), detail: issueText[issue], href: issueHref[issue], action: t('actionFix'), primary: true });
     }

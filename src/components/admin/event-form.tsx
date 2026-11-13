@@ -19,12 +19,14 @@ type Props = {
   eventId?: number;
   defaultValues: EventFormValues;
   readOnly?: boolean;
+  /** USt-Modus aus den globalen Einstellungen (Vorgabe für „wie global“) */
+  globalVatMode: 'small_business' | 'standard';
 };
 
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
 
-export function EventForm({ mode, eventId, defaultValues, readOnly }: Props) {
+export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMode }: Props) {
   const t = useTranslations('eventForm');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -106,6 +108,13 @@ export function EventForm({ mode, eventId, defaultValues, readOnly }: Props) {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <Field id="capacity" label={t('capacity')} hint={t('capacityHint')} error={fieldError(errors, 'capacity')}>
                 <Input id="capacity" inputMode="numeric" {...register('capacity')} />
+              </Field>
+              <Field id="vatMode" label={t('vatMode')} hint={t('vatModeHint')} error={fieldError(errors, 'vatMode')}>
+                <select id="vatMode" className={selectClass} {...register('vatMode')}>
+                  <option value="">{t('vatModeGlobal', { mode: t(globalVatMode === 'standard' ? 'vatStandard' : 'vatSmallBusiness') })}</option>
+                  <option value="small_business">{t('vatSmallBusiness')}</option>
+                  <option value="standard">{t('vatStandard')}</option>
+                </select>
               </Field>
               <Field id="ticketVatRateBp" label={t('vatRate')} hint={t('vatRateHint')} error={fieldError(errors, 'ticketVatRateBp')}>
                 <select id="ticketVatRateBp" className={selectClass} {...register('ticketVatRateBp')}>

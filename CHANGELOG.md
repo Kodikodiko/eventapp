@@ -1,5 +1,61 @@
 # Changelog
 
+## 13.11.2026 – Feedback-Runde, Paket 5 (U5 Teilnahmebestätigung)
+
+- Neuer Menüpunkt „Teilnahmebestätigung“ je Event: Hintergrundbild hochladen (PNG/JPG, max. 5 MB, A4 quer; füllt die ganze Seite), Überschrift und Text de/en mit Platzhaltern `{name}`, `{event}`, `{datum}`, `{uhrzeit}` (Beginn bis Ende), `{ort}` – Werte aus den Event-Einstellungen –, Textfarbe. Zeilen nur mit `{name}` bzw. `{event}` werden hervorgehoben. Vorschau als PDF (Deutsch/Englisch) mit Beispielnamen. Ohne eigene Einrichtung gelten Standardtexte.
+- Teilnehmerliste: Personen anhaken → „Teilnahmebestätigung (n)“ lädt ein PDF mit einer Seite je angehakter Person herunter (unabhängig vom Status, die Auswahl entscheidet), in der Sprache der Person, sortiert nach Nachname. Einzeln auch über das Drei-Punkte-Menü einer Zeile bzw. im Detailbereich. Wird protokolliert.
+- Beim Kopieren eines Events wird die Einrichtung samt Bild übernommen.
+- Ablage der Bilder unter `CERTIFICATE_DIR` (Standard `data/certificates`, nicht im Git, bitte mitsichern).
+- Datenbank: Migration `0012_certificates` (Tabelle `event_certificates`).
+- 5 neue Tests (257 gesamt).
+
+## 13.11.2026 – Feedback-Runde, Paket 4 (U9 Streams)
+
+- Streams je Event: Abschnitt „Streams“ auf der Programmseite – bis zu 10 Streams mit Namen (de/en, z. B. „Saal A“) anlegen, umbenennen, nach links/rechts verschieben (Programmpunkte wandern mit) und löschen. Löschen geht nicht, solange ein Programmpunkt allein in diesem Stream liegt; Punkte über mehrere Streams werden schmäler. Neue Events starten mit „Stream 1“, beim Kopieren werden die Streams übernommen. Alles wird protokolliert.
+- Programmpunkte über mehrere Streams: im Formular „Stream (von)“ und „bis“ sowie Knopf „Alle Streams“ (z. B. Keynote, Pause). Die Überschneidungsprüfung berücksichtigt Bereiche: eine Keynote über alle Streams blockiert jeden Stream in dieser Zeit. Wird ein Stream hinzugefügt, bleiben Punkte über alle bisherigen Streams über die ganze Breite.
+- Darstellung: Planungsansicht, Druckansicht und öffentliches Programm zeigen ein Raster mit einer Spalte je Stream (Stream-Name als Überschrift), Punkte über mehrere Streams gehen über die entsprechende Breite. Öffentlich am Handy bleibt die Liste, mit Stream-Name je Punkt.
+- Datenbank: Migration `0011_event_streams` (Tabelle `event_streams`, Spalte `sessions.stream_to`). Bestehende Events bekommen „Stream 1 … n“ bis zum höchsten verwendeten Stream; allein stehende Punkte der Art „Allgemein“/„Pause“ (bisher in der Druckansicht über die ganze Breite) gehen jetzt ausdrücklich über alle Streams.
+- 4 neue Tests (251 gesamt).
+
+## 13.11.2026 – Feedback-Runde, Paket 3 (U8, U10) und AGB-Umbau
+
+- AGB: Die globalen AGB sind eine Vorlage. Ein neues Event übernimmt beim Anlegen eine Kopie der dann gültigen globalen AGB als eigene Version 1; spätere Änderungen der globalen AGB wirken nicht auf bestehende Events (keine Änderung der Bedingungen während der Anmeldephase). Die AGB eines Events werden jetzt in den Event-Einstellungen bearbeitet (eigener Menüpunkt „AGB“ entfällt, alte Adresse leitet weiter); „Aktuelle globale AGB als Vorlage laden“ übernimmt den globalen Text ins Formular, erst „Als neue Version veröffentlichen“ ändert die AGB des Events. Der Modus „globale AGB“ aus Paket 2 ist wieder entfernt.
+- Sponsoren ohne Paket: Felder „Betrag (brutto, €)“ und „USt-Satz“ erscheinen, wenn kein Paket gewählt ist (Pflicht). Sponsorenliste, Summen, Erfolgsrechnung und Rechnung („Sponsoring“) verwenden diesen Betrag abzüglich Rabatt.
+- Speaker-Folien: Feld „Link zu den Folien“ (https, z. B. SharePoint- oder Nextcloud-Freigabe) im Speaker-Dialog, Link-Symbol in der Liste. Schalter „Folien veröffentlichen“ auf der Speaker-Seite: zeigt bei bestätigten Speakern einen Link „Folien“ im öffentlichen Programm; im Teilnehmerportal erscheint „Programm und Folien“. Wird protokolliert.
+- Datenbank: Migration `0010_sponsors_slides` (`events.slides_public`, `speakers.slides_url`, `sponsors.custom_price_cents`, `sponsors.custom_vat_rate_bp`; entfernt `events.terms_mode`).
+- 5 neue Tests (247 gesamt).
+
+## 13.11.2026 – Feedback-Runde, Paket 2 (U1–U3, Menü)
+
+- Anmeldung pausieren: Schalter „Anmeldung pausieren / fortsetzen“ im Event-Kopf (Cockpit und Event-Einstellungen), wirkt sofort zusätzlich zu „Anmeldung öffnet/schließt am“. Status „Anmeldung pausiert“ (gelb) im Kopf aller Event-Seiten, Eventseite und Anmeldeformular zeigen „Die Anmeldung ist derzeit pausiert“. Begonnene Reservierungen, Zahlungen und Wartelisten-Angebote laufen weiter. Wird protokolliert.
+- USt je Event: in den Event-Einstellungen „Umsatzsteuer“ = „Wie in den Einstellungen“ (Standard), „Kleinunternehmer“ oder „Regulär“. Rechnungen, Ausgaben (Netto/USt-Eingabe) und die Prüfung der Veranstalterdaten verwenden den Wert des Events. Global bleibt Kleinunternehmer (0 %) die Vorgabe.
+- Globale AGB: neuer Abschnitt in den Einstellungen (versioniert). Neue Events verwenden die globalen AGB; eine neue globale Version gilt sofort für alle nicht archivierten Events mit globalen AGB. Unter „AGB“ im Event: „Für dieses Event anpassen“ (Text der globalen AGB als Ausgangspunkt) bzw. „Zurück auf globale AGB“. Bestehende Events behalten ihre eigenen AGB. Beim Kopieren bleiben globale AGB global.
+- Menü: „Erfolgsrechnung“ steht unter „Finanzen“, „Event-Einstellungen“ unter „Organisation“ (jeweils für das gewählte Event).
+- Kostengruppen: Beschriftung „Einem Speaker zuordenbar machen“.
+- Datenbank: Migration `0009_event_settings` (Spalten `events.terms_mode`, `events.vat_mode`, `events.registration_paused`); wird beim Start automatisch eingespielt.
+- 4 neue Tests (243 gesamt).
+
+## 13.11.2026 – Feedback-Runde, Paket 1 (U4, U6, U7, U11, U12)
+
+- Browser-Tab-Symbol: PMI-Austria-Bildmarke ohne Text (`src/app/favicon.ico`, `icon.png`, `apple-icon.png`).
+- Rechnungen: zusätzlicher Filter „Bezahlt“ (auch per `?state=paid`).
+- Erfolgsrechnung: unter „Momentaner Erfolg“ steht nur noch die große Zahl (Zeilen „eingegangen/bezahlt“ und „Prognose“ entfernt).
+- Teilnehmende gruppiert: die führende Zahl zählt nur nicht stornierte Anmeldungen, Stornierte stehen extra („16 Personen · 22 storniert · Summe …“); beim Gruppieren nach Zahlungsstatus entfallen „bezahlt/offen“.
+- Kostengruppen: Beschriftung „Ausgaben einem Speaker zuordnen“ statt „Speaker-Zuordnung“.
+- 1 neuer Test (239 gesamt).
+
+## 13.11.2026 – Erfolgsrechnung je Event (F1)
+
+- Neuer Bereich „Erfolgsrechnung“ je Event (Seitenleiste nach „Ausgaben“, auch in der Schnellsuche).
+- Übersicht: „Momentaner Erfolg“ (Ist = tatsächlich geflossenes Geld) groß, darunter Prognose und Plan; Einnahmen und Ausgaben als Balken (geflossen/offen), Aufteilung nach Tickets, Sponsoren und Kostengruppen, Verlauf des Erfolgs je Woche, neue Anmeldungen je Kalenderwoche oder Monat als Linie im Vergleich zu einem anderen Event (ausgerichtet am Abstand zum Event) und die offenen Posten („Kommt noch herein“, „Geht noch hinaus“). Jede Zeile führt zur passenden Stelle der Tabelle.
+- Tabelle: Ist (hervorgehoben), Offen und Prognose je Tickettyp (Normalpreis, Mitglieder, Sonderpreis, Freitickets, Erstattungen und Gutschriften), je Sponsor mit Zahlungsstatus und je Kostengruppe, aufklappbar bis zum Einzelposten. „Plan und Abweichung“ und „Vergleich mit anderen Events“ lassen sich zuschalten (Standard aus, Einstellung pro Browser).
+- Plan erfassen: drei Varianten (Plan, Minimum, Best Case) mit erwarteten Tickets je Typ, optionalem Durchschnittspreis, Sponsoreneinnahmen und Budget je Kostengruppe; die Ist-Werte eines Vergleichs-Events lassen sich als Ausgangspunkt übernehmen. Bei archivierten Events nur lesbar.
+- Vergleich: bis zu zwei andere Events; Sponsoren und Kostengruppen werden über den Namen zugeordnet, alles Übrige wird gesammelt ausgewiesen.
+- Excel-Export (`/api/export/pnl`, wird protokolliert) und Druck/PDF über den Browser.
+- Begriffe: Einnahmen Ist = Zahlungseingänge abzüglich ausgeführter Erstattungen; offen = unbezahlte Tickets aktiver Anmeldungen und offene Sponsorenbeträge abzüglich freigegebener Erstattungen. Ausgaben Ist = Status „Bezahlt“, offen = „Neu“ und „Geplant“. Prognose = Ist + Offen; Abweichung = Prognose − Plan. Alle Beträge brutto.
+- Datenbank: Migration `0008_event_plans` (Tabellen `event_plans`, `event_plan_budgets`, `event_comparisons`); sie wird beim Start automatisch eingespielt.
+- 14 neue Tests (238 gesamt).
+
 ## 30.10.2026 – Firebase-Reste entfernt, hostingneutral
 
 - Entfernt: `apphosting.yaml` (Firebase App Hosting), der Ordner `legacy/` (alter Firebase-Stand inkl. Firebase-Konfiguration) und die veraltete `COST_ANALYSIS.md`.

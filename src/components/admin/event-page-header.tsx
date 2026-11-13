@@ -8,24 +8,25 @@ type Props = {
   eventId: number;
   eventName: string;
   /** Status der Anmeldung (bereits übersetzt) mit Farbton */
-  state: { label: string; tone: 'open' | 'neutral' | 'archived' };
+  state: { label: string; tone: 'open' | 'neutral' | 'paused' | 'archived' };
   /** z. B. „noch 227 Tage · Anmeldeschluss 05.05.2027“ */
   timing: string;
   /** Aktionen rechts (Kopieren, Archivieren), nur im Cockpit und in den Einstellungen */
   actions: React.ReactNode;
 };
 
-const SECTIONS = ['attendees', 'speakers', 'schedule', 'sponsors', 'expenses', 'invoices', 'refunds', 'settings', 'terms'] as const;
+const SECTIONS = ['attendees', 'certificate', 'speakers', 'schedule', 'sponsors', 'expenses', 'pnl', 'invoices', 'refunds', 'settings'] as const;
 const SECTION_LABEL = {
   attendees: 'attendees',
+  certificate: 'certificate',
   speakers: 'speakers',
   schedule: 'schedule',
   sponsors: 'sponsors',
   expenses: 'expenses',
+  pnl: 'pnl',
   invoices: 'invoices',
   refunds: 'refunds',
   settings: 'eventSettings',
-  terms: 'terms',
 } as const;
 
 /** Kopf der Event-Seiten: im Cockpit Eventname mit Status, sonst Eventname klein und Bereich als Überschrift. */
@@ -42,7 +43,7 @@ export function EventPageHeader({ eventId, eventName, state, timing, actions }: 
         'rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap',
         state.tone === 'open' && 'bg-[#E7F4EC] text-[#17603C]',
         state.tone === 'neutral' && 'bg-muted text-muted-foreground',
-        state.tone === 'archived' && 'bg-amber-100 text-amber-900'
+        (state.tone === 'archived' || state.tone === 'paused') && 'bg-amber-100 text-amber-900'
       )}
     >
       {state.label}
@@ -66,7 +67,7 @@ export function EventPageHeader({ eventId, eventName, state, timing, actions }: 
       <div className="flex flex-col gap-0.5">
         <span className="flex items-center gap-2 text-sm text-muted-foreground">
           {eventName}
-          {state.tone === 'archived' && badge}
+          {(state.tone === 'archived' || state.tone === 'paused') && badge}
         </span>
         <h1 className="text-2xl font-extrabold">{section ? t(SECTION_LABEL[section]) : eventName}</h1>
       </div>

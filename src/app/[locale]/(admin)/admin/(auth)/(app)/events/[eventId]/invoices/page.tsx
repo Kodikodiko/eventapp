@@ -10,13 +10,14 @@ type Props = EventParams & { searchParams: Promise<Record<string, string | strin
 export default async function InvoicesPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const one = (k: string) => (Array.isArray(sp[k]) ? sp[k][0] : sp[k]) ?? '';
-  const state: InvoiceStateFilter = one('state') === 'overdue' ? 'overdue' : one('state') === 'open' ? 'open' : 'all';
+  const requested = one('state');
+  const state: InvoiceStateFilter = requested === 'overdue' || requested === 'open' || requested === 'paid' ? requested : 'all';
   await initAdminPage(params);
   const { eventId } = await params;
   const { db, event } = await loadEvent(eventId);
   const t = await getTranslations('invoices');
   const org = getOrganizerSettings(db);
-  const organizerIncomplete = !org.name.trim() || !org.address.trim() || (org.vatMode === 'standard' && !org.vatId?.trim());
+  const organizerIncomplete = !org.name.trim() || !org.address.trim() || ((event.vatMode ?? org.vatMode) === 'standard' && !org.vatId?.trim());
   return (
     <div className="space-y-4">
       <h2 className="sr-only">{t('title')}</h2>

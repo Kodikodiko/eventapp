@@ -76,6 +76,8 @@ export type PortalRegistration = {
   createdAt: string;
   cancelledAt: string | null;
   canCancel: boolean;
+  /** Folien der Speaker sind auf der Eventseite veröffentlicht */
+  slidesPublic: boolean;
   documents: PortalDocument[];
 };
 
@@ -117,6 +119,7 @@ export function portalOverview(db: Db, personId: number, now = new Date()): { pe
       createdAt: reg.createdAt,
       cancelledAt: reg.cancelledAt,
       canCancel: portalCanCancel(reg, event, now),
+      slidesPublic: event.slidesPublic,
       documents: docs
         .filter((d) => d.registrationId === reg.id)
         .map((d) => ({

@@ -20,7 +20,7 @@ export default async function ExpensesPage({ params }: EventParams) {
         totals={eventTotals(groups)}
         expenses={listExpenses(db, event.id)}
         speakers={listSpeakers(db, event.id).map((s) => ({ id: s.id, name: `${s.firstName} ${s.lastName}` }))}
-        withVat={getOrganizerSettings(db).vatMode === 'standard'}
+        withVat={(event.vatMode ?? getOrganizerSettings(db).vatMode) === 'standard'}
         readOnly={Boolean(event.archivedAt)}
       />
     </div>

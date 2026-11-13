@@ -11,7 +11,7 @@ export default async function SpeakersPage({ params }: EventParams) {
   return (
     <div className="space-y-4">
       <h2 className="sr-only">{t('title')}</h2>
-      <SpeakersTable eventId={event.id} rows={listSpeakers(db, event.id)} readOnly={Boolean(event.archivedAt)} />
+      <SpeakersTable eventId={event.id} rows={listSpeakers(db, event.id)} readOnly={Boolean(event.archivedAt)} slidesPublic={event.slidesPublic} />
     </div>
   );
 }

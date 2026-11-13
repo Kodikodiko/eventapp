@@ -92,7 +92,9 @@
     },
     "expenses": "Ausgaben",
     "costGroups": "Kostengruppen",
-    "sectionFinance": "Finanzen"
+    "sectionFinance": "Finanzen",
+    "pnl": "Erfolgsrechnung",
+    "certificate": "Teilnahmebestätigung"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -123,6 +125,7 @@
     "waitlisted": "{count} auf der Warteliste"
   },
   "validation": {
+    "httpsUrl": "Bitte eine Adresse mit https:// angeben.",
     "invalid": "Ungültige Eingabe.",
     "required": "Pflichtfeld.",
     "tooLong": "Zu lang.",
@@ -190,7 +193,15 @@
     "expensePaid": "Bezahlte Ausgaben können nicht gelöscht werden.",
     "groupHasSpeakerCosts": "Es gibt Ausgaben mit zugeordnetem Speaker – die Speaker-Zuordnung kann nicht abgeschaltet werden.",
     "alreadyTemplate": "Diese Kostengruppe stammt bereits aus einer Vorlage.",
-    "templateNameTaken": "Es gibt bereits eine Vorlage mit diesem Namen."
+    "templateNameTaken": "Es gibt bereits eine Vorlage mit diesem Namen.",
+    "streamOrder": "„bis“ darf nicht vor „von“ liegen.",
+    "tooManyStreams": "Es sind höchstens 10 Streams möglich.",
+    "streamSpanned": "Ein Programmpunkt reicht über einen der beiden Streams hinaus. Bitte zuerst den Programmpunkt anpassen.",
+    "lastStream": "Der letzte Stream kann nicht gelöscht werden.",
+    "streamInUse": "In diesem Stream liegen noch Programmpunkte. Bitte zuerst verschieben oder löschen.",
+    "imageType": "Bitte ein Bild als PNG oder JPG wählen.",
+    "imageTooLarge": "Das Bild darf höchstens 5 MB groß sein.",
+    "imageUnreadable": "Das Bild lässt sich nicht verarbeiten. Bitte als PNG oder JPG neu speichern."
   },
   "forms": {
     "german": "Deutsch",
@@ -227,8 +238,13 @@
     "pricesHint": "Preise sind Endpreise (brutto) in Euro. 0 = kostenlos.",
     "capacity": "Plätze",
     "capacityHint": "Danach kommen Anmeldungen auf die Warteliste.",
+    "vatMode": "Umsatzsteuer",
+    "vatModeGlobal": "Wie in den Einstellungen – {mode}",
+    "vatSmallBusiness": "Kleinunternehmer (keine USt)",
+    "vatStandard": "Regulär (USt laut Satz)",
+    "vatModeHint": "Gilt für Rechnungen dieses Events; wirkt nur auf danach ausgestellte Rechnungen.",
     "vatRate": "USt-Satz Tickets",
-    "vatRateHint": "Wirkt nur bei regulärer Umsatzsteuer (Einstellungen).",
+    "vatRateHint": "Wirkt nur bei regulärer Umsatzsteuer.",
     "priceNormal": "Normalpreis (€)",
     "priceMember": "Mitgliederpreis (€)",
     "payment": "Zahlungsarten",
@@ -251,6 +267,14 @@
     "saved": "Gespeichert"
   },
   "eventActions": {
+    "pause": "Anmeldung pausieren",
+    "resume": "Anmeldung fortsetzen",
+    "pauseTitle": "Anmeldung pausieren?",
+    "pauseHint": "Neue Anmeldungen sind sofort nicht mehr möglich, unabhängig von „Anmeldung öffnet/schließt am“. Begonnene Reservierungen und Zahlungen laufen zu Ende.",
+    "resumeTitle": "Anmeldung fortsetzen?",
+    "resumeHint": "Die Anmeldung ist wieder möglich, sofern sie nach den Daten offen ist.",
+    "paused": "Anmeldung pausiert",
+    "resumed": "Anmeldung fortgesetzt",
     "copy": "Kopieren",
     "copyTitle": "Event als Vorlage kopieren",
     "copyHint": "Übernommen werden Einstellungen, Preise, Stornobedingungen, AGB und Sponsorpakete – keine Anmeldungen, Speaker, Sponsoren oder Programmpunkte. Termine bitte danach anpassen.",
@@ -279,10 +303,12 @@
     "sponsors": "Sponsoren",
     "invoices": "Rechnungen",
     "refunds": "Erstattungen",
-    "expenses": "Ausgaben"
+    "expenses": "Ausgaben",
+    "pnl": "Erfolgsrechnung"
   },
   "registrationState": {
     "archived": "Archiviert",
+    "paused": "Anmeldung pausiert",
     "notOpenYet": "Anmeldung noch nicht offen",
     "open": "Anmeldung offen",
     "closed": "Anmeldung geschlossen"
@@ -346,6 +372,8 @@
     "timingCloses": "Anmeldeschluss {date}"
   },
   "terms": {
+    "loadGlobal": "Aktuelle globale AGB als Vorlage laden",
+    "eventHint": "Neue Events übernehmen beim Anlegen die damals gültigen globalen AGB als Kopie. Änderungen der globalen AGB wirken danach nicht mehr auf dieses Event; geändert wird nur hier.",
     "title": "Allgemeine Geschäftsbedingungen",
     "current": "Aktuell gültig: Version {version} vom {date}",
     "none": "Noch keine AGB hinterlegt.",
@@ -380,6 +408,9 @@
     "smallBusinessNote": "Hinweis auf Rechnungen",
     "save": "Speichern",
     "saved": "Veranstalterdaten gespeichert",
+    "termsTitle": "Allgemeine Geschäftsbedingungen (global)",
+    "termsNone": "Noch keine globalen AGB veröffentlicht.",
+    "termsHint": "Vorlage für neue Events: Beim Anlegen übernimmt ein Event eine Kopie der dann gültigen Fassung. Bestehende Events ändern sich nicht; ihre AGB bearbeiten Sie in den Event-Einstellungen.",
     "privacyTitle": "Datenschutzerklärung",
     "privacyNone": "Noch keine Datenschutzerklärung veröffentlicht.",
     "privacyHint": "Wird auf der Anmeldeseite, im Teilnehmerportal und in E-Mails verlinkt (Spezifikation 7.1)."
@@ -679,13 +710,17 @@
       "status": "nach Status",
       "payment": "nach Zahlung"
     },
-    "groupStats": "{count, plural, one {# Person} other {# Personen}} · {paid} bezahlt · {open} offen · Summe {sum}",
+    "groupStats": "{count, plural, one {# Person} other {# Personen}}{cancelled, plural, =0 {} other { · # storniert}} · {paid} bezahlt · {open} offen · Summe {sum}",
+    "groupStatsPayment": "{count, plural, one {# Person} other {# Personen}}{cancelled, plural, =0 {} other { · # storniert}} · Summe {sum}",
     "groupNoCompany": "Ohne Firma",
     "groupNoRole": "Ohne Rolle",
     "groupAlsoIn": "auch unter: {roles}",
     "groupRoleHint": "Personen mit mehreren Rollen erscheinen in jeder ihrer Rollen-Gruppen (Hinweis „auch unter …“).",
     "groupExpandAll": "Alle aufklappen",
-    "groupCollapseAll": "Alle zuklappen"
+    "groupCollapseAll": "Alle zuklappen",
+    "bulkCertificate": "Teilnahmebestätigung ({count})",
+    "bulkCertificateHint": "PDF mit einer Seite je angehakter Person, in ihrer Sprache",
+    "certificate": "Teilnahmebestätigung (PDF)"
   },
   "registrationForm": {
     "createTitle": "Anmeldung hinzufügen",
@@ -770,6 +805,13 @@
     }
   },
   "speakers": {
+    "slidesUrl": "Link zu den Folien",
+    "slidesUrlHint": "Freigabelink aus SharePoint oder Nextcloud (https://…). Für die Veröffentlichung muss er für Externe freigegeben sein.",
+    "openSlides": "Folien öffnen",
+    "slidesPublic": "Folien veröffentlichen",
+    "slidesPublicHint": "Zeigt die Links im öffentlichen Programm und im Teilnehmerportal.",
+    "slidesPublished": "Folien sind jetzt öffentlich",
+    "slidesUnpublished": "Folien sind nicht mehr öffentlich",
     "title": "Speaker",
     "add": "Speaker hinzufügen",
     "addTitle": "Speaker hinzufügen",
@@ -835,14 +877,30 @@
     "speaker": "Speaker",
     "noSpeaker": "– kein Speaker –",
     "tagLabel": "Art",
-    "stream": "Stream",
-    "streamHint": "Parallele Programmpunkte in verschiedenen Streams.",
+    "stream": "Stream (von)",
+    "streamHint": "Parallele Programmpunkte liegen in verschiedenen Streams.",
     "tag": {
       "general": "Allgemein",
       "talk": "Vortrag",
       "workshop": "Workshop",
       "break": "Pause"
-    }
+    },
+    "streamTo": "bis",
+    "streamToHint": "Für eine Keynote über alle Streams „Alle Streams“ wählen.",
+    "allStreams": "Alle Streams",
+    "streamsTitle": "Streams",
+    "streamsHint": "Bis zu {max} parallele Streams, z. B. Säle oder Themenschienen.",
+    "addStream": "Stream hinzufügen",
+    "moveLeft": "Nach links verschieben",
+    "moveRight": "Nach rechts verschieben",
+    "renameStream": "Stream umbenennen",
+    "deleteStream": "Stream löschen",
+    "deleteStreamTitle": "Stream „{name}“ löschen?",
+    "deleteStreamHint": "Nur möglich, wenn kein Programmpunkt allein in diesem Stream liegt. Punkte über mehrere Streams werden schmäler, die Streams rechts davon rücken nach.",
+    "streamDeleted": "Stream gelöscht",
+    "streamMoved": "Reihenfolge geändert",
+    "streamSaved": "Stream gespeichert",
+    "streamName": "Name"
   },
   "sponsors": {
     "title": "Sponsoren",
@@ -892,6 +950,8 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "noPackage": "– kein Paket –",
+    "customPrice": "Betrag (brutto, €)",
+    "customPriceHint": "Vereinbarter Betrag ohne Paket, z. B. ein fixer Geldbetrag.",
     "discount": "Rabatt (€)",
     "paymentHint": "Wird beim Rechnungsversand, beim Verbuchen von Zahlungen und bei Überfälligkeit automatisch gesetzt.",
     "billingAddress": "Rechnungsadresse",
@@ -972,7 +1032,8 @@
     "stateFilterOption": {
       "all": "Alle",
       "open": "Offen",
-      "overdue": "Überfällig"
+      "overdue": "Überfällig",
+      "paid": "Bezahlt"
     },
     "noMatches": "Keine Belege passen zur Suche.",
     "changeStatus": "Zahlungsstatus ändern",
@@ -1137,6 +1198,7 @@
     }
   },
   "public": {
+    "slides": "Folien",
     "skipToContent": "Zum Inhalt springen",
     "navLabel": "Hauptnavigation",
     "events": "Veranstaltungen",
@@ -1162,6 +1224,7 @@
     "registerNow": "Jetzt anmelden",
     "opensAt": "Die Anmeldung öffnet am {date}.",
     "closed": "Die Anmeldung ist geschlossen.",
+    "paused": "Die Anmeldung ist derzeit pausiert. Bitte versuchen Sie es später erneut.",
     "unavailable": "Die Anmeldung ist derzeit nicht möglich. Bitte versuchen Sie es später erneut.",
     "notOpenYet": "Die Anmeldung ist noch nicht geöffnet.",
     "closesAt": "Anmeldeschluss: {date}",
@@ -1172,7 +1235,8 @@
     "termsTitle": "Allgemeine Geschäftsbedingungen",
     "imprintOwner": "Medieninhaber und Veranstalter",
     "vatId": "UID-Nummer",
-    "myRegistrations": "Meine Anmeldungen"
+    "myRegistrations": "Meine Anmeldungen",
+    "time": "Zeit"
   },
   "publicForm": {
     "waitlistTitle": "Die Veranstaltung ist ausgebucht",
@@ -1297,6 +1361,7 @@
     "backToEvent": "← Zur Veranstaltung"
   },
   "portal": {
+    "slidesLink": "Programm und Folien",
     "title": "Meine Anmeldungen",
     "loginTitle": "Meine Anmeldungen",
     "loginIntro": "Geben Sie die E-Mail-Adresse ein, mit der Sie sich angemeldet haben. Wir senden Ihnen einen Anmeldelink – ein Passwort ist nicht nötig.",
@@ -1456,7 +1521,7 @@
     "colTotal": "Summe",
     "fromTemplate": "aus Vorlage",
     "ownGroup": "eventeigen",
-    "speakerBadge": "Speaker-Zuordnung",
+    "speakerBadge": "Einem Speaker zuordenbar machen",
     "inactive": "deaktiviert",
     "deactivate": "Deaktivieren",
     "activate": "Aktivieren",
@@ -1471,7 +1536,7 @@
     "deactivateHint": "Bestehende Ausgaben behalten die Gruppe. Für neue Ausgaben steht sie nicht mehr zur Wahl. Sie können sie jederzeit wieder aktivieren.",
     "groupActionsFor": "Aktionen für Kostengruppe {name}",
     "name": "Name",
-    "speakerLink": "Speaker-Zuordnung",
+    "speakerLink": "Einem Speaker zuordenbar machen",
     "speakerLinkHint": "Ausgaben dieser Gruppe können einem Speaker des Events zugeordnet werden.",
     "expensesTitle": "Ausgaben",
     "addExpense": "Ausgabe erfassen",
@@ -1525,7 +1590,7 @@
     "edit": "Bearbeiten",
     "editTitle": "Vorlage bearbeiten",
     "colName": "Name",
-    "colSpeakerLink": "Speaker-Zuordnung",
+    "colSpeakerLink": "Einem Speaker zuordenbar machen",
     "colEvents": "Verwendet in",
     "colStatus": "Status",
     "colActions": "Aktionen",
@@ -1542,5 +1607,139 @@
     "activated": "Vorlage aktiviert",
     "empty": "Noch keine Vorlagen.",
     "actionsFor": "Aktionen für {name}"
+  },
+  "pnl": {
+    "title": "Erfolgsrechnung",
+    "asOf": "Stand {date}",
+    "viewLabel": "Ansicht",
+    "viewOverview": "Übersicht",
+    "viewTable": "Tabelle",
+    "now": "Momentaner Erfolg",
+    "income": "Einnahmen",
+    "expenses": "Ausgaben",
+    "received": "eingegangen",
+    "paid": "bezahlt",
+    "stillOpen": "noch offen {amount}",
+    "incomeBy": "Woher das Geld kommt",
+    "expensesBy": "Wofür es ausgegeben wird",
+    "noIncome": "Noch keine Einnahmen.",
+    "noExpenses": "Noch keine Ausgaben erfasst.",
+    "tickets": "Tickets",
+    "sponsors": "Sponsoren",
+    "openTickets": "{count, plural, one {# Anmeldung noch nicht bezahlt} other {# Anmeldungen noch nicht bezahlt}}",
+    "more": "{count, plural, one {# weiterer Posten} other {# weitere Posten}} in der Tabelle",
+    "trend": "Verlauf des Erfolgs",
+    "noTrend": "Noch keine Zahlungen, daher noch kein Verlauf.",
+    "trendAria": "Liniendiagramm: aufgelaufener Erfolg je Woche",
+    "reg": {
+      "title": "Anmeldungen",
+      "total": "{count, plural, =0 {Noch keine Anmeldungen} one {# Anmeldung} other {# Anmeldungen}}",
+      "same": "gleich viele wie {name} zum gleichen Zeitpunkt",
+      "more": "{count} mehr als {name} zum gleichen Zeitpunkt",
+      "fewer": "{count} weniger als {name} zum gleichen Zeitpunkt",
+      "none": "Sobald Anmeldungen eingehen, erscheint hier der Verlauf.",
+      "unit": "Zeiteinheit",
+      "week": "Wochen",
+      "month": "Monate",
+      "weekNote": "Neue Anmeldungen je Kalenderwoche, ausgerichtet am Abstand zum Event.",
+      "monthNote": "Neue Anmeldungen je Monat, ausgerichtet am Abstand zum Event.",
+      "aria": "Liniendiagramm: neue Anmeldungen im Zeitverlauf",
+      "chooseCompare": "Vergleichs-Event wählen",
+      "kw": "KW {week}",
+      "kwFrom": "KW {week} (ab {date})"
+    },
+    "comingIn": "Kommt noch herein",
+    "goingOut": "Geht noch hinaus",
+    "nothingOpenIn": "Keine offenen Einnahmen.",
+    "nothingOpenOut": "Keine offenen Ausgaben.",
+    "togglePlan": "Plan und Abweichung",
+    "toggleCompare": "Vergleich mit anderen Events",
+    "excel": "Excel",
+    "print": "Drucken / PDF",
+    "variantLabel": "Variante",
+    "variant": {
+      "plan": "Plan",
+      "min": "Minimum",
+      "best": "Best Case"
+    },
+    "variantEmpty": "leer",
+    "editPlan": "Plan erfassen",
+    "viewPlan": "Plan ansehen",
+    "noPlan": "Für diese Variante ist noch kein Plan erfasst.",
+    "compareWith": "Vergleich {n}",
+    "compareNone": "kein Vergleich",
+    "noCandidates": "Es gibt noch kein anderes Event zum Vergleichen.",
+    "col": {
+      "item": "Posten",
+      "count": "Anzahl",
+      "actual": "Ist",
+      "open": "Offen",
+      "forecast": "Prognose",
+      "deviation": "Abweichung",
+      "compareHint": "Ist-Werte dieses Events"
+    },
+    "ticket": {
+      "normal": "Normalpreis",
+      "member": "Mitglieder",
+      "special": "Sonderpreis",
+      "free": "Freitickets",
+      "refunds": "Erstattungen und Gutschriften"
+    },
+    "row": {
+      "income": "Einnahmen",
+      "expenses": "Ausgaben",
+      "tickets": "Tickets",
+      "sponsors": "Sponsoren",
+      "sumTickets": "Summe Tickets",
+      "sumSponsors": "Summe Sponsoren",
+      "sumIncome": "Summe Einnahmen",
+      "sumExpenses": "Summe Ausgaben",
+      "result": "Ergebnis",
+      "otherSponsors": "Weitere Sponsoren"
+    },
+    "compareOnly": "nur im Vergleich",
+    "legend": "Ist = tatsächlich geflossenes Geld. Offen = noch nicht bezahlt. Prognose = Ist + Offen. Abweichung = Prognose − Plan. Alle Beträge in Euro, brutto.",
+    "planDialog": {
+      "title": "Plan erfassen",
+      "intro": "Erwartete Tickets, Sponsoreneinnahmen und ein Budget je Kostengruppe. Jede Variante wird einzeln gespeichert.",
+      "saved": "{variant} gespeichert",
+      "copyFrom": "Ist-Werte aus {name} übernehmen",
+      "ticketType": "Ticket",
+      "count": "Anzahl",
+      "price": "Ø Preis in €",
+      "priceHint": "Ohne Preis gilt der Ticketpreis des Events. Freitickets zählen nur als Anzahl.",
+      "reference": "{name}: {amount}",
+      "budgets": "Budget je Kostengruppe",
+      "noGroups": "Dieses Event hat noch keine Kostengruppen. Sie werden unter „Ausgaben“ angelegt.",
+      "group": "Kostengruppe",
+      "budget": "Budget in €",
+      "close": "Schließen",
+      "save": "{variant} speichern"
+    },
+    "export": {
+      "sheet": "Erfolgsrechnung",
+      "fileName": "erfolgsrechnung",
+      "status": "Status"
+    }
+  },
+  "certificate": {
+    "title": "Teilnahmebestätigung",
+    "intro": "Vorlage für die Teilnahmebestätigung als PDF (A4 quer). Datum, Uhrzeit, Ort und Eventname kommen aus den Event-Einstellungen. Ausgestellt wird sie in der Teilnehmerliste: die gewünschten Personen anhaken und „Teilnahmebestätigung“ wählen.",
+    "image": "Hintergrundbild",
+    "imageCurrent": "Aktuell: {name}",
+    "imageRemove": "Bild entfernen",
+    "imageHint": "PNG oder JPG, höchstens 5 MB, am besten A4 quer (z. B. 3508 × 2480 Pixel). Das Bild füllt die ganze Seite; Logos und Unterschriften können Teil des Bildes sein. Ein neues Bild ersetzt das bisherige.",
+    "heading": "Überschrift",
+    "body": "Text",
+    "placeholders": "Platzhalter: '{name}' (Name der Person), '{event}' (Eventname), '{datum}' (Datum des Events), '{uhrzeit}' (Beginn bis Ende, z. B. „08:00 bis 18:00 Uhr“), '{ort}' (Ort). Eine Zeile, die nur '{name}' enthält, wird groß und fett gesetzt, eine Zeile nur mit '{event}' fett.",
+    "textColor": "Textfarbe",
+    "textColorHint": "Passend zum Hintergrundbild, z. B. #1a1a1a oder #ffffff.",
+    "save": "Speichern",
+    "saved": "Teilnahmebestätigung gespeichert",
+    "previewDe": "Vorschau Deutsch",
+    "previewEn": "Vorschau Englisch",
+    "previewUnsaved": "Die Vorschau zeigt den gespeicherten Stand – bitte zuerst speichern.",
+    "usage": "Die Vorschau verwendet einen Beispielnamen.",
+    "templateTitle": "Vorlage"
   }
 }

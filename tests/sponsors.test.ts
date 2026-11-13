@@ -84,7 +84,7 @@ describe('Sponsor-Formulare', () => {
   });
 
   it('Sponsor: mindestens ein Kontakt, keine doppelten E-Mails', () => {
-    const base = { companyName: 'Acme', packageId: '', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
+    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '2000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
     const c = { firstName: 'A', lastName: 'B', email: 'a@x.example', phone: '', function: '', locale: 'de' };
     const none = sponsorFormSchema.safeParse({ ...base, contacts: [] });
     expect(none.success).toBe(false);
@@ -94,7 +94,16 @@ describe('Sponsor-Formulare', () => {
     const bad = sponsorFormSchema.safeParse({ ...base, dueOn: '12.05.2027', contacts: [c] });
     expect(bad.error?.issues[0].message).toBe('date');
     const ok = toSponsorInput(sponsorFormSchema.parse({ ...base, discount: '250', packageId: '3', contacts: [{ ...c, email: ' A@X.example ' }] }));
-    expect(ok).toMatchObject({ packageId: 3, discountCents: 25000, dueOn: null, notes: null, contacts: [{ email: 'a@x.example', phone: null, function: null }] });
+    expect(ok).toMatchObject({ packageId: 3, customPriceCents: null, discountCents: 25000, dueOn: null, notes: null, contacts: [{ email: 'a@x.example', phone: null, function: null }] });
+  });
+
+  it('Sponsor ohne Paket braucht einen Betrag', () => {
+    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '1000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
+    const c = { firstName: 'A', lastName: 'B', email: 'a@x.example', phone: '', function: '', locale: 'de' };
+    expect(sponsorFormSchema.safeParse({ ...base, contacts: [c] }).error?.issues[0]).toMatchObject({ path: ['customPrice'], message: 'required' });
+    expect(sponsorFormSchema.safeParse({ ...base, customPrice: 'abc', contacts: [c] }).error?.issues[0].message).toBe('amount');
+    const ok = toSponsorInput(sponsorFormSchema.parse({ ...base, customPrice: '2.500', contacts: [c] }));
+    expect(ok).toMatchObject({ packageId: null, customPriceCents: 250000, customVatRateBp: 1000 });
   });
 });
 
@@ -141,6 +150,12 @@ describe('Sponsoren', () => {
       ['Cent KG', 0],
     ]);
     expect(sponsorTotals(rows)).toEqual({ count: 3, totalCents: 900000, paidCents: 400000, openCents: 500000 });
+  });
+
+  it('ohne Paket: eigener Betrag − Rabatt', () => {
+    const { db, event } = setup();
+    createSponsor(db, actor, event.id, sponsor({ customPriceCents: 300000, customVatRateBp: 2000, discountCents: 50000 }));
+    expect(listSponsors(db, event.id)[0]).toMatchObject({ packageName: null, packagePriceCents: 300000, amountCents: 250000 });
   });
 
   it('Paket muss zum Event gehören', () => {

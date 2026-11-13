@@ -20,6 +20,7 @@ type EventLike = {
   priceNormalCents: number;
   priceMemberCents: number;
   ticketVatRateBp: number;
+  vatMode?: 'small_business' | 'standard' | null;
   allowStripe: boolean;
   allowInvoice: boolean;
   refundMode: 'automatic' | 'approval';
@@ -42,6 +43,7 @@ export function emptyEventFormValues(): EventFormValues {
     priceNormal: '',
     priceMember: '',
     ticketVatRateBp: '2000',
+    vatMode: '',
     allowStripe: true,
     allowInvoice: true,
     refundMode: 'automatic',
@@ -71,6 +73,7 @@ export function eventToFormValues(
     priceNormal: centsToInput(event.priceNormalCents),
     priceMember: centsToInput(event.priceMemberCents),
     ticketVatRateBp: (['0', '1000', '1300', '2000'].includes(vat) ? vat : '2000') as EventFormValues['ticketVatRateBp'],
+    vatMode: event.vatMode ?? '',
     allowStripe: event.allowStripe,
     allowInvoice: event.allowInvoice,
     refundMode: event.refundMode,

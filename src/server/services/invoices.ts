@@ -17,6 +17,7 @@ import { ServiceError } from '@/lib/action-result';
 import { viennaDate, viennaInputToUtc } from '@/lib/dates';
 import { localized } from '@/lib/localized';
 import { splitGross } from '@/lib/money';
+import { sponsorBase } from '@/lib/sponsor-price';
 import type { Db } from '@/server/db/core';
 import {
   events,
@@ -96,10 +97,12 @@ export function sumItems(items: InvoiceItem[]) {
   );
 }
 
-function organizerSnapshot(tx: Tx | Db) {
+/** Veranstalterdaten als Momentaufnahme; der USt-Modus des Events (falls gesetzt) übersteuert den globalen. */
+function organizerSnapshot(tx: Tx | Db, eventVatMode: 'small_business' | 'standard' | null) {
   const org = tx.select().from(organizerSettings).where(eq(organizerSettings.id, 1)).get();
   if (!org || !org.name.trim() || !org.address.trim()) throw new ServiceError('CONFLICT', { _form: 'organizerIncomplete' });
-  if (org.vatMode === 'standard' && !org.vatId?.trim()) throw new ServiceError('CONFLICT', { _form: 'organizerIncomplete' });
+  const vatMode = eventVatMode ?? org.vatMode;
+  if (vatMode === 'standard' && !org.vatId?.trim()) throw new ServiceError('CONFLICT', { _form: 'organizerIncomplete' });
   const party: InvoiceParty = {
     name: org.name.trim(),
     address: org.address.trim(),
@@ -107,9 +110,9 @@ function organizerSnapshot(tx: Tx | Db) {
     email: org.contactEmail?.trim() || null,
     iban: org.iban?.trim() || null,
     bic: org.bic?.trim() || null,
-    smallBusinessNote: org.vatMode === 'small_business' ? org.smallBusinessNote : null,
+    smallBusinessNote: vatMode === 'small_business' ? org.smallBusinessNote : null,
   };
-  return { org, party };
+  return { org, party, vatMode };
 }
 
 /** Bereits gutgeschriebener Betrag einer Rechnung. */
@@ -203,13 +206,13 @@ export function issueRegistrationInvoice(db: Db, actor: Actor, registrationId: n
         throw new ServiceError('CONFLICT', { _form: 'invoiceNotPossible' });
       }
       if (activeInvoiceOf(tx, { registrationId })) throw new ServiceError('CONFLICT', { _form: 'invoiceExists' });
-      const { org, party } = organizerSnapshot(tx);
+      const { org, party, vatMode } = organizerSnapshot(tx, event.vatMode);
 
       const locale = person.locale;
       const description = [`${localized(event.name, locale)} – ${TICKET_LABEL[locale][reg.ticketType]}`, event.location.trim()]
         .filter(Boolean)
         .join('\n');
-      const items = [invoiceLine(description, reg.priceCents, org.vatMode, event.ticketVatRateBp)];
+      const items = [invoiceLine(description, reg.priceCents, vatMode, event.ticketVatRateBp)];
       const paid = paidCentsOf(tx, { registrationId }) >= reg.priceCents || reg.paymentStatus === 'paid';
       const issueDay = viennaDate(now.toISOString());
 
@@ -230,7 +233,7 @@ export function issueRegistrationInvoice(db: Db, actor: Actor, registrationId: n
           },
           organizer: party,
           items,
-          vatMode: org.vatMode,
+          vatMode,
         },
         event.id,
         now
@@ -253,11 +256,12 @@ export function issueSponsorInvoice(db: Db, actor: Actor, sponsorId: number, now
         .get();
       if (!row) throw new ServiceError('NOT_FOUND');
       const { s, pkg, event } = row;
-      if (!pkg || pkg.priceCents - s.discountCents <= 0) throw new ServiceError('CONFLICT', { _form: 'invoiceNotPossible' });
+      const base = sponsorBase(s, pkg);
+      if (base.priceCents - s.discountCents <= 0) throw new ServiceError('CONFLICT', { _form: 'invoiceNotPossible' });
       if (!s.billingAddress.trim()) throw new ServiceError('CONFLICT', { _form: 'billingAddressMissing' });
       if (s.paymentStatus === 'paid') throw new ServiceError('CONFLICT', { _form: 'invoiceNotPossible' });
       if (activeInvoiceOf(tx, { sponsorId })) throw new ServiceError('CONFLICT', { _form: 'invoiceExists' });
-      const { org, party } = organizerSnapshot(tx);
+      const { org, party, vatMode } = organizerSnapshot(tx, event.vatMode);
 
       const contact = tx
         .select({ p: people })
@@ -267,10 +271,14 @@ export function issueSponsorInvoice(db: Db, actor: Actor, sponsorId: number, now
         .orderBy(asc(sponsorContacts.id))
         .get()?.p;
       const locale = contact?.locale ?? 'de';
-      const packageLabel = locale === 'en' ? `Sponsoring package “${localized(pkg.name, 'en')}”` : `Sponsoringpaket „${localized(pkg.name, 'de')}“`;
-      const items = [invoiceLine(`${packageLabel}\n${localized(event.name, locale)}`, pkg.priceCents, org.vatMode, pkg.vatRateBp)];
+      const packageLabel = pkg
+        ? locale === 'en'
+          ? `Sponsoring package “${localized(pkg.name, 'en')}”`
+          : `Sponsoringpaket „${localized(pkg.name, 'de')}“`
+        : 'Sponsoring';
+      const items = [invoiceLine(`${packageLabel}\n${localized(event.name, locale)}`, base.priceCents, vatMode, base.vatRateBp)];
       if (s.discountCents > 0) {
-        items.push(invoiceLine(locale === 'en' ? 'Discount' : 'Rabatt', -Math.min(s.discountCents, pkg.priceCents), org.vatMode, pkg.vatRateBp));
+        items.push(invoiceLine(locale === 'en' ? 'Discount' : 'Rabatt', -Math.min(s.discountCents, base.priceCents), vatMode, base.vatRateBp));
       }
       const issueDay = viennaDate(now.toISOString());
       const dueAt = s.dueOn && s.dueOn >= issueDay ? s.dueOn : addDays(issueDay, org.invoicePaymentTermDays);
@@ -293,7 +301,7 @@ export function issueSponsorInvoice(db: Db, actor: Actor, sponsorId: number, now
           },
           organizer: party,
           items,
-          vatMode: org.vatMode,
+          vatMode,
         },
         event.id,
         now
@@ -326,7 +334,7 @@ export function issueCreditNote(
       if (remaining <= 0) throw new ServiceError('CONFLICT', { _form: 'invoiceAlreadyCredited' });
       if (!Number.isSafeInteger(amount) || amount <= 0 || amount > remaining) throw new ServiceError('INVALID', { amount: 'outOfRange' });
 
-      const { party } = organizerSnapshot(tx);
+      const { party } = organizerSnapshot(tx, original.vatMode);
       const en = original.locale === 'en';
       const items: InvoiceItem[] =
         amount === original.grossCents

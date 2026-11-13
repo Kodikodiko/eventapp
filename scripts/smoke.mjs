@@ -27,6 +27,8 @@ const checks = [
   { path: '/api/health', status: 200, contains: '"status":"ok"' },
   { path: '/de/admin/events/1/attendees', status: 307, location: '/de/admin/login' },
   { path: '/api/export/registrations?event=1', status: 403 },
+  { path: '/de/admin/events/1/pnl', status: 307, location: '/de/admin/login' },
+  { path: '/api/export/pnl?event=1', status: 403 },
   { path: '/de/admin/events/1/sponsors', status: 307, location: '/de/admin/login' },
   { path: '/de/admin/events/1/invoices', status: 307, location: '/de/admin/login' },
   { path: '/de/admin/events/1/refunds', status: 307, location: '/de/admin/login' },

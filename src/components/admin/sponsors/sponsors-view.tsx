@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FileText, MoreHorizontal, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
-import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
+import { FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -268,6 +268,10 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
               ? {
                   companyName: dialog.row.companyName,
                   packageId: dialog.row.packageId ? String(dialog.row.packageId) : '',
+                  customPrice: dialog.row.customPriceCents != null ? centsToInput(dialog.row.customPriceCents) : '',
+                  customVatRateBp: (VAT_RATE_OPTIONS as readonly string[]).includes(String(dialog.row.customVatRateBp))
+                    ? (String(dialog.row.customVatRateBp) as SponsorFormValues['customVatRateBp'])
+                    : '2000',
                   discount: centsToInput(dialog.row.discountCents),
                   dueOn: dialog.row.dueOn ?? '',
                   paymentStatus: dialog.row.paymentStatus,
@@ -286,6 +290,8 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
               : {
                   companyName: '',
                   packageId: packages[0] ? String(packages[0].id) : '',
+                  customPrice: '',
+                  customVatRateBp: '2000',
                   discount: '0',
                   dueOn: '',
                   paymentStatus: 'open',
@@ -418,6 +424,7 @@ function SponsorDialog({
   const contacts = useFieldArray({ control: form.control, name: 'contacts' });
   const errors = form.formState.errors;
   const reg = form.register;
+  const withoutPackage = useWatch({ control: form.control, name: 'packageId' }) === '';
 
   const onSubmit = form.handleSubmit((values) =>
     startTransition(async () => {
@@ -451,6 +458,22 @@ function SponsorDialog({
                     ))}
                   </select>
                 </Field>
+                {withoutPackage && (
+                  <>
+                    <Field id="sp-custom-price" label={t('customPrice')} hint={t('customPriceHint')} error={fieldError(errors, 'customPrice')}>
+                      <Input id="sp-custom-price" inputMode="decimal" {...reg('customPrice')} />
+                    </Field>
+                    <Field id="sp-custom-vat" label={t('vatRate')} error={fieldError(errors, 'customVatRateBp')}>
+                      <select id="sp-custom-vat" className={selectClass} {...reg('customVatRateBp')}>
+                        {VAT_RATE_OPTIONS.map((bp) => (
+                          <option key={bp} value={bp}>
+                            {Number(bp) / 100} %
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </>
+                )}
                 <Field id="sp-discount" label={t('discount')} error={fieldError(errors, 'discount')}>
                   <Input id="sp-discount" inputMode="decimal" {...reg('discount')} />
                 </Field>

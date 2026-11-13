@@ -13,6 +13,7 @@ import {
   listEvents,
   registrationState,
   setEventArchived,
+  setRegistrationPaused,
   updateEvent,
 } from '@/server/services/events';
 import { currentPrivacyNotice, currentTerms, listLegalVersions, publishLegalVersion } from '@/server/services/legal';
@@ -163,6 +164,24 @@ describe('Anmeldezeitraum', () => {
     expect(registrationState(ev, new Date('2027-05-12T08:00:00Z'))).toBe('closed');
     expect(registrationState({ ...ev, registrationClosesAt: '2027-05-01T00:00:00.000Z' }, new Date('2027-05-02T00:00:00Z'))).toBe('closed');
   });
+
+  it('Schalter „pausiert“ stoppt sofort, nach Anmeldeschluss bleibt „geschlossen“', () => {
+    const paused = { ...ev, registrationPaused: true };
+    expect(registrationState(paused, new Date('2027-01-15T00:00:00Z'))).toBe('paused');
+    expect(registrationState(paused, new Date('2027-03-01T00:00:00Z'))).toBe('paused');
+    expect(registrationState(paused, new Date('2027-05-12T08:00:00Z'))).toBe('closed');
+  });
+
+  it('pausieren und fortsetzen wird protokolliert, archiviert gesperrt', () => {
+    const d = db();
+    const e = createEvent(d, actor, input());
+    expect(setRegistrationPaused(d, actor, e.id, true).registrationPaused).toBe(true);
+    expect(setRegistrationPaused(d, actor, e.id, false).registrationPaused).toBe(false);
+    const actions = d.select().from(auditLog).all().map((a) => a.action);
+    expect(actions).toEqual(expect.arrayContaining(['event.registration_paused', 'event.registration_resumed']));
+    setEventArchived(d, actor, e.id, true);
+    expectServiceError(() => setRegistrationPaused(d, actor, e.id, true), 'ARCHIVED');
+  });
 });
 
 describe('Rechtstexte', () => {
@@ -185,6 +204,26 @@ describe('Rechtstexte', () => {
     publishLegalVersion(d, actor, 'privacy', null, { de: 'P2' });
     expect(currentPrivacyNotice(d)?.version).toBe(2);
     expect(() => publishLegalVersion(d, actor, 'privacy', 1, { de: 'x' })).toThrow(ServiceError);
+  });
+
+  it('neue Events übernehmen eine Kopie der globalen AGB; spätere globale Änderungen wirken nicht', () => {
+    const d = db();
+    const before = createEvent(d, actor, input());
+    expect(before.termsDocumentId).toBeNull();
+
+    publishLegalVersion(d, actor, 'terms', null, { de: 'Global 1' });
+    const a = createEvent(d, actor, input({ slug: 'a-event' }));
+    expect(currentTerms(d, a.id)).toMatchObject({ eventId: a.id, version: 1, content: { de: 'Global 1' } });
+    expect(a.termsDocumentId).toBe(currentTerms(d, a.id)?.id);
+
+    publishLegalVersion(d, actor, 'terms', null, { de: 'Global 2' });
+    expect(currentTerms(d, a.id)?.content.de).toBe('Global 1');
+    expect(currentTerms(d, before.id)).toBeUndefined();
+    const b = createEvent(d, actor, input({ slug: 'b-event' }));
+    expect(currentTerms(d, b.id)?.content.de).toBe('Global 2');
+
+    publishLegalVersion(d, actor, 'terms', a.id, { de: 'A geändert' });
+    expect(currentTerms(d, a.id)).toMatchObject({ version: 2, content: { de: 'A geändert' } });
   });
 
   it('sind für archivierte Events gesperrt', () => {

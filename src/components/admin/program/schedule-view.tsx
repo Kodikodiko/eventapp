@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Pencil, Plus, Printer, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,9 +14,19 @@ import type { Locale } from '@/i18n/routing';
 import type { ActionResult } from '@/lib/action-result';
 import { TIME_ZONE, utcToViennaInput, viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
-import { SESSION_TAG_KEYS, sessionFormSchema, type SessionFormValues } from '@/lib/validation/program';
-import { createSessionAction, deleteSessionAction, updateSessionAction } from '@/server/actions/program';
+import { MAX_STREAMS, streamEnd, type StreamInfo } from '@/lib/streams';
+import { SESSION_TAG_KEYS, sessionFormSchema, streamFormSchema, type SessionFormValues, type StreamFormValues } from '@/lib/validation/program';
+import {
+  addStreamAction,
+  createSessionAction,
+  deleteSessionAction,
+  deleteStreamAction,
+  moveStreamAction,
+  renameStreamAction,
+  updateSessionAction,
+} from '@/server/actions/program';
 import type { SessionRow } from '@/server/services/program';
+import { ProgramGrid } from '@/components/program/program-grid';
 import { ConfirmDialog } from '../confirm-dialog';
 import { Field, fieldError, LocalizedFields } from '../form-fields';
 import { useActionFeedback } from '../use-action-feedback';
@@ -31,22 +41,18 @@ type Props = {
   eventStartsAt: string;
   sessions: SessionRow[];
   speakers: SpeakerOption[];
+  streams: StreamInfo[];
   readOnly: boolean;
 };
 
-/** Programmpunkte nach Tag und Zeitfenster gruppieren. */
-export function groupSessions(sessions: SessionRow[]) {
-  const days = new Map<string, Map<string, SessionRow[]>>();
-  for (const s of sessions) {
-    const day = viennaDate(s.startsAt);
-    const slots = days.get(day) ?? new Map<string, SessionRow[]>();
-    slots.set(s.startsAt, [...(slots.get(s.startsAt) ?? []), s].sort((a, b) => a.stream - b.stream));
-    days.set(day, slots);
-  }
-  return [...days.entries()].map(([day, slots]) => ({ day, slots: [...slots.entries()].map(([startsAt, items]) => ({ startsAt, items })) }));
+/** Programmpunkte nach Tag gruppieren (Reihenfolge nach Beginn). */
+function groupByDay(sessions: SessionRow[]) {
+  const days = new Map<string, SessionRow[]>();
+  for (const s of sessions) days.set(viennaDate(s.startsAt), [...(days.get(viennaDate(s.startsAt)) ?? []), s]);
+  return [...days.entries()].map(([day, items]) => ({ day, items }));
 }
 
-export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readOnly }: Props) {
+export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, streams, readOnly }: Props) {
   const t = useTranslations('schedule');
   const locale = useLocale() as Locale;
   const format = useFormatter();
@@ -54,7 +60,13 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readO
   const handle = useActionFeedback();
   const [, startTransition] = useTransition();
   const [dialog, setDialog] = useState<{ mode: 'create' } | { mode: 'edit' | 'delete'; row: SessionRow } | null>(null);
-  const days = useMemo(() => groupSessions(sessions), [sessions]);
+  const days = useMemo(() => groupByDay(sessions), [sessions]);
+  const streamLabel = (n: number) => localized(streams[n - 1]?.name, locale) || t('streamN', { n });
+  const streamRange = (s: SessionRow) => {
+    const to = streamEnd(s);
+    if (streams.length > 1 && s.stream === 1 && to >= streams.length) return t('allStreams');
+    return to > s.stream ? `${streamLabel(s.stream)} – ${streamLabel(to)}` : streamLabel(s.stream);
+  };
   const time = (iso: string) => format.dateTime(new Date(iso), { timeStyle: 'short', timeZone: TIME_ZONE });
   const firstDay = viennaDate(eventStartsAt);
 
@@ -83,43 +95,49 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readO
 
       {days.length === 0 && <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">{t('empty')}</p>}
 
-      {days.map(({ day, slots }) => (
+      <StreamsPanel eventId={eventId} streams={streams} readOnly={readOnly} />
+
+      {days.map(({ day, items }) => (
         <section key={day} className="space-y-3">
           <h3 className="font-semibold">{format.dateTime(new Date(`${day}T12:00:00Z`), { dateStyle: 'full', timeZone: TIME_ZONE })}</h3>
-          <ol className="space-y-2">
-            {slots.map(({ startsAt, items }) => (
-              <li key={startsAt} className="grid gap-2 sm:grid-cols-[6rem_1fr]">
-                <div className="pt-2 text-sm font-medium tabular-nums">{time(startsAt)}</div>
-                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                  {items.map((s) => (
-                    <article key={s.id} className={s.tag === 'break' ? 'rounded-md border border-dashed bg-muted/40 p-3' : 'rounded-md border p-3'}>
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium">{localized(s.title, locale)}</h4>
-                        {!readOnly && (
-                          <div className="flex shrink-0">
-                            <Button variant="ghost" size="icon" className="size-7" aria-label={t('editNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'edit', row: s })}>
-                              <Pencil aria-hidden className="size-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="size-7" aria-label={t('deleteNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'delete', row: s })}>
-                              <Trash2 aria-hidden className="size-3.5" />
-                            </Button>
-                          </div>
-                        )}
+          <ProgramGrid
+            streams={streams.map((st) => ({ position: st.position, label: streamLabel(st.position) }))}
+            timeLabel={time}
+            timeHeader={t('time')}
+            items={items.map((s) => ({
+              id: s.id,
+              startsAt: s.startsAt,
+              stream: s.stream,
+              streamTo: streamEnd(s),
+              className: s.tag === 'break' ? 'border-dashed bg-muted/40' : 'bg-card',
+              content: (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-medium">{localized(s.title, locale)}</h4>
+                    {!readOnly && (
+                      <div className="flex shrink-0">
+                        <Button variant="ghost" size="icon" className="size-7" aria-label={t('editNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'edit', row: s })}>
+                          <Pencil aria-hidden className="size-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="size-7" aria-label={t('deleteNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'delete', row: s })}>
+                          <Trash2 aria-hidden className="size-3.5" />
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {time(s.startsAt)}–{time(s.endsAt)}
-                        {s.location && ` · ${s.location}`} · {t('streamN', { n: s.stream })}
-                      </p>
-                      {s.speakerName && <p className="mt-1 text-sm">{s.speakerName}</p>}
-                      <Badge variant="secondary" className="mt-2">
-                        {t(`tag.${s.tag}`)}
-                      </Badge>
-                    </article>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ol>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {time(s.startsAt)}–{time(s.endsAt)}
+                    {s.location && ` · ${s.location}`}
+                    {streams.length > 1 && ` · ${streamRange(s)}`}
+                  </p>
+                  {s.speakerName && <p className="mt-1 text-sm">{s.speakerName}</p>}
+                  <Badge variant="secondary" className="mt-2">
+                    {t(`tag.${s.tag}`)}
+                  </Badge>
+                </>
+              ),
+            }))}
+          />
         </section>
       ))}
 
@@ -128,6 +146,7 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readO
           key={dialog.mode === 'edit' ? `edit-${dialog.row.id}` : 'create'}
           title={dialog.mode === 'edit' ? t('editTitle') : t('addTitle')}
           speakers={speakers}
+          streams={streams.map((st) => ({ position: st.position, label: streamLabel(st.position) }))}
           defaultValues={
             dialog.mode === 'edit'
               ? {
@@ -136,10 +155,11 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readO
                   endsAt: utcToViennaInput(dialog.row.endsAt),
                   location: dialog.row.location,
                   tag: dialog.row.tag,
-                  stream: String(dialog.row.stream) as SessionFormValues['stream'],
+                  stream: String(dialog.row.stream),
+                  streamTo: String(streamEnd(dialog.row)),
                   speakerId: dialog.row.speakerId ? String(dialog.row.speakerId) : '',
                 }
-              : { title: { de: '', en: '' }, startsAt: `${firstDay}T09:00`, endsAt: `${firstDay}T09:45`, location: '', tag: 'talk', stream: '1', speakerId: '' }
+              : { title: { de: '', en: '' }, startsAt: `${firstDay}T09:00`, endsAt: `${firstDay}T09:45`, location: '', tag: 'talk', stream: '1', streamTo: '1', speakerId: '' }
           }
           save={(values) => (dialog.mode === 'edit' ? updateSessionAction(dialog.row.id, values) : createSessionAction(eventId, values))}
           onClose={() => setDialog(null)}
@@ -163,12 +183,13 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, readO
 type DialogProps = {
   title: string;
   speakers: SpeakerOption[];
+  streams: { position: number; label: string }[];
   defaultValues: SessionFormValues;
   save: (values: SessionFormValues) => Promise<ActionResult<unknown>>;
   onClose: () => void;
 };
 
-function SessionDialog({ title, speakers, defaultValues, save, onClose }: DialogProps) {
+function SessionDialog({ title, speakers, streams, defaultValues, save, onClose }: DialogProps) {
   const t = useTranslations('schedule');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -178,6 +199,11 @@ function SessionDialog({ title, speakers, defaultValues, save, onClose }: Dialog
     register,
     formState: { errors },
   } = form;
+  const from = Number(useWatch({ control: form.control, name: 'stream' }));
+  const allStreams = () => {
+    form.setValue('stream', '1', { shouldDirty: true });
+    form.setValue('streamTo', String(streams.length), { shouldDirty: true });
+  };
 
   const onSubmit = form.handleSubmit((values) =>
     startTransition(async () => {
@@ -227,16 +253,175 @@ function SessionDialog({ title, speakers, defaultValues, save, onClose }: Dialog
                     ))}
                   </select>
                 </Field>
-                <Field id="s-stream" label={t('stream')} hint={t('streamHint')} error={fieldError(errors, 'stream')}>
-                  <select id="s-stream" className={selectClass} {...register('stream')}>
-                    {['1', '2', '3', '4'].map((n) => (
-                      <option key={n} value={n}>
-                        {t('streamN', { n })}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                {streams.length > 1 && (
+                  <>
+                    <Field id="s-stream" label={t('stream')} hint={t('streamHint')} error={fieldError(errors, 'stream')}>
+                      <select
+                        id="s-stream"
+                        className={selectClass}
+                        {...register('stream', {
+                          onChange: (e) => {
+                            if (Number(form.getValues('streamTo')) < Number(e.target.value)) form.setValue('streamTo', e.target.value);
+                          },
+                        })}
+                      >
+                        {streams.map((st) => (
+                          <option key={st.position} value={String(st.position)}>
+                            {st.label}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field id="s-stream-to" label={t('streamTo')} hint={t('streamToHint')} error={fieldError(errors, 'streamTo')}>
+                      <div className="flex gap-2">
+                        <select id="s-stream-to" className={selectClass} {...register('streamTo')}>
+                          {streams
+                            .filter((st) => st.position >= from)
+                            .map((st) => (
+                              <option key={st.position} value={String(st.position)}>
+                                {st.label}
+                              </option>
+                            ))}
+                        </select>
+                        <Button type="button" variant="outline" size="sm" className="h-9 shrink-0" onClick={allStreams}>
+                          {t('allStreams')}
+                        </Button>
+                      </div>
+                    </Field>
+                  </>
+                )}
               </div>
+            </fieldset>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {t('save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Streams des Events: anlegen, umbenennen, Reihenfolge ändern, löschen. */
+function StreamsPanel({ eventId, streams, readOnly }: { eventId: number; streams: StreamInfo[]; readOnly: boolean }) {
+  const t = useTranslations('schedule');
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const handle = useActionFeedback();
+  const [pending, startTransition] = useTransition();
+  const [edit, setEdit] = useState<{ position: number | null; name: StreamFormValues['name'] } | null>(null);
+  const [remove, setRemove] = useState<StreamInfo | null>(null);
+
+  function run(action: () => Promise<ActionResult<unknown>>, success: string) {
+    startTransition(async () => {
+      if (handle(await action(), { success })) router.refresh();
+    });
+  }
+
+  return (
+    <section aria-labelledby="streams-title" className="rounded-lg border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 id="streams-title" className="font-semibold">
+            {t('streamsTitle')}
+          </h3>
+          <p className="text-xs text-muted-foreground">{t('streamsHint', { max: MAX_STREAMS })}</p>
+        </div>
+        {!readOnly && streams.length < MAX_STREAMS && (
+          <Button variant="outline" size="sm" disabled={pending} onClick={() => setEdit({ position: null, name: { de: `Stream ${streams.length + 1}`, en: '' } })}>
+            <Plus aria-hidden className="size-4" />
+            {t('addStream')}
+          </Button>
+        )}
+      </div>
+      <ol className="mt-3 flex flex-wrap gap-2">
+        {streams.map((s, i) => (
+          <li key={s.position} className="flex items-center gap-1 rounded-md border bg-background py-1 pr-1 pl-3 text-sm">
+            <span className="mr-1 text-xs text-muted-foreground tabular-nums">{s.position}</span>
+            <span className="font-medium">{localized(s.name, locale)}</span>
+            {!readOnly && (
+              <>
+                <Button variant="ghost" size="icon" className="size-7" disabled={pending || i === 0} aria-label={t('moveLeft')} onClick={() => run(() => moveStreamAction(eventId, s.position, -1), t('streamMoved'))}>
+                  <ChevronLeft aria-hidden className="size-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="size-7" disabled={pending || i === streams.length - 1} aria-label={t('moveRight')} onClick={() => run(() => moveStreamAction(eventId, s.position, 1), t('streamMoved'))}>
+                  <ChevronRight aria-hidden className="size-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="size-7" disabled={pending} aria-label={t('renameStream')} onClick={() => setEdit({ position: s.position, name: { de: s.name.de, en: s.name.en ?? '' } })}>
+                  <Pencil aria-hidden className="size-3.5" />
+                </Button>
+                {streams.length > 1 && (
+                  <Button variant="ghost" size="icon" className="size-7" disabled={pending} aria-label={t('deleteStream')} onClick={() => setRemove(s)}>
+                    <Trash2 aria-hidden className="size-3.5" />
+                  </Button>
+                )}
+              </>
+            )}
+          </li>
+        ))}
+      </ol>
+      {edit && (
+        <StreamDialog
+          title={edit.position == null ? t('addStream') : t('renameStream')}
+          defaultValues={{ name: edit.name }}
+          save={(v) => (edit.position == null ? addStreamAction(eventId, v) : renameStreamAction(eventId, edit.position, v))}
+          onClose={() => setEdit(null)}
+        />
+      )}
+      {remove && (
+        <ConfirmDialog
+          open
+          onOpenChange={(o) => !o && setRemove(null)}
+          title={t('deleteStreamTitle', { name: localized(remove.name, locale) })}
+          description={t('deleteStreamHint')}
+          confirmLabel={t('delete')}
+          destructive
+          onConfirm={() => run(() => deleteStreamAction(eventId, remove.position), t('streamDeleted'))}
+        />
+      )}
+    </section>
+  );
+}
+
+function StreamDialog({
+  title,
+  defaultValues,
+  save,
+  onClose,
+}: {
+  title: string;
+  defaultValues: StreamFormValues;
+  save: (v: StreamFormValues) => Promise<ActionResult<unknown>>;
+  onClose: () => void;
+}) {
+  const t = useTranslations('schedule');
+  const router = useRouter();
+  const handle = useActionFeedback();
+  const [pending, startTransition] = useTransition();
+  const form = useForm<StreamFormValues>({ resolver: zodResolver(streamFormSchema), defaultValues });
+  const onSubmit = form.handleSubmit((values) =>
+    startTransition(async () => {
+      if (handle(await save(values), { setError: form.setError, success: t('streamSaved') })) {
+        onClose();
+        router.refresh();
+      }
+    })
+  );
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <FormProvider {...form}>
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+            <DialogHeader>
+              <DialogTitle>{title}</DialogTitle>
+            </DialogHeader>
+            <fieldset disabled={pending}>
+              <LocalizedFields name="name" label={t('streamName')} />
             </fieldset>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

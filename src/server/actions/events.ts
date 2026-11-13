@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { fail, issuesToFieldErrors, type ActionResult } from '@/lib/action-result';
 import { copyEventSchema, eventFormSchema, legalDocumentFormSchema, toEventInput } from '@/lib/validation/forms';
-import { copyEvent, createEvent, setEventArchived, updateEvent } from '@/server/services/events';
+import { copyEvent, createEvent, setEventArchived, setRegistrationPaused, setSlidesPublic, updateEvent } from '@/server/services/events';
 import { publishLegalVersion } from '@/server/services/legal';
 import { runAdminAction } from './run';
 
@@ -51,4 +51,20 @@ export async function publishTermsAction(eventId: number, values: unknown): Prom
   return runAdminAction(({ actor, db }) => ({
     version: publishLegalVersion(db, actor, 'terms', parsedId.data, content).version,
   }));
+}
+
+export async function setRegistrationPausedAction(id: number, paused: boolean): Promise<ActionResult<void>> {
+  const parsedId = idSchema.safeParse(id);
+  if (!parsedId.success || typeof paused !== 'boolean') return fail('INVALID');
+  return runAdminAction(({ actor, db }) => {
+    setRegistrationPaused(db, actor, parsedId.data, paused);
+  });
+}
+
+export async function setSlidesPublicAction(id: number, value: boolean): Promise<ActionResult<void>> {
+  const parsedId = idSchema.safeParse(id);
+  if (!parsedId.success || typeof value !== 'boolean') return fail('INVALID');
+  return runAdminAction(({ actor, db }) => {
+    setSlidesPublic(db, actor, parsedId.data, value);
+  });
 }

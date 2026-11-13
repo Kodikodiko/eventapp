@@ -24,6 +24,10 @@ export type RowGroup<T> = {
   rows: T[];
   /** bestätigte/reservierte Personen (ohne Warteliste und Storno) */
   active: number;
+  /** Anmeldungen ohne Storno (bestätigt, reserviert, Warteliste) */
+  live: number;
+  /** stornierte Anmeldungen der Gruppe */
+  cancelled: number;
   paid: number;
   open: number;
   /** Summe der Ticketpreise ohne stornierte Anmeldungen */
@@ -65,6 +69,8 @@ function stats<T extends GroupableRow>(key: string, label: string | null, rows: 
     label,
     rows,
     active: rows.filter((r) => r.status === 'confirmed' || r.status === 'reserved').length,
+    live: live.length,
+    cancelled: rows.length - live.length,
     paid: live.filter((r) => r.paymentStatus === 'paid').length,
     open: live.filter((r) => r.paymentStatus === 'open' && r.priceCents > 0).length,
     sumCents: live.reduce((s, r) => s + r.priceCents, 0),

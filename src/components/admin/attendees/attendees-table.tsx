@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Copy, FileDown, FileText, Mail, Tag, Undo2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Award, ChevronRight, Copy, FileDown, FileText, Mail, Tag, Undo2, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -332,6 +332,9 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
   const emails = selectedRows.map((r) => r.email).filter((e): e is string => Boolean(e));
   const invoiceable = selectedRows.filter(canIssueInvoice);
   // Sammel-Erstattung/-Storno: alles außer bereits stornierten ohne erstattbaren Betrag
+  const certificateHref = (...ids: number[]) => `/api/export/certificates?event=${eventId}&ids=${ids.join(',')}`;
+  // Teilnahmebestätigung: für alle angehakten Personen (Auswahl entscheidet, nicht der Status)
+  const certifiable = selectedRows;
   const refundCandidates = selectedRows.filter((r) => r.status !== 'cancelled' || r.refundableCents > 0);
   async function copyEmails() {
     try {
@@ -376,6 +379,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
     <RegistrationDetailPanel
       key={detailRow.id}
       row={detailRow}
+      certificateHref={certificateHref(detailRow.id)}
       roleLabel={roleLabel}
       readOnly={readOnly}
       onAction={(dialog) => openDialog(detailRow, dialog)}
@@ -461,7 +465,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
             {format.dateTime(new Date(r.createdAt), { dateStyle: 'short', timeStyle: 'short' })}
           </td>
           <td className="px-2 py-1.5 text-right">
-            {!readOnly && <RegistrationRowMenu row={r} onAction={(dialog) => openDialog(r, dialog)} />}
+            {!readOnly && <RegistrationRowMenu row={r} onAction={(dialog) => openDialog(r, dialog)} certificateHref={certificateHref(r.id)} />}
           </td>
         </tr>
       );
@@ -572,6 +576,17 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            {certifiable.length > 0 && (
+              <a
+                href={certificateHref(...certifiable.map((r) => r.id))}
+                download
+                title={t('bulkCertificateHint')}
+                className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
+              >
+                <Award aria-hidden className="size-4" />
+                {t('bulkCertificate', { count: certifiable.length })}
+              </a>
+            )}
             <a href={exportParams({ ...EMPTY_FILTER, ids: selectedRows.map((r) => r.id) })} download className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline">
               <FileDown aria-hidden className="size-4" />
               {t('bulkExport')}
@@ -638,7 +653,9 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
                                 <ChevronRight aria-hidden className={cn('size-4 transition-transform', open && 'rotate-90')} />
                                 <span className="font-semibold">{title}</span>
                                 <span className="text-muted-foreground">
-                                  {t('groupStats', { count: g.rows.length, active: g.active, paid: g.paid, open: g.open, sum: formatEuro(g.sumCents, locale) })}
+                                  {groupBy === 'payment'
+                                    ? t('groupStatsPayment', { count: g.live, cancelled: g.cancelled, sum: formatEuro(g.sumCents, locale) })
+                                    : t('groupStats', { count: g.live, cancelled: g.cancelled, paid: g.paid, open: g.open, sum: formatEuro(g.sumCents, locale) })}
                                 </span>
                               </button>
                             </td>

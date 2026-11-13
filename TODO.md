@@ -35,4 +35,35 @@ Hinweis: Die Architektur wurde von Firebase auf Next.js + SQLite umgestellt (abg
 
 ## Finanzen
 
-- [ ] **F1 – Erfolgsrechnung je Event.** Einnahmen (Tickets, Sponsoren, abzüglich Erstattungen und Gutschriften) den Ausgaben je Kostengruppe gegenüberstellen, getrennt nach bezahlt/geplant; Grundlage sind die Ausgaben und Kostengruppen (Event → Ausgaben, seit 30.10.2026).
+- [x] **F1 – Erfolgsrechnung je Event** (13.11.2026). Event → Erfolgsrechnung: Übersicht (momentaner Erfolg = Ist, Verlauf, Anmeldungen im Vergleich, offene Posten) und Tabelle (Ist/Offen/Prognose je Tickettyp, Sponsor und Kostengruppe bis zum Einzelposten; Plan in drei Varianten und Vergleich mit bis zu zwei Events zuschaltbar), Excel-Export und Druck. Details: `CHANGELOG.md`.
+
+## Feedback-Runde nach dem Test (13.11.2026)
+
+Umsetzungsplan: `docs/umsetzungsplan-feedback-2026-11.md`. Umsetzung erst nach Freigabe.
+
+- [x] **U1 – Anmeldung pausieren.** Schalter „Anmeldung pausiert“ je Event, zusätzlich zu „Anmeldung öffnet/schließt am“; stoppt sofort, die Anmeldeseite zeigt „Anmeldung derzeit pausiert“. Begonnene Reservierungen und Zahlungen laufen zu Ende.
+- [x] **U2 – USt-Modus global mit Abweichung je Event.** Kleinunternehmer/regulär bleibt in den globalen Einstellungen der Standard, Vorgabe Kleinunternehmer (0 %, keine USt); je Event „wie global“ oder abweichend. Rechnungen nehmen den Wert des Events.
+- [x] **U3 – Globale AGB.** AGB versioniert in den globalen Einstellungen als Vorlage: Ein neues Event übernimmt beim Anlegen eine Kopie der dann gültigen Fassung; spätere Änderungen der globalen AGB wirken nicht auf bestehende Events. Bearbeitet werden die AGB eines Events in den Event-Einstellungen („Aktuelle globale AGB als Vorlage laden“ möglich).
+- [x] **U4 – Favicon** = PMI-Austria-Bildmarke ohne Text (favicon.ico, icon.png, apple-icon.png).
+- [x] **U5 – Teilnahmebestätigung (Zertifikat).** Einrichtung je Event: Hintergrundbild (A4 quer) hochladen, bearbeitbarer Text mit Platzhaltern für Eventname, Datum/Uhrzeit, Ort, Teilnehmername und Bestätigungstext (de/en). In der Teilnehmerliste eine oder mehrere Personen auswählen → ein PDF (eine Seite je Person) zum Drucken/Herunterladen.
+- [x] **U6 – Rechnungen: Filter „Bezahlt“** neben Alle / Offen / Überfällig.
+- [x] **U7 – Erfolgsrechnung: nur die große Zahl.** Die Zeilen „€ … eingegangen, € … bezahlt“ und „Prognose …“ unter dem momentanen Erfolg entfallen.
+- [x] **U8 – Sponsor ohne Paket mit Betrag.** Ohne Paket erscheinen die Felder Betrag (netto) und USt-Satz; Rechnung und Erfolgsrechnung verwenden diesen Betrag.
+- [x] **U9 – Programm: bis zu 10 Streams, Punkte über mehrere Streams.** Streams je Event mit Namen (z. B. „Saal A“), 1–10. Ein Programmpunkt belegt einen Stream oder einen Bereich „von Stream – bis Stream“ (z. B. Keynote über alle) und wird in Planung, Druck und öffentlichem Programm über die ganze Breite gezeigt. Art bleibt die Werteliste Allgemein / Vortrag / Workshop / Pause.
+- [x] **U10 – Speaker-Folien als Link.** Feld „Link zu den Folien“ (SharePoint oder Nextcloud, beliebige https-Adresse), Status weiter von Hand. Schalter je Event „Folien veröffentlichen“ zeigt die Links im öffentlichen Programm und im Teilnehmerportal.
+- [x] **U11 – Teilnehmende: Gruppenzeile klarer.** Statt „38 Personen · 16 bezahlt · 0 offen“ z. B. „16 Personen · 22 storniert · Summe …“; die Zahlen „bezahlt/offen“ entfallen beim Gruppieren nach Zahlungsstatus.
+- [x] **U12 – Kostengruppe:** Beschriftung „Speaker-Zuordnung“ → „Ausgaben einem Speaker zuordnen“.
+
+## Hosting (Docker hinter nginx beim Sysadmin, Plan seit 12.11.2026 – zurückgestellt am 13.11.2026)
+
+Details: `DEPLOYMENT.md`, Teil C.
+
+- [ ] **H1 – Client-IP fälschungssicher.** `clientIp()` in `src/server/rate-limit.ts` nimmt den *ersten* Eintrag von `X-Forwarded-For`; hinter nginx mit `$proxy_add_x_forwarded_for` kann ein Angreifer ihn setzen und die Begrenzung von Login und Anmeldung umgehen. `X-Real-IP` bevorzugen, IP-Header von Better Auth festlegen; nginx setzt beide Header auf `$remote_addr`.
+- [ ] **H2 – Dockerfile** (mehrstufig, `node:24-bookworm-slim`, `output: 'standalone'`, Benutzer ohne Root, `HEALTHCHECK` auf `/api/health` per `node -e fetch(...)`) und `.dockerignore`.
+- [ ] **H3 – Skripte ohne tsx:** `jobs`, `db:backup`, `admin:create` (später `retention`) beim Build mit esbuild zu `.mjs` bündeln, damit das Laufzeit-Image ohne Entwicklungspakete auskommt.
+- [ ] **H4 – `docker-compose.yml`:** Dienste `eventflow` und `eventflow-jobs` (alle 300 s `jobs.mjs`), Volume `/data`, Netz des nginx ohne `ports:`, `read_only`, `cap_drop: ALL`, `no-new-privileges`, `init: true`, Logrotation, Speicherlimit.
+- [ ] **H5 – Entwickler-Schalter in Produktion sperren:** Start mit `NODE_ENV=production` bricht ab, wenn `PAYMENT_PROVIDER=fake`, `AUTO_SEED` oder `DEV_LOGIN`/`DEV_ADMIN_WITHOUT_2FA` gesetzt sind.
+- [ ] **H6 – Image-Pipeline:** GitHub Actions baut bei Release-Tag und monatlich, prüft mit Trivy, schiebt nach GHCR (privat); Dependabot für npm und Basis-Image.
+- [ ] **H7 – Content-Security-Policy** in der App (Nonces für Skripte).
+- [ ] **H8 – Backup und Notfall:** `db-backup.mjs` per Timer, Volume ins Backup des Sysadmins (verschlüsselt, extern; DB 90 Tage, Rechnungen und Belege 7 Jahre); Wiederherstellung vor Go-live einmal durchspielen; Notfallablauf (Teil C.7) mit dem Sysadmin abstimmen.
+- [ ] **H9 – Mit dem Sysadmin klären:** nginx im Container oder auf dem Host, Deploy-Weg (Registry-Pull oder eingeschränkter SSH-Zugang), Backup-System, GeoIP/CrowdSec, Monitoring, Client-Zertifikat für mTLS, Serverstandort EU und AVV (siehe D9), SMTP-Relay mit SPF/DKIM.

@@ -1,9 +1,11 @@
 'use client';
 
 import {
+  Award,
   Building2,
   CalendarDays,
   CalendarRange,
+  ChartNoAxesCombined,
   Check,
   ChevronsUpDown,
   FileText,
@@ -16,13 +18,12 @@ import {
   PanelLeftOpen,
   Plus,
   Receipt,
-  ScrollText,
   Settings,
   ShieldCheck,
   Tags,
+  type LucideIcon,
   Undo2,
   Users,
-  type LucideIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
@@ -77,6 +78,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
           icon: Users,
           badge: { value: current!.counts.attendees, tone: 'muted', label: t('attendeesBadge', { count: current!.counts.attendees }) },
         },
+        { href: `${base}/certificate`, label: t('certificate'), icon: Award },
         { href: `${base}/speakers`, label: t('speakers'), icon: Mic },
         { href: `${base}/schedule`, label: t('schedule'), icon: CalendarDays },
         { href: `${base}/sponsors`, label: t('sponsors'), icon: Handshake },
@@ -93,19 +95,23 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
           icon: Undo2,
           badge: { value: current!.counts.openRefunds, tone: 'warn', label: t('refundsBadge', { count: current!.counts.openRefunds }) },
         },
-        { href: `${base}/settings`, label: t('eventSettings'), icon: Settings },
-        { href: `${base}/terms`, label: t('terms'), icon: ScrollText },
       ]
     : [];
+  // Einstellungen des gewählten Events stehen unter „Organisation“ (Wunsch 13.11.2026)
   const orgItems: Item[] = [
     { href: '/admin/events', label: t('allEvents'), icon: CalendarRange, exact: true },
+    ...(base ? [{ href: `${base}/settings`, label: t('eventSettings'), icon: Settings }] : []),
     { href: '/admin/members', label: t('members'), icon: IdCard },
     { href: '/admin/audit', label: t('audit'), icon: History },
     { href: '/admin/settings', label: t('organizer'), icon: Building2 },
     { href: '/admin/security', label: t('security'), icon: ShieldCheck },
   ];
 
-  const financeItems: Item[] = [{ href: '/admin/cost-groups', label: t('costGroups'), icon: Tags }];
+  // Erfolgsrechnung des gewählten Events steht unter „Finanzen“ (Wunsch 13.11.2026), Kostengruppen sind global
+  const financeItems: Item[] = [
+    ...(base ? [{ href: `${base}/pnl`, label: t('pnl'), icon: ChartNoAxesCombined }] : []),
+    { href: '/admin/cost-groups', label: t('costGroups'), icon: Tags },
+  ];
 
   const isActive = (item: Item) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`));
   const activeEvents = events.filter((e) => !e.archived);

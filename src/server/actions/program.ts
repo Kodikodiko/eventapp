@@ -2,12 +2,16 @@
 
 import { z } from 'zod';
 import { fail, issuesToFieldErrors, type ActionResult } from '@/lib/action-result';
-import { sessionFormSchema, speakerFormSchema, toSessionInput, toSpeakerInput } from '@/lib/validation/program';
+import { sessionFormSchema, speakerFormSchema, streamFormSchema, toSessionInput, toSpeakerInput } from '@/lib/validation/program';
 import {
+  addStream,
   createSession,
   createSpeaker,
   deleteSession,
+  deleteStream,
+  moveStream,
   removeSpeaker,
+  renameStream,
   updateSession,
   updateSpeaker,
 } from '@/server/services/program';
@@ -57,4 +61,38 @@ export async function deleteSessionAction(sessionId: number): Promise<ActionResu
   const id = idSchema.safeParse(sessionId);
   if (!id.success) return fail('NOT_FOUND');
   return runAdminAction(({ actor, db }) => deleteSession(db, actor, id.data));
+}
+
+const positionSchema = z.number().int().min(1).max(10);
+const streamName = (v: { de: string; en: string }) => (v.en.trim() ? { de: v.de.trim(), en: v.en.trim() } : { de: v.de.trim() });
+
+export async function addStreamAction(eventId: number, values: unknown): Promise<ActionResult<{ position: number }>> {
+  const id = idSchema.safeParse(eventId);
+  const parsed = streamFormSchema.safeParse(values);
+  if (!id.success) return fail('NOT_FOUND');
+  if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
+  return runAdminAction(({ actor, db }) => ({ position: addStream(db, actor, id.data, streamName(parsed.data.name)) }));
+}
+
+export async function renameStreamAction(eventId: number, position: number, values: unknown): Promise<ActionResult<void>> {
+  const id = idSchema.safeParse(eventId);
+  const pos = positionSchema.safeParse(position);
+  const parsed = streamFormSchema.safeParse(values);
+  if (!id.success || !pos.success) return fail('NOT_FOUND');
+  if (!parsed.success) return fail('INVALID', issuesToFieldErrors(parsed.error));
+  return runAdminAction(({ actor, db }) => renameStream(db, actor, id.data, pos.data, streamName(parsed.data.name)));
+}
+
+export async function moveStreamAction(eventId: number, position: number, direction: -1 | 1): Promise<ActionResult<void>> {
+  const id = idSchema.safeParse(eventId);
+  const pos = positionSchema.safeParse(position);
+  if (!id.success || !pos.success || (direction !== -1 && direction !== 1)) return fail('INVALID');
+  return runAdminAction(({ actor, db }) => moveStream(db, actor, id.data, pos.data, direction));
+}
+
+export async function deleteStreamAction(eventId: number, position: number): Promise<ActionResult<void>> {
+  const id = idSchema.safeParse(eventId);
+  const pos = positionSchema.safeParse(position);
+  if (!id.success || !pos.success) return fail('NOT_FOUND');
+  return runAdminAction(({ actor, db }) => deleteStream(db, actor, id.data, pos.data));
 }

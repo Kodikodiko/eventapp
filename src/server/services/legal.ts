@@ -1,11 +1,15 @@
 /**
- * Versionierte Rechtstexte: AGB (pro Event) und Datenschutzerklärung (global).
+ * Versionierte Rechtstexte: AGB (global und je Event) und Datenschutzerklärung (global).
+ * Globale AGB sind die Vorlage: Ein neues Event bekommt beim Anlegen eine Kopie der aktuellen globalen AGB als
+ * eigene Version 1. Spätere Änderungen der globalen AGB wirken nie auf bestehende Events – die Bedingungen
+ * dürfen sich während der Anmeldephase nicht von selbst ändern.
  * Eine neue Version ersetzt nie eine alte – Zustimmungen verweisen auf die Version, die gezeigt wurde.
  */
 import { and, desc, eq, isNull, max } from 'drizzle-orm';
 import { ServiceError } from '@/lib/action-result';
 import type { LocalizedText } from '@/lib/localized';
 import type { Db } from '@/server/db/core';
+import type { Tx } from './audit';
 import { events, legalDocuments } from '@/server/db/schema';
 import { writeAudit, type Actor } from './audit';
 
@@ -32,7 +36,15 @@ export function currentTerms(db: Db, eventId: number): LegalDocumentRow | undefi
   return db.select().from(legalDocuments).where(eq(legalDocuments.id, event.termsDocumentId)).get();
 }
 
-/** Legt eine neue Version an; bei AGB wird sie sofort die gültige Version des Events. */
+/** Neueste globale AGB-Version (Vorlage für neue Events). */
+export function latestGlobalTerms(db: Db | Tx): LegalDocumentRow | undefined {
+  return db.select().from(legalDocuments).where(scope('terms', null)).orderBy(desc(legalDocuments.version)).get();
+}
+
+/**
+ * Legt eine neue Version an. Event-AGB werden sofort die gültige Version des Events;
+ * globale AGB gelten nur für Events, die danach angelegt werden.
+ */
 export function publishLegalVersion(
   db: Db,
   actor: Actor,
@@ -40,7 +52,6 @@ export function publishLegalVersion(
   eventId: number | null,
   content: LocalizedText
 ): LegalDocumentRow {
-  if (kind === 'terms' && eventId == null) throw new ServiceError('INVALID');
   if (kind === 'privacy' && eventId != null) throw new ServiceError('INVALID');
   return db.transaction((tx) => {
     if (eventId != null) {
@@ -62,7 +73,7 @@ export function publishLegalVersion(
       entity: 'legal_document',
       entityId: doc.id,
       eventId,
-      summary: `${kind === 'terms' ? 'AGB' : 'Datenschutzerklärung'} Version ${doc.version} veröffentlicht`,
+      summary: `${kind === 'terms' ? (eventId == null ? 'Globale AGB' : 'AGB') : 'Datenschutzerklärung'} Version ${doc.version} veröffentlicht`,
     });
     return doc;
   });

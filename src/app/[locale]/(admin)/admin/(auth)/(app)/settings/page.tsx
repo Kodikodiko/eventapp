@@ -4,7 +4,7 @@ import { OrganizerForm } from '@/components/admin/organizer-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { LocaleParams } from '@/i18n/page';
 import { initAdminPage } from '@/server/admin-pages';
-import { publishPrivacyAction } from '@/server/actions/settings';
+import { publishGlobalTermsAction, publishPrivacyAction } from '@/server/actions/settings';
 import { requestDb } from '@/server/db';
 import { currentPrivacyNotice, listLegalVersions } from '@/server/services/legal';
 import { DEFAULT_SMALL_BUSINESS_NOTE, getOrganizerSettings } from '@/server/services/organizer';
@@ -18,6 +18,8 @@ export default async function SettingsPage({ params }: LocaleParams) {
   const org = getOrganizerSettings(db);
   const privacy = currentPrivacyNotice(db);
   const privacyVersions = listLegalVersions(db, 'privacy', null);
+  const termsVersions = listLegalVersions(db, 'terms', null);
+  const terms = termsVersions[0];
   const note = org.smallBusinessNote ?? DEFAULT_SMALL_BUSINESS_NOTE;
 
   return (
@@ -43,6 +45,34 @@ export default async function SettingsPage({ params }: LocaleParams) {
               invoicePaymentTermDays: String(org.invoicePaymentTermDays),
             }}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('termsTitle')}</CardTitle>
+          <CardDescription>
+            {terms
+              ? tTerms('current', { version: terms.version, date: format.dateTime(new Date(terms.validFrom), { dateStyle: 'medium', timeStyle: 'short' }) })
+              : t('termsNone')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">{t('termsHint')}</p>
+          <LegalDocumentForm
+            key={terms?.id ?? 'none'}
+            defaultValues={{ content: { de: terms?.content.de ?? '', en: terms?.content.en ?? '' } }}
+            publish={publishGlobalTermsAction}
+          />
+          {termsVersions.length > 1 && (
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              {termsVersions.map((v) => (
+                <li key={v.id}>
+                  {tTerms('versionLine', { version: v.version, date: format.dateTime(new Date(v.validFrom), { dateStyle: 'medium', timeStyle: 'short' }) })}
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
 

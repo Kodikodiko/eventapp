@@ -108,6 +108,13 @@ function RegistrationCard({ reg, onCancel }: { reg: PortalRegistration; onCancel
               {reg.location}
             </p>
           )}
+          {reg.slidesPublic && (
+            <p>
+              <Link href={`/events/${reg.eventSlug}#program`} className="text-primary underline underline-offset-4">
+                {t('slidesLink')}
+              </Link>
+            </p>
+          )}
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
           <dt className="text-muted-foreground">{t('ticket')}</dt>

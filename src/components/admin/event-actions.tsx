@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Archive, ArchiveRestore, Copy } from 'lucide-react';
+import { Archive, ArchiveRestore, Copy, Pause, Play } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { useRouter } from '@/i18n/navigation';
 import { copyEventSchema, type CopyEventValues } from '@/lib/validation/forms';
-import { copyEventAction, setEventArchivedAction } from '@/server/actions/events';
+import { copyEventAction, setEventArchivedAction, setRegistrationPausedAction } from '@/server/actions/events';
 import { Field, fieldError, LocalizedFields } from './form-fields';
 import { useActionFeedback } from './use-action-feedback';
 
@@ -105,6 +105,42 @@ export function ArchiveToggle({ eventId, archived }: { eventId: number; archived
         <AlertDialogFooter>
           <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={run}>{archived ? t('unarchive') : t('archive')}</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+/** Anmeldung sofort anhalten bzw. fortsetzen (zusätzlich zu „Anmeldung öffnet/schließt am“) – mit Rückfrage. */
+export function PauseToggle({ eventId, paused }: { eventId: number; paused: boolean }) {
+  const t = useTranslations('eventActions');
+  const router = useRouter();
+  const handle = useActionFeedback();
+  const [pending, startTransition] = useTransition();
+
+  function run() {
+    startTransition(async () => {
+      const result = await setRegistrationPausedAction(eventId, !paused);
+      if (handle(result, { success: paused ? t('resumed') : t('paused') })) router.refresh();
+    });
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={pending}>
+          {paused ? <Play aria-hidden className="size-4" /> : <Pause aria-hidden className="size-4" />}
+          {paused ? t('resume') : t('pause')}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{paused ? t('resumeTitle') : t('pauseTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{paused ? t('resumeHint') : t('pauseHint')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={run}>{paused ? t('resume') : t('pause')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

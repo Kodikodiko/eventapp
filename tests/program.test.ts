@@ -4,9 +4,15 @@ import type { SessionInput, SpeakerInput } from '@/lib/validation/program';
 import { sessionFormSchema, toSessionInput } from '@/lib/validation/program';
 import { openDatabase, type Db } from '@/server/db/core';
 import { people } from '@/server/db/schema';
-import { createEvent, setEventArchived } from '@/server/services/events';
+import { createEvent, setEventArchived, setSlidesPublic } from '@/server/services/events';
+import { listPublicSessions } from '@/server/services/public-events';
 import {
+  addStream,
   createSession,
+  deleteStream,
+  listStreams,
+  moveStream,
+  renameStream,
   createSpeaker,
   deleteSession,
   listSessions,
@@ -60,6 +66,7 @@ const session = (o: Partial<SessionInput> = {}): SessionInput => ({
   location: 'Saal A',
   tag: 'talk',
   stream: 1,
+  streamTo: 1,
   speakerId: null,
   ...o,
 });
@@ -85,6 +92,20 @@ describe('Speaker', () => {
     createSpeaker(db, actor, other.id, speaker('eva@example.org'));
     expect(db.select().from(people).all()).toHaveLength(1);
     expect(listSpeakers(db, event.id)[0]).toMatchObject({ email: 'eva@example.org', proposalStatus: 'pending', sessionCount: 0 });
+  });
+
+  it('Folien-Link: öffentlich nur bei bestätigten Speakern und veröffentlichten Folien', () => {
+    const { db, event } = setup();
+    const id = createSpeaker(db, actor, event.id, { ...speaker('eva@example.org'), slidesUrl: 'https://cloud.example/s/abc' });
+    createSession(db, actor, event.id, session({ speakerId: id }));
+    expect(listSpeakers(db, event.id)[0].slidesUrl).toBe('https://cloud.example/s/abc');
+    expect(listPublicSessions(db, event.id)[0].slidesUrl).toBeNull();
+    setSlidesPublic(db, actor, event.id, true);
+    expect(listPublicSessions(db, event.id)[0].slidesUrl).toBeNull(); // Einreichung noch nicht bestätigt
+    updateSpeaker(db, actor, id, { ...speaker('eva@example.org'), proposalStatus: 'confirmed', slidesUrl: 'https://cloud.example/s/abc' });
+    expect(listPublicSessions(db, event.id)[0].slidesUrl).toBe('https://cloud.example/s/abc');
+    setSlidesPublic(db, actor, event.id, false);
+    expect(listPublicSessions(db, event.id)[0].slidesUrl).toBeNull();
   });
 
   it('werden bearbeitet und entfernt – Programmpunkte behalten, Zuordnung weg', () => {
@@ -141,7 +162,7 @@ describe('Programmpunkte', () => {
   });
 
   it('Formular: Zeiten in Wiener Ortszeit, Ende nach Beginn', () => {
-    const values = { title: { de: 'Keynote', en: '' }, startsAt: '2027-05-12T09:00', endsAt: '2027-05-12T09:45', location: ' Saal A ', tag: 'general' as const, stream: '2' as const, speakerId: '' };
+    const values = { title: { de: 'Keynote', en: '' }, startsAt: '2027-05-12T09:00', endsAt: '2027-05-12T09:45', location: ' Saal A ', tag: 'general' as const, stream: '2', streamTo: '4', speakerId: '' };
     expect(toSessionInput(sessionFormSchema.parse(values))).toEqual({
       title: { de: 'Keynote' },
       startsAt: '2027-05-12T07:00:00.000Z',
@@ -149,9 +170,80 @@ describe('Programmpunkte', () => {
       location: 'Saal A',
       tag: 'general',
       stream: 2,
+      streamTo: 4,
       speakerId: null,
     });
     const bad = sessionFormSchema.safeParse({ ...values, endsAt: '2027-05-12T08:00' });
     expect(bad.success).toBe(false);
+    const order = sessionFormSchema.safeParse({ ...values, streamTo: '1' });
+    expect(order.success).toBe(false);
+    expect(sessionFormSchema.safeParse({ ...values, streamTo: '11' }).success).toBe(false);
+  });
+});
+
+describe('Streams', () => {
+  const names = (db: Db, id: number) => listStreams(db, id).map((s) => s.name.de);
+  const ranges = (db: Db, id: number) => listSessions(db, id).map((s) => `${s.title.de}:${s.stream}-${s.streamTo}`);
+
+  it('neues Event hat einen Stream; anlegen bis höchstens 10, umbenennen', () => {
+    const { db, event } = setup();
+    expect(names(db, event.id)).toEqual(['Stream 1']);
+    expect(addStream(db, actor, event.id, { de: 'Saal B' })).toBe(2);
+    renameStream(db, actor, event.id, 1, { de: 'Saal A', en: 'Hall A' });
+    expect(names(db, event.id)).toEqual(['Saal A', 'Saal B']);
+    for (let i = 3; i <= 10; i++) addStream(db, actor, event.id, { de: `S${i}` });
+    expect(codeOf(() => addStream(db, actor, event.id, { de: 'zu viel' }))).toEqual({ code: 'CONFLICT', fields: { _form: 'tooManyStreams' } });
+  });
+
+  it('Keynote über alle Streams blockiert jeden Stream in dieser Zeit', () => {
+    const { db, event } = setup();
+    addStream(db, actor, event.id, { de: 'B' });
+    addStream(db, actor, event.id, { de: 'C' });
+    createSession(db, actor, event.id, session({ title: { de: 'Keynote' }, stream: 1, streamTo: 3 }));
+    expect(codeOf(() => createSession(db, actor, event.id, session({ stream: 3, streamTo: 3 })))).toEqual({
+      code: 'CONFLICT',
+      fields: { stream: 'streamOverlap' },
+    });
+    const later = { startsAt: '2027-05-12T08:00:00.000Z', endsAt: '2027-05-12T08:45:00.000Z' };
+    createSession(db, actor, event.id, session({ ...later, title: { de: 'B' }, stream: 2, streamTo: 2 }));
+    // Bereich 1–2 trifft den Punkt in Stream 2, Stream 3 allein ist frei
+    expect(codeOf(() => createSession(db, actor, event.id, session({ ...later, stream: 1, streamTo: 2 }))).code).toBe('CONFLICT');
+    createSession(db, actor, event.id, session({ ...later, title: { de: 'C' }, stream: 3, streamTo: 3 }));
+    expect(ranges(db, event.id)).toEqual(['Keynote:1-3', 'B:2-2', 'C:3-3']);
+    expect(listPublicSessions(db, event.id).map((s) => s.streamTo)).toEqual([3, 2, 3]);
+    // ein weiterer Stream: „alle Streams“ bleibt alle
+    addStream(db, actor, event.id, { de: 'D' });
+    expect(ranges(db, event.id)).toEqual(['Keynote:1-4', 'B:2-2', 'C:3-3']);
+  });
+
+  it('verschieben tauscht Namen und Programmpunkte; nicht bei halb überdeckten Bereichen', () => {
+    const { db, event } = setup();
+    renameStream(db, actor, event.id, 1, { de: 'A' });
+    addStream(db, actor, event.id, { de: 'B' });
+    addStream(db, actor, event.id, { de: 'C' });
+    createSession(db, actor, event.id, session({ title: { de: 'in A' }, stream: 1, streamTo: 1 }));
+    moveStream(db, actor, event.id, 1, 1);
+    expect(names(db, event.id)).toEqual(['B', 'A', 'C']);
+    expect(ranges(db, event.id)).toEqual(['in A:2-2']);
+    createSession(db, actor, event.id, session({ title: { de: 'Workshop' }, startsAt: '2027-05-12T09:00:00.000Z', endsAt: '2027-05-12T10:00:00.000Z', stream: 1, streamTo: 2 }));
+    expect(codeOf(() => moveStream(db, actor, event.id, 2, 1))).toEqual({ code: 'CONFLICT', fields: { _form: 'streamSpanned' } });
+    // Tausch innerhalb des Bereichs ist in Ordnung
+    moveStream(db, actor, event.id, 2, -1);
+    expect(names(db, event.id)).toEqual(['A', 'B', 'C']);
+  });
+
+  it('löschen: nicht mit eigenem Programmpunkt, Bereiche werden schmäler, rechts rückt nach', () => {
+    const { db, event } = setup();
+    addStream(db, actor, event.id, { de: 'B' });
+    addStream(db, actor, event.id, { de: 'C' });
+    createSession(db, actor, event.id, session({ title: { de: 'Keynote' }, stream: 1, streamTo: 3 }));
+    createSession(db, actor, event.id, session({ title: { de: 'in C' }, startsAt: '2027-05-12T08:00:00.000Z', endsAt: '2027-05-12T08:30:00.000Z', stream: 3, streamTo: 3 }));
+    expect(codeOf(() => deleteStream(db, actor, event.id, 3))).toEqual({ code: 'CONFLICT', fields: { _form: 'streamInUse' } });
+    deleteStream(db, actor, event.id, 2);
+    expect(names(db, event.id)).toEqual(['Stream 1', 'C']);
+    expect(ranges(db, event.id)).toEqual(['Keynote:1-2', 'in C:2-2']);
+    deleteStream(db, actor, event.id, 1);
+    expect(ranges(db, event.id)).toEqual(['Keynote:1-1', 'in C:1-1']);
+    expect(codeOf(() => deleteStream(db, actor, event.id, 1))).toEqual({ code: 'CONFLICT', fields: { _form: 'lastStream' } });
   });
 });

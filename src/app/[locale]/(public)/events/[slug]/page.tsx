@@ -3,14 +3,17 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ProgramGrid } from '@/components/program/program-grid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { initLocale } from '@/i18n/page';
 import { viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
 import { formatEuro } from '@/lib/money';
+import { cn } from '@/lib/utils';
 import { requestDb } from '@/server/db';
 import { isOnlinePaymentEnabled } from '@/server/payments/config';
+import { listStreams } from '@/server/services/program';
 import {
   getAvailability,
   getPublicEventBySlug,
@@ -41,6 +44,13 @@ export default async function PublicEventPage({ params }: Props) {
   const format = await getFormatter();
   const availability = getAvailability(db, event, isOnlinePaymentEnabled());
   const sessions = listPublicSessions(db, event.id);
+  const streams = listStreams(db, event.id);
+  const streamCols = streams.map((s) => ({ position: s.position, label: localized(s.name, locale) || `Stream ${s.position}` }));
+  const multi = streams.length > 1;
+  const streamLabel = (s: PublicSession) =>
+    s.stream === 1 && s.streamTo >= streams.length
+      ? null
+      : [...new Set([s.stream, s.streamTo])].map((n) => streamCols[n - 1]?.label ?? `Stream ${n}`).join('–');
   const speakers = listPublicSpeakers(db, event.id);
   const sponsors = listPublicSponsors(db, event.id);
   const description = localized(event.description, locale);
@@ -71,7 +81,7 @@ export default async function PublicEventPage({ params }: Props) {
             {[...days.entries()].map(([day, items]) => (
               <div key={day} className="space-y-2">
                 {days.size > 1 && <h3 className="font-semibold">{format.dateTime(new Date(items[0].startsAt), { dateStyle: 'full' })}</h3>}
-                <ul className="divide-y rounded-lg border">
+                <ul className={cn('divide-y rounded-lg border', multi && 'sm:hidden')}>
                   {items.map((s) => (
                     <li key={s.id} className="grid gap-1 p-3 sm:grid-cols-[8rem_1fr]">
                       <span className="text-sm text-muted-foreground tabular-nums">
@@ -79,13 +89,51 @@ export default async function PublicEventPage({ params }: Props) {
                       </span>
                       <span>
                         <span className="font-medium">{localized(s.title, locale)}</span>
-                        {(s.speakerName || s.location) && (
-                          <span className="block text-sm text-muted-foreground">{[s.speakerName, s.location].filter(Boolean).join(' · ')}</span>
+                        {(s.speakerName || s.location || multi) && (
+                          <span className="block text-sm text-muted-foreground">
+                            {[multi ? streamLabel(s) : null, s.speakerName, s.location].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                        {s.slidesUrl && (
+                          <a href={s.slidesUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline underline-offset-4">
+                            {t('slides')}
+                          </a>
                         )}
                       </span>
                     </li>
                   ))}
                 </ul>
+                {multi && (
+                  <ProgramGrid
+                    className="hidden sm:block"
+                    streams={streamCols}
+                    timeHeader={t('time')}
+                    timeLabel={time}
+                    items={items.map((s) => ({
+                      id: s.id,
+                      startsAt: s.startsAt,
+                      stream: s.stream,
+                      streamTo: s.streamTo,
+                      className: s.tag === 'break' ? 'bg-muted/50' : undefined,
+                      content: (
+                        <>
+                          <span className="block text-xs text-muted-foreground tabular-nums">
+                            {time(s.startsAt)}–{time(s.endsAt)}
+                          </span>
+                          <span className="block font-medium">{localized(s.title, locale)}</span>
+                          {(s.speakerName || s.location) && (
+                            <span className="block text-sm text-muted-foreground">{[s.speakerName, s.location].filter(Boolean).join(' · ')}</span>
+                          )}
+                          {s.slidesUrl && (
+                            <a href={s.slidesUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline underline-offset-4">
+                              {t('slides')}
+                            </a>
+                          )}
+                        </>
+                      ),
+                    }))}
+                  />
+                )}
               </div>
             ))}
           </section>
@@ -166,6 +214,7 @@ export default async function PublicEventPage({ params }: Props) {
               <p className="text-sm">{t('opensAt', { date: format.dateTime(new Date(event.registrationOpensAt), { dateStyle: 'long', timeStyle: 'short' }) })}</p>
             )}
             {availability.state === 'closed' && <p className="text-sm">{t('closed')}</p>}
+            {availability.state === 'paused' && <p className="text-sm">{t('paused')}</p>}
             {availability.state === 'unavailable' && <p className="text-sm">{t('unavailable')}</p>}
             {availability.state === 'open' && event.registrationClosesAt && (
               <p className="text-xs text-muted-foreground">

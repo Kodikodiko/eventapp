@@ -48,4 +48,13 @@ describe('Gruppieren der Teilnehmerliste', () => {
     expect(groupRows(rows, 'status').map((g) => g.key)).toEqual(['confirmed', 'waitlisted', 'cancelled']);
     expect(groupRows(rows, 'payment').map((g) => g.key)).toEqual(['open', 'paid']);
   });
+
+  it('zählt Stornierte getrennt (bezahlt, aber storniert)', () => {
+    const rows = [
+      row({ id: 1, paymentStatus: 'paid', priceCents: 5000 }),
+      row({ id: 2, paymentStatus: 'paid', status: 'cancelled', priceCents: 7000 }),
+      row({ id: 3, paymentStatus: 'paid', status: 'cancelled', priceCents: 7000 }),
+    ];
+    expect(groupRows(rows, 'payment')[0]).toMatchObject({ key: 'paid', live: 1, cancelled: 2, paid: 1, sumCents: 5000 });
+  });
 });

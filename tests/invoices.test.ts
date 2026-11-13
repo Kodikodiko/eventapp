@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ServiceError } from '@/lib/action-result';
 import type { PublicRegistrationInput } from '@/lib/validation/public-registration';
 import { openDatabase, type Db } from '@/server/db/core';
-import { auditLog, invoices, paymentReminders, registrations, sponsors } from '@/server/db/schema';
+import { auditLog, events, invoices, paymentReminders, registrations, sponsors } from '@/server/db/schema';
 import { buildInvoiceDocument } from '@/server/invoices/document';
 import { renderInvoicePdf } from '@/server/invoices/pdf';
 import { invoicePdf } from '@/server/invoices/storage';
@@ -169,6 +169,14 @@ describe('Rechnung zu einer Anmeldung', () => {
     expect(inv.organizer.smallBusinessNote).toBeNull();
   });
 
+  it('USt-Modus des Events übersteuert den globalen', () => {
+    const { db, event, register } = setup({ organizer: { vatId: 'ATU12345678' } });
+    db.update(events).set({ vatMode: 'standard' }).where(eq(events.id, event.id)).run();
+    const inv = issueRegistrationInvoice(db, actor, register('a@example.org'), NOW);
+    expect(inv).toMatchObject({ vatMode: 'standard', netCents: 16667, vatCents: 3333 });
+    expect(inv.organizer.smallBusinessNote).toBeNull();
+  });
+
   it('Regeln: keine doppelte Rechnung, nicht für Warteliste, Veranstalterdaten nötig', () => {
     const { db, register } = setup();
     const id = register('a@example.org');
@@ -227,6 +235,26 @@ describe('Sponsor-Rechnung', () => {
     expect(db.select().from(sponsors).where(eq(sponsors.id, sponsorId)).get()!.paymentStatus).toBe('overdue');
     cancelInvoice(db, actor, inv.id, 'Paket geändert', days(15));
     expect(db.select().from(sponsors).where(eq(sponsors.id, sponsorId)).get()!.paymentStatus).toBe('open');
+  });
+
+  it('ohne Paket: eigener Betrag und Steuersatz', () => {
+    const { db, event } = setup({ organizer: { vatMode: 'standard', vatId: 'ATU12345678' } });
+    const contact = { firstName: 'Max', lastName: 'Muster', email: 'max@fix.example', phone: null, function: null, locale: 'de' as const };
+    const sponsorId = createSponsor(db, actor, event.id, {
+      companyName: 'Fix GmbH',
+      packageId: null,
+      customPriceCents: 120000,
+      customVatRateBp: 2000,
+      discountCents: 0,
+      dueOn: null,
+      paymentStatus: 'open',
+      billingAddress: 'Gasse 1\n1010 Wien',
+      vatId: null,
+      notes: null,
+      contacts: [contact],
+    });
+    const inv = issueSponsorInvoice(db, actor, sponsorId, NOW);
+    expect(inv.items.map((i) => [i.description, i.grossCents, i.netCents, i.vatCents])).toEqual([['Sponsoring\nSummit', 120000, 100000, 20000]]);
   });
 
   it('ohne Rechnungsadresse nicht möglich', () => {

@@ -58,7 +58,13 @@ export default async function RegisterPage({ params }: Props) {
           paymentTermDays={organizer.invoicePaymentTermDays}
         />
       ) : (
-        <p className="rounded-lg border p-6">{availability.state === 'notOpenYet' ? t('notOpenYet') : availability.state === 'unavailable' ? t('unavailable') : t('closed')}</p>
+        <p className="rounded-lg border p-6">{availability.state === 'notOpenYet'
+            ? t('notOpenYet')
+            : availability.state === 'paused'
+              ? t('paused')
+              : availability.state === 'unavailable'
+                ? t('unavailable')
+                : t('closed')}</p>
       )}
     </div>
   );

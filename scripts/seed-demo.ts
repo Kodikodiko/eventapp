@@ -230,13 +230,19 @@ db.transaction((tx) => {
     .all()[0];
 
   const at = (hhmm: string) => iso(`2027-05-12T${hhmm}:00+02:00`);
+  tx.insert(s.eventStreams)
+    .values([
+      { eventId: summit.id, position: 1, name: { de: 'Saal A', en: 'Hall A' } },
+      { eventId: summit.id, position: 2, name: { de: 'Saal B', en: 'Hall B' } },
+    ])
+    .run();
   tx.insert(s.sessions)
     .values([
-      { eventId: summit.id, title: { de: 'Registrierung & Frühstück', en: 'Registration & breakfast' }, startsAt: at('08:00'), endsAt: at('09:00'), location: 'Foyer', tag: 'general', stream: 1 },
-      { eventId: summit.id, title: { de: 'Eröffnungs-Keynote', en: 'Opening keynote' }, startsAt: at('09:00'), endsAt: at('09:45'), location: 'Saal A', tag: 'general', stream: 1, speakerId: speakerIds[0] },
+      { eventId: summit.id, title: { de: 'Registrierung & Frühstück', en: 'Registration & breakfast' }, startsAt: at('08:00'), endsAt: at('09:00'), location: 'Foyer', tag: 'general', stream: 1, streamTo: 2 },
+      { eventId: summit.id, title: { de: 'Eröffnungs-Keynote', en: 'Opening keynote' }, startsAt: at('09:00'), endsAt: at('09:45'), location: 'Saal A', tag: 'general', stream: 1, streamTo: 2, speakerId: speakerIds[0] },
       { eventId: summit.id, title: { de: 'Agile Planung in der Praxis', en: 'Agile planning in practice' }, startsAt: at('10:00'), endsAt: at('10:45'), location: 'Raum 1', tag: 'talk', stream: 1, speakerId: speakerIds[1] },
       { eventId: summit.id, title: { de: 'Risikomanagement kompakt', en: 'Risk management in brief' }, startsAt: at('10:00'), endsAt: at('10:45'), location: 'Raum 2', tag: 'talk', stream: 2, speakerId: felix.id },
-      { eventId: summit.id, title: { de: 'Mittagspause', en: 'Lunch break' }, startsAt: at('12:00'), endsAt: at('13:00'), location: 'Foyer', tag: 'break', stream: 1 },
+      { eventId: summit.id, title: { de: 'Mittagspause', en: 'Lunch break' }, startsAt: at('12:00'), endsAt: at('13:00'), location: 'Foyer', tag: 'break', stream: 1, streamTo: 2 },
       { eventId: summit.id, title: { de: 'Workshop: Stakeholder-Mapping', en: 'Workshop: stakeholder mapping' }, startsAt: at('13:00'), endsAt: at('14:30'), location: 'Raum 3', tag: 'workshop', stream: 1 },
     ])
     .run();

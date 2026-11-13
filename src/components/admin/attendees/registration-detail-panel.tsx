@@ -19,6 +19,8 @@ import { paymentTone, Pill, statusTone, type PillTone } from './status-pill';
 
 type Props = {
   row: RegistrationListRow;
+  /** Download der Teilnahmebestätigung (PDF) */
+  certificateHref?: string;
   roleLabel: (key: string) => string;
   readOnly: boolean;
   onAction: (dialog: RowDialog) => void;
@@ -51,7 +53,7 @@ function TagButton({ label, onClick, children }: { label: string; onClick?: () =
 }
 
 /** Detailpanel einer Anmeldung: Stammdaten, Belege, Verlauf und die wichtigsten Aktionen. */
-export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, onClose, onFilter, version, headingId }: Props) {
+export function RegistrationDetailPanel({ row, certificateHref, roleLabel, readOnly, onAction, onClose, onFilter, version, headingId }: Props) {
   const t = useTranslations('attendees');
   const tInv = useTranslations('invoices');
   const locale = useLocale() as Locale;
@@ -137,6 +139,7 @@ export function RegistrationDetailPanel({ row, roleLabel, readOnly, onAction, on
             <RegistrationRowMenu
               row={row}
               onAction={onAction}
+              certificateHref={certificateHref}
               exclude={['edit', ...(primary?.dialog ? [primary.dialog] : [])]}
               trigger={
                 <Button size="sm" variant="outline" aria-label={t('detail.more')}>

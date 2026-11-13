@@ -32,9 +32,16 @@ const stateVariant: Record<InvoiceState, BadgeProps['variant']> = {
   credit_note: 'outline',
 };
 
-export type InvoiceStateFilter = 'all' | 'open' | 'overdue';
+export type InvoiceStateFilter = 'all' | 'open' | 'overdue' | 'paid';
 type Props = { rows: InvoiceListRow[]; organizerIncomplete: boolean; mailToFile: boolean; initialQuery?: string; initialState?: InvoiceStateFilter };
 type DialogState = { kind: 'payment' | 'cancel' | 'status' | 'refund'; row: InvoiceListRow } | null;
+
+/** Filter „Alle / Offen / Überfällig / Bezahlt“; „Offen“ schließt überfällige Rechnungen ein. */
+function matchesState(r: InvoiceListRow, f: InvoiceStateFilter): boolean {
+  if (f === 'all') return true;
+  if (f === 'open') return r.state === 'open' || r.state === 'overdue';
+  return r.state === f;
+}
 
 /** Heutiges Datum in Wien als YYYY-MM-DD (Vorbelegung für den Zahlungseingang). */
 function todayVienna(): string {
@@ -55,7 +62,7 @@ export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, i
   const needle = query.trim().toLowerCase();
   const rows = allRows.filter(
     (r) =>
-      (stateFilter === 'all' || (stateFilter === 'overdue' ? r.state === 'overdue' : r.state === 'open' || r.state === 'overdue')) &&
+      matchesState(r, stateFilter) &&
       (!needle || `${r.number} ${r.recipientName} ${r.recipientCompany ?? ''}`.toLowerCase().includes(needle))
   );
 
@@ -97,7 +104,7 @@ export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, i
           className="h-9 w-64 bg-card"
         />
         <div role="group" aria-label={t('stateFilter')} className="flex rounded-lg border bg-card p-0.5">
-          {(['all', 'open', 'overdue'] as const).map((s) => (
+          {(['all', 'open', 'overdue', 'paid'] as const).map((s) => (
             <button
               key={s}
               type="button"

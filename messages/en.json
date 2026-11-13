@@ -92,7 +92,9 @@
     },
     "expenses": "Expenses",
     "costGroups": "Cost groups",
-    "sectionFinance": "Finance"
+    "sectionFinance": "Finance",
+    "pnl": "Profit and loss",
+    "certificate": "Certificate of attendance"
   },
   "security": {
     "title": "Two-factor authentication",
@@ -123,6 +125,7 @@
     "waitlisted": "{count} on the waitlist"
   },
   "validation": {
+    "httpsUrl": "Please enter an address starting with https://.",
     "invalid": "Invalid input.",
     "required": "Required.",
     "tooLong": "Too long.",
@@ -190,7 +193,15 @@
     "expensePaid": "Paid expenses cannot be deleted.",
     "groupHasSpeakerCosts": "Some expenses are assigned to a speaker – speaker assignment cannot be turned off.",
     "alreadyTemplate": "This cost group already comes from a template.",
-    "templateNameTaken": "A template with this name already exists."
+    "templateNameTaken": "A template with this name already exists.",
+    "streamOrder": "“to” must not be before “from”.",
+    "tooManyStreams": "At most 10 streams are possible.",
+    "streamSpanned": "A session extends beyond one of the two streams. Please adjust the session first.",
+    "lastStream": "The last stream cannot be deleted.",
+    "streamInUse": "There are still sessions in this stream. Please move or delete them first.",
+    "imageType": "Please choose a PNG or JPG image.",
+    "imageTooLarge": "The image must not exceed 5 MB.",
+    "imageUnreadable": "The image cannot be processed. Please save it again as PNG or JPG."
   },
   "forms": {
     "german": "German",
@@ -227,8 +238,13 @@
     "pricesHint": "Prices are final (gross) prices in euros. 0 = free.",
     "capacity": "Seats",
     "capacityHint": "Further registrations go to the waitlist.",
+    "vatMode": "VAT",
+    "vatModeGlobal": "As in settings – {mode}",
+    "vatSmallBusiness": "Small business (no VAT)",
+    "vatStandard": "Standard (VAT by rate)",
+    "vatModeHint": "Applies to invoices of this event issued from now on.",
     "vatRate": "Ticket VAT rate",
-    "vatRateHint": "Only applies with standard VAT (settings).",
+    "vatRateHint": "Only applies with standard VAT.",
     "priceNormal": "Normal price (€)",
     "priceMember": "Member price (€)",
     "payment": "Payment methods",
@@ -251,6 +267,14 @@
     "saved": "Saved"
   },
   "eventActions": {
+    "pause": "Pause registration",
+    "resume": "Resume registration",
+    "pauseTitle": "Pause registration?",
+    "pauseHint": "New registrations stop immediately, regardless of the opening and closing dates. Reservations and payments already started will complete.",
+    "resumeTitle": "Resume registration?",
+    "resumeHint": "Registration is possible again if it is open according to the dates.",
+    "paused": "Registration paused",
+    "resumed": "Registration resumed",
     "copy": "Copy",
     "copyTitle": "Copy event as a template",
     "copyHint": "Settings, prices, cancellation terms, terms of service and sponsor packages are copied – no registrations, speakers, sponsors or sessions. Please adjust the dates afterwards.",
@@ -279,10 +303,12 @@
     "sponsors": "Sponsors",
     "invoices": "Invoices",
     "refunds": "Refunds",
-    "expenses": "Expenses"
+    "expenses": "Expenses",
+    "pnl": "Profit and loss"
   },
   "registrationState": {
     "archived": "Archived",
+    "paused": "Registration paused",
     "notOpenYet": "Registration not open yet",
     "open": "Registration open",
     "closed": "Registration closed"
@@ -346,6 +372,8 @@
     "timingCloses": "registration closes {date}"
   },
   "terms": {
+    "loadGlobal": "Load current global terms as template",
+    "eventHint": "New events take a copy of the global terms valid when they are created. Later changes to the global terms do not affect this event; change them here.",
     "title": "Terms of service",
     "current": "Currently valid: version {version} of {date}",
     "none": "No terms of service yet.",
@@ -380,6 +408,9 @@
     "smallBusinessNote": "Note on invoices",
     "save": "Save",
     "saved": "Organizer details saved",
+    "termsTitle": "Terms and conditions (global)",
+    "termsNone": "No global terms published yet.",
+    "termsHint": "Template for new events: an event takes a copy of the version valid when it is created. Existing events do not change; edit their terms in the event settings.",
     "privacyTitle": "Privacy notice",
     "privacyNone": "No privacy notice published yet.",
     "privacyHint": "Linked on the registration page, in the attendee portal and in emails (specification 7.1)."
@@ -679,13 +710,17 @@
       "status": "by status",
       "payment": "by payment"
     },
-    "groupStats": "{count, plural, one {# person} other {# people}} · {paid} paid · {open} open · total {sum}",
+    "groupStats": "{count, plural, one {# person} other {# people}}{cancelled, plural, =0 {} other { · # cancelled}} · {paid} paid · {open} open · total {sum}",
+    "groupStatsPayment": "{count, plural, one {# person} other {# people}}{cancelled, plural, =0 {} other { · # cancelled}} · total {sum}",
     "groupNoCompany": "No company",
     "groupNoRole": "No role",
     "groupAlsoIn": "also in: {roles}",
     "groupRoleHint": "People with several roles appear in each of their role groups (note “also in …”).",
     "groupExpandAll": "Expand all",
-    "groupCollapseAll": "Collapse all"
+    "groupCollapseAll": "Collapse all",
+    "bulkCertificate": "Certificate ({count})",
+    "bulkCertificateHint": "PDF with one page per ticked person, in their language",
+    "certificate": "Certificate of attendance (PDF)"
   },
   "registrationForm": {
     "createTitle": "Add registration",
@@ -770,6 +805,13 @@
     }
   },
   "speakers": {
+    "slidesUrl": "Link to slides",
+    "slidesUrlHint": "Sharing link from SharePoint or Nextcloud (https://…). It must be shared externally to be published.",
+    "openSlides": "Open slides",
+    "slidesPublic": "Publish slides",
+    "slidesPublicHint": "Shows the links in the public programme and the attendee portal.",
+    "slidesPublished": "Slides are now public",
+    "slidesUnpublished": "Slides are no longer public",
     "title": "Speakers",
     "add": "Add speaker",
     "addTitle": "Add speaker",
@@ -835,14 +877,30 @@
     "speaker": "Speaker",
     "noSpeaker": "– no speaker –",
     "tagLabel": "Type",
-    "stream": "Stream",
+    "stream": "Stream (from)",
     "streamHint": "Parallel sessions go in different streams.",
     "tag": {
       "general": "General",
       "talk": "Talk",
       "workshop": "Workshop",
       "break": "Break"
-    }
+    },
+    "streamTo": "to",
+    "streamToHint": "For a keynote across all streams, choose “All streams”.",
+    "allStreams": "All streams",
+    "streamsTitle": "Streams",
+    "streamsHint": "Up to {max} parallel streams, e.g. rooms or tracks.",
+    "addStream": "Add stream",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "renameStream": "Rename stream",
+    "deleteStream": "Delete stream",
+    "deleteStreamTitle": "Delete stream “{name}”?",
+    "deleteStreamHint": "Only possible if no session lies in this stream alone. Sessions across several streams get narrower; streams to the right move up.",
+    "streamDeleted": "Stream deleted",
+    "streamMoved": "Order changed",
+    "streamSaved": "Stream saved",
+    "streamName": "Name"
   },
   "sponsors": {
     "title": "Sponsors",
@@ -892,6 +950,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "noPackage": "– no package –",
+    "customPrice": "Amount (gross, €)",
+    "customPriceHint": "Agreed amount without a package, e.g. a fixed sum.",
     "discount": "Discount (€)",
     "paymentHint": "Set automatically when the invoice is sent, when payments are recorded and when it becomes overdue.",
     "billingAddress": "Billing address",
@@ -972,7 +1032,8 @@
     "stateFilterOption": {
       "all": "All",
       "open": "Open",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "paid": "Paid"
     },
     "noMatches": "No documents match the search.",
     "changeStatus": "Change payment status",
@@ -1137,6 +1198,7 @@
     }
   },
   "public": {
+    "slides": "Slides",
     "skipToContent": "Skip to content",
     "navLabel": "Main navigation",
     "events": "Events",
@@ -1162,6 +1224,7 @@
     "registerNow": "Register now",
     "opensAt": "Registration opens on {date}.",
     "closed": "Registration is closed.",
+    "paused": "Registration is currently paused. Please try again later.",
     "unavailable": "Registration is currently not possible. Please try again later.",
     "notOpenYet": "Registration is not open yet.",
     "closesAt": "Registration closes: {date}",
@@ -1172,7 +1235,8 @@
     "termsTitle": "Terms and conditions",
     "imprintOwner": "Owner and organizer",
     "vatId": "VAT ID",
-    "myRegistrations": "My registrations"
+    "myRegistrations": "My registrations",
+    "time": "Time"
   },
   "publicForm": {
     "waitlistTitle": "This event is sold out",
@@ -1297,6 +1361,7 @@
     "backToEvent": "← Back to the event"
   },
   "portal": {
+    "slidesLink": "Programme and slides",
     "title": "My registrations",
     "loginTitle": "My registrations",
     "loginIntro": "Enter the e-mail address you registered with. We will send you a sign-in link – no password needed.",
@@ -1456,7 +1521,7 @@
     "colTotal": "Total",
     "fromTemplate": "from template",
     "ownGroup": "event only",
-    "speakerBadge": "Speaker assignment",
+    "speakerBadge": "Make assignable to a speaker",
     "inactive": "deactivated",
     "deactivate": "Deactivate",
     "activate": "Activate",
@@ -1471,7 +1536,7 @@
     "deactivateHint": "Existing expenses keep the group. It can no longer be chosen for new expenses. You can activate it again at any time.",
     "groupActionsFor": "Actions for cost group {name}",
     "name": "Name",
-    "speakerLink": "Speaker assignment",
+    "speakerLink": "Make assignable to a speaker",
     "speakerLinkHint": "Expenses in this group can be assigned to a speaker of the event.",
     "expensesTitle": "Expenses",
     "addExpense": "Record expense",
@@ -1525,7 +1590,7 @@
     "edit": "Edit",
     "editTitle": "Edit template",
     "colName": "Name",
-    "colSpeakerLink": "Speaker assignment",
+    "colSpeakerLink": "Make assignable to a speaker",
     "colEvents": "Used in",
     "colStatus": "Status",
     "colActions": "Actions",
@@ -1542,5 +1607,139 @@
     "activated": "Template activated",
     "empty": "No templates yet.",
     "actionsFor": "Actions for {name}"
+  },
+  "pnl": {
+    "title": "Profit and loss",
+    "asOf": "As of {date}",
+    "viewLabel": "View",
+    "viewOverview": "Overview",
+    "viewTable": "Table",
+    "now": "Current result",
+    "income": "Income",
+    "expenses": "Expenses",
+    "received": "received",
+    "paid": "paid",
+    "stillOpen": "still open {amount}",
+    "incomeBy": "Where the money comes from",
+    "expensesBy": "What it is spent on",
+    "noIncome": "No income yet.",
+    "noExpenses": "No expenses recorded yet.",
+    "tickets": "Tickets",
+    "sponsors": "Sponsors",
+    "openTickets": "{count, plural, one {# registration not yet paid} other {# registrations not yet paid}}",
+    "more": "{count, plural, one {# more item} other {# more items}} in the table",
+    "trend": "Result over time",
+    "noTrend": "No payments yet, so there is no trend to show.",
+    "trendAria": "Line chart: cumulative result per week",
+    "reg": {
+      "title": "Registrations",
+      "total": "{count, plural, =0 {No registrations yet} one {# registration} other {# registrations}}",
+      "same": "the same as {name} at this point",
+      "more": "{count} more than {name} at this point",
+      "fewer": "{count} fewer than {name} at this point",
+      "none": "The trend appears here as soon as registrations come in.",
+      "unit": "Time unit",
+      "week": "Weeks",
+      "month": "Months",
+      "weekNote": "New registrations per calendar week, aligned by distance to the event.",
+      "monthNote": "New registrations per month, aligned by distance to the event.",
+      "aria": "Line chart: new registrations over time",
+      "chooseCompare": "Choose an event to compare",
+      "kw": "W{week}",
+      "kwFrom": "Week {week} (from {date})"
+    },
+    "comingIn": "Still to come in",
+    "goingOut": "Still to go out",
+    "nothingOpenIn": "No open income.",
+    "nothingOpenOut": "No open expenses.",
+    "togglePlan": "Plan and deviation",
+    "toggleCompare": "Compare with other events",
+    "excel": "Excel",
+    "print": "Print / PDF",
+    "variantLabel": "Variant",
+    "variant": {
+      "plan": "Plan",
+      "min": "Minimum",
+      "best": "Best case"
+    },
+    "variantEmpty": "empty",
+    "editPlan": "Enter plan",
+    "viewPlan": "View plan",
+    "noPlan": "No plan has been entered for this variant yet.",
+    "compareWith": "Comparison {n}",
+    "compareNone": "no comparison",
+    "noCandidates": "There is no other event to compare with yet.",
+    "col": {
+      "item": "Item",
+      "count": "Count",
+      "actual": "Actual",
+      "open": "Open",
+      "forecast": "Forecast",
+      "deviation": "Deviation",
+      "compareHint": "Actual figures of this event"
+    },
+    "ticket": {
+      "normal": "Regular price",
+      "member": "Members",
+      "special": "Special price",
+      "free": "Free tickets",
+      "refunds": "Refunds and credit notes"
+    },
+    "row": {
+      "income": "Income",
+      "expenses": "Expenses",
+      "tickets": "Tickets",
+      "sponsors": "Sponsors",
+      "sumTickets": "Total tickets",
+      "sumSponsors": "Total sponsors",
+      "sumIncome": "Total income",
+      "sumExpenses": "Total expenses",
+      "result": "Result",
+      "otherSponsors": "Other sponsors"
+    },
+    "compareOnly": "comparison only",
+    "legend": "Actual = money that has actually moved. Open = not yet paid. Forecast = actual + open. Deviation = forecast − plan. All amounts in euros, gross.",
+    "planDialog": {
+      "title": "Enter plan",
+      "intro": "Expected tickets, sponsor income and a budget per cost group. Each variant is saved separately.",
+      "saved": "{variant} saved",
+      "copyFrom": "Copy actual figures from {name}",
+      "ticketType": "Ticket",
+      "count": "Count",
+      "price": "Avg. price in €",
+      "priceHint": "Without a price, the event's ticket price applies. Free tickets only count as a number.",
+      "reference": "{name}: {amount}",
+      "budgets": "Budget per cost group",
+      "noGroups": "This event has no cost groups yet. They are created under “Expenses”.",
+      "group": "Cost group",
+      "budget": "Budget in €",
+      "close": "Close",
+      "save": "Save {variant}"
+    },
+    "export": {
+      "sheet": "Profit and loss",
+      "fileName": "profit-and-loss",
+      "status": "Status"
+    }
+  },
+  "certificate": {
+    "title": "Certificate of attendance",
+    "intro": "Template for the certificate of attendance as a PDF (A4 landscape). Date, time, location and event name come from the event settings. It is issued from the attendee list: tick the people and choose “Certificate”.",
+    "image": "Background image",
+    "imageCurrent": "Current: {name}",
+    "imageRemove": "Remove image",
+    "imageHint": "PNG or JPG, max. 5 MB, ideally A4 landscape (e.g. 3508 × 2480 pixels). The image fills the whole page; logos and signatures can be part of it. A new image replaces the previous one.",
+    "heading": "Heading",
+    "body": "Text",
+    "placeholders": "Placeholders: '{name}' (person’s name), '{event}' (event name), '{datum}' (event date), '{uhrzeit}' (start–end, e.g. 08:00–18:00), '{ort}' (location). A line that contains only '{name}' is set large and bold, a line with only '{event}' in bold.",
+    "textColor": "Text colour",
+    "textColorHint": "To match the background, e.g. #1a1a1a or #ffffff.",
+    "save": "Save",
+    "saved": "Certificate saved",
+    "previewDe": "Preview German",
+    "previewEn": "Preview English",
+    "previewUnsaved": "The preview shows the saved version – please save first.",
+    "usage": "The preview uses a sample name.",
+    "templateTitle": "Template"
   }
 }

@@ -14,6 +14,12 @@ export const speakerFormSchema = z.object({
   locale: z.enum(['de', 'en'], 'required'),
   proposalStatus: z.enum(['pending', 'confirmed', 'rejected'], 'required'),
   slidesStatus: z.enum(['missing', 'uploaded', 'review'], 'required'),
+  /** Freigabelink zu den Folien (SharePoint, Nextcloud …), leer = keiner */
+  slidesUrl: z
+    .string()
+    .trim()
+    .max(1000, 'tooLong')
+    .refine((v) => v === '' || /^https:\/\/[^\s]+$/i.test(v), 'httpsUrl'),
 });
 export type SpeakerFormValues = z.infer<typeof speakerFormSchema>;
 
@@ -25,15 +31,17 @@ export type SpeakerInput = {
   locale: 'de' | 'en';
   proposalStatus: 'pending' | 'confirmed' | 'rejected';
   slidesStatus: 'missing' | 'uploaded' | 'review';
+  slidesUrl?: string | null;
 };
 
 export function toSpeakerInput(v: SpeakerFormValues): SpeakerInput {
-  return { ...v, email: v.email.trim().toLowerCase(), company: v.company.trim() || null };
+  return { ...v, email: v.email.trim().toLowerCase(), company: v.company.trim() || null, slidesUrl: v.slidesUrl.trim() || null };
 }
 
 const localDateTime = z.string().refine((v) => viennaInputToUtc(v) !== null, 'dateTime');
 
 export const SESSION_TAG_KEYS = ['general', 'talk', 'workshop', 'break'] as const;
+const STREAM_PATTERN = /^(10|[1-9])$/;
 
 export const sessionFormSchema = z
   .object({
@@ -42,13 +50,16 @@ export const sessionFormSchema = z
     endsAt: localDateTime,
     location: z.string().trim().max(100, 'tooLong'),
     tag: z.enum(SESSION_TAG_KEYS, 'required'),
-    stream: z.enum(['1', '2', '3', '4'], 'required'),
+    /** erster und letzter Stream (Positionen 1–10); gleich = nur ein Stream */
+    stream: z.string().regex(STREAM_PATTERN, 'required'),
+    streamTo: z.string().regex(STREAM_PATTERN, 'required'),
     speakerId: z.string(),
   })
   .superRefine((v, ctx) => {
     const s = viennaInputToUtc(v.startsAt);
     const e = viennaInputToUtc(v.endsAt);
     if (s && e && e <= s) ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'endBeforeStart' });
+    if (Number(v.streamTo) < Number(v.stream)) ctx.addIssue({ code: 'custom', path: ['streamTo'], message: 'streamOrder' });
   });
 export type SessionFormValues = z.infer<typeof sessionFormSchema>;
 
@@ -59,6 +70,8 @@ export type SessionInput = {
   location: string;
   tag: (typeof SESSION_TAG_KEYS)[number];
   stream: number;
+  /** letzter Stream; fehlt = nur `stream` */
+  streamTo?: number;
   speakerId: number | null;
 };
 
@@ -70,6 +83,10 @@ export function toSessionInput(v: SessionFormValues): SessionInput {
     location: v.location.trim(),
     tag: v.tag,
     stream: Number(v.stream),
+    streamTo: Number(v.streamTo),
     speakerId: v.speakerId ? Number(v.speakerId) : null,
   };
 }
+
+export const streamFormSchema = z.object({ name: localizedTextSchema(60) });
+export type StreamFormValues = z.infer<typeof streamFormSchema>;

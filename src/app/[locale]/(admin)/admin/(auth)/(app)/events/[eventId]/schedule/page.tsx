@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { ScheduleView } from '@/components/admin/program/schedule-view';
 import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
-import { listSessions, listSpeakers } from '@/server/services/program';
+import { listSessions, listSpeakers, listStreams } from '@/server/services/program';
 
 export default async function SchedulePage({ params }: EventParams) {
   await initAdminPage(params);
@@ -17,6 +17,7 @@ export default async function SchedulePage({ params }: EventParams) {
         eventStartsAt={event.startsAt}
         sessions={listSessions(db, event.id)}
         speakers={speakers}
+        streams={listStreams(db, event.id)}
         readOnly={Boolean(event.archivedAt)}
       />
     </div>

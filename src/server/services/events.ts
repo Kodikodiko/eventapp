@@ -10,6 +10,9 @@ import type { Db } from '@/server/db/core';
 import { cancellationRules, events, legalDocuments, registrations, sponsorPackages, waitlistOffers } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { copyEventCostGroups, instantiateTemplates } from './expenses';
+import { latestGlobalTerms } from './legal';
+import { copyCertificate } from './certificates';
+import { copyStreams, createDefaultStream } from './program';
 
 export type EventRow = typeof events.$inferSelect;
 export type CancellationRuleRow = typeof cancellationRules.$inferSelect;
@@ -96,21 +99,41 @@ export function getEventStats(db: Db | Tx, event: EventRow, now = new Date()): E
   };
 }
 
-export type RegistrationState = 'archived' | 'notOpenYet' | 'open' | 'closed';
+export type RegistrationState = 'archived' | 'paused' | 'notOpenYet' | 'open' | 'closed';
 
 /**
  * Ob die öffentliche Anmeldung gerade möglich ist. Ohne Beginn gilt „sofort offen“,
- * ohne Ende schließt die Anmeldung mit Beginn des Events.
+ * ohne Ende schließt die Anmeldung mit Beginn des Events. „Pausiert“ (Schalter) gilt, solange die Anmeldung
+ * nach den Daten nicht ohnehin geschlossen ist.
  */
 export function registrationState(
-  event: Pick<EventRow, 'archivedAt' | 'registrationOpensAt' | 'registrationClosesAt' | 'startsAt'>,
+  event: Pick<EventRow, 'archivedAt' | 'registrationOpensAt' | 'registrationClosesAt' | 'startsAt'> & { registrationPaused?: boolean },
   now = new Date()
 ): RegistrationState {
   if (event.archivedAt) return 'archived';
   const iso = now.toISOString();
-  if (event.registrationOpensAt && iso < event.registrationOpensAt) return 'notOpenYet';
   const closes = event.registrationClosesAt ?? event.startsAt;
-  return iso < closes ? 'open' : 'closed';
+  if (iso >= closes) return 'closed';
+  if (event.registrationPaused) return 'paused';
+  if (event.registrationOpensAt && iso < event.registrationOpensAt) return 'notOpenYet';
+  return 'open';
+}
+
+/** Anmeldung von Hand anhalten bzw. fortsetzen. Begonnene Reservierungen und Zahlungen laufen weiter. */
+export function setRegistrationPaused(db: Db, actor: Actor, id: number, paused: boolean): EventRow {
+  return db.transaction((tx) => {
+    const before = loadEditable(tx, id);
+    if (before.registrationPaused === paused) return before;
+    const [row] = tx.update(events).set({ registrationPaused: paused }).where(eq(events.id, id)).returning().all();
+    writeAudit(tx, actor, {
+      action: paused ? 'event.registration_paused' : 'event.registration_resumed',
+      entity: 'event',
+      entityId: id,
+      eventId: id,
+      summary: paused ? 'Anmeldung pausiert' : 'Anmeldung fortgesetzt',
+    });
+    return row;
+  });
 }
 
 function assertSlugFree(tx: Tx | Db, slug: string, exceptId?: number): void {
@@ -133,6 +156,18 @@ export function createEvent(db: Db, actor: Actor, input: EventInput): EventRow {
     assertSlugFree(tx, input.slug);
     const [row] = tx.insert(events).values(eventValues(input)).returning().all();
     replaceRules(tx, row.id, input.cancellationRules);
+    createDefaultStream(tx, row.id);
+    // AGB: Kopie der aktuellen globalen AGB als eigene Version 1; spätere globale Änderungen wirken hier nicht
+    const globalTerms = latestGlobalTerms(tx);
+    if (globalTerms) {
+      const [doc] = tx
+        .insert(legalDocuments)
+        .values({ kind: 'terms', eventId: row.id, version: 1, content: globalTerms.content, validFrom: new Date().toISOString() })
+        .returning()
+        .all();
+      row.termsDocumentId = doc.id;
+      tx.update(events).set({ termsDocumentId: doc.id }).where(eq(events.id, row.id)).run();
+    }
     instantiateTemplates(tx, row.id);
     writeAudit(tx, actor, { action: 'event.created', entity: 'event', entityId: row.id, eventId: row.id, summary: `Event ${row.slug} angelegt` });
     return row;
@@ -168,7 +203,7 @@ export function updateEvent(db: Db, actor: Actor, id: number, input: EventInput)
 
 /**
  * Kopiert ein Event als Vorlage für die nächste Ausgabe: Einstellungen, Stornobedingungen,
- * aktuelle AGB (als Version 1), Sponsorpakete und aktive Kostengruppen. Anmeldungen, Speaker, Sponsoren, Programm
+ * aktuelle AGB (als Version 1), Sponsorpakete, Streams und aktive Kostengruppen. Anmeldungen, Speaker, Sponsoren, Programm
  * und Ausgaben nicht.
  */
 export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug: string; name: LocalizedText }): EventRow {
@@ -179,7 +214,7 @@ export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug
     const { id: _id, createdAt: _c, archivedAt: _a, termsDocumentId, ...copyable } = source;
     const [row] = tx
       .insert(events)
-      .values({ ...copyable, slug: target.slug, name: target.name })
+      .values({ ...copyable, slug: target.slug, name: target.name, registrationPaused: false })
       .returning()
       .all();
 
@@ -210,6 +245,8 @@ export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug
     }
 
     copyEventCostGroups(tx, sourceId, row.id);
+    copyStreams(tx, sourceId, row.id);
+    copyCertificate(tx, sourceId, row.id);
 
     writeAudit(tx, actor, {
       action: 'event.copied',
@@ -240,5 +277,22 @@ export function setEventArchived(db: Db, actor: Actor, id: number, archived: boo
       summary: archived ? 'Event archiviert' : 'Archivierung aufgehoben',
     });
     return updated;
+  });
+}
+
+/** Folien-Links der Speaker im öffentlichen Programm und im Teilnehmerportal zeigen bzw. ausblenden. */
+export function setSlidesPublic(db: Db, actor: Actor, id: number, value: boolean): EventRow {
+  return db.transaction((tx) => {
+    const before = loadEditable(tx, id);
+    if (before.slidesPublic === value) return before;
+    const [row] = tx.update(events).set({ slidesPublic: value }).where(eq(events.id, id)).returning().all();
+    writeAudit(tx, actor, {
+      action: value ? 'event.slides_published' : 'event.slides_unpublished',
+      entity: 'event',
+      entityId: id,
+      eventId: id,
+      summary: value ? 'Folien veröffentlicht' : 'Folien nicht mehr öffentlich',
+    });
+    return row;
   });
 }

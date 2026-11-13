@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Ban, FileText, MoreHorizontal, Pencil, Undo2, UserCheck, Wallet } from 'lucide-react';
+import { Award, Ban, FileText, MoreHorizontal, Pencil, Undo2, UserCheck, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState, useTransition } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -53,8 +53,11 @@ export function RegistrationRowMenu({
   onAction,
   trigger,
   exclude = [],
+  certificateHref,
 }: {
   row: RegistrationListRow;
+  /** Download der Teilnahmebestätigung (PDF) für diese Person */
+  certificateHref?: string;
   onAction: (dialog: RowDialog) => void;
   /** eigener Auslöser (z. B. „Weitere Aktionen“ im Detailpanel) */
   trigger?: React.ReactNode;
@@ -101,6 +104,14 @@ export function RegistrationRowMenu({
           <DropdownMenuItem onSelect={() => onAction('refund')}>
             <Undo2 aria-hidden className="size-4" />
             {t('refund')}
+          </DropdownMenuItem>
+        )}
+        {certificateHref && (
+          <DropdownMenuItem asChild>
+            <a href={certificateHref} download>
+              <Award aria-hidden className="size-4" />
+              {t('certificate')}
+            </a>
           </DropdownMenuItem>
         )}
         {show('cancel') && row.status !== 'cancelled' && (

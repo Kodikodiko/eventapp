@@ -38,6 +38,8 @@ export const eventFormSchema = z
     priceNormal: euroAmount,
     priceMember: euroAmount,
     ticketVatRateBp: z.enum(VAT_RATE_OPTIONS, 'required'),
+    /** '' = wie in den globalen Einstellungen */
+    vatMode: z.enum(['', 'small_business', 'standard'], 'required'),
     allowStripe: z.boolean(),
     allowInvoice: z.boolean(),
     refundMode: z.enum(['automatic', 'approval'], 'required'),
@@ -89,6 +91,7 @@ export type EventInput = {
   priceNormalCents: number;
   priceMemberCents: number;
   ticketVatRateBp: number;
+  vatMode?: 'small_business' | 'standard' | null;
   allowStripe: boolean;
   allowInvoice: boolean;
   refundMode: 'automatic' | 'approval';
@@ -114,6 +117,7 @@ export function toEventInput(v: EventFormValues): EventInput {
     priceNormalCents: parseEuroToCents(v.priceNormal)!,
     priceMemberCents: parseEuroToCents(v.priceMember)!,
     ticketVatRateBp: Number(v.ticketVatRateBp),
+    vatMode: v.vatMode || null,
     allowStripe: v.allowStripe,
     allowInvoice: v.allowInvoice,
     refundMode: v.refundMode,

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useRouter } from '@/i18n/navigation';
 import type { ActionResult } from '@/lib/action-result';
 import { speakerFormSchema, type SpeakerFormValues } from '@/lib/validation/program';
+import { setSlidesPublicAction } from '@/server/actions/events';
 import { createSpeakerAction, removeSpeakerAction, updateSpeakerAction } from '@/server/actions/program';
 import type { SpeakerRow } from '@/server/services/program';
 import { ConfirmDialog } from '../confirm-dialog';
@@ -33,7 +35,7 @@ const slidesVariant: Record<SpeakerRow['slidesStatus'], BadgeProps['variant']> =
   missing: 'outline',
 };
 
-export function SpeakersTable({ eventId, rows, readOnly }: { eventId: number; rows: SpeakerRow[]; readOnly: boolean }) {
+export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { eventId: number; rows: SpeakerRow[]; readOnly: boolean; slidesPublic: boolean }) {
   const t = useTranslations('speakers');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -46,16 +48,29 @@ export function SpeakersTable({ eventId, rows, readOnly }: { eventId: number; ro
     });
   }
 
+  function toggleSlidesPublic(value: boolean) {
+    startTransition(async () => {
+      if (handle(await setSlidesPublicAction(eventId, value), { success: value ? t('slidesPublished') : t('slidesUnpublished') })) router.refresh();
+    });
+  }
+
   return (
     <div className="space-y-4">
-      {!readOnly && (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm">
+          <Switch checked={slidesPublic} onCheckedChange={toggleSlidesPublic} disabled={readOnly} />
+          <span>
+            {t('slidesPublic')}
+            <span className="block text-xs text-muted-foreground">{t('slidesPublicHint')}</span>
+          </span>
+        </label>
+        {!readOnly && (
           <Button size="sm" onClick={() => setDialog({ mode: 'create' })}>
             <Plus aria-hidden className="size-4" />
             {t('add')}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left">
@@ -84,7 +99,14 @@ export function SpeakersTable({ eventId, rows, readOnly }: { eventId: number; ro
                   <Badge variant={proposalVariant[r.proposalStatus]}>{t(`proposal.${r.proposalStatus}`)}</Badge>
                 </td>
                 <td className="p-2">
-                  <Badge variant={slidesVariant[r.slidesStatus]}>{t(`slides.${r.slidesStatus}`)}</Badge>
+                  <span className="inline-flex items-center gap-2">
+                    <Badge variant={slidesVariant[r.slidesStatus]}>{t(`slides.${r.slidesStatus}`)}</Badge>
+                    {r.slidesUrl && (
+                      <a href={r.slidesUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" aria-label={t('openSlides')} title={t('openSlides')}>
+                        <ExternalLink aria-hidden className="size-4" />
+                      </a>
+                    )}
+                  </span>
                 </td>
                 <td className="p-2 text-right tabular-nums">{r.sessionCount}</td>
                 <td className="p-2 text-right">
@@ -135,8 +157,9 @@ export function SpeakersTable({ eventId, rows, readOnly }: { eventId: number; ro
                   locale: dialog.row.locale,
                   proposalStatus: dialog.row.proposalStatus,
                   slidesStatus: dialog.row.slidesStatus,
+                  slidesUrl: dialog.row.slidesUrl ?? '',
                 }
-              : { firstName: '', lastName: '', email: '', company: '', locale: 'de', proposalStatus: 'pending', slidesStatus: 'missing' }
+              : { firstName: '', lastName: '', email: '', company: '', locale: 'de', proposalStatus: 'pending', slidesStatus: 'missing', slidesUrl: '' }
           }
           save={(values) => (dialog.mode === 'edit' ? updateSpeakerAction(dialog.row.id, values) : createSpeakerAction(eventId, values))}
           onClose={() => setDialog(null)}
@@ -229,6 +252,9 @@ function SpeakerDialog({ title, defaultValues, save, onClose }: DialogProps) {
                     </option>
                   ))}
                 </select>
+              </Field>
+              <Field id="sp-slides-url" label={t('slidesUrl')} hint={t('slidesUrlHint')} error={fieldError(errors, 'slidesUrl')}>
+                <Input id="sp-slides-url" type="url" placeholder="https://" {...register('slidesUrl')} />
               </Field>
             </fieldset>
             <DialogFooter>

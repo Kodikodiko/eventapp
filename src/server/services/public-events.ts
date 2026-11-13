@@ -87,10 +87,15 @@ export type PublicSession = {
   location: string;
   tag: (typeof sessions.$inferSelect)['tag'];
   stream: number;
+  /** letzter Stream des Bereichs (gleich `stream`, wenn der Punkt nur in einem Stream liegt) */
+  streamTo: number;
   speakerName: string | null;
+  /** nur wenn die Folien des Events veröffentlicht sind */
+  slidesUrl: string | null;
 };
 
 export function listPublicSessions(db: Db, eventId: number): PublicSession[] {
+  const slidesPublic = db.select({ v: events.slidesPublic }).from(events).where(eq(events.id, eventId)).get()?.v ?? false;
   return db
     .select({
       id: sessions.id,
@@ -100,7 +105,9 @@ export function listPublicSessions(db: Db, eventId: number): PublicSession[] {
       location: sessions.location,
       tag: sessions.tag,
       stream: sessions.stream,
+      streamTo: sessions.streamTo,
       proposalStatus: speakers.proposalStatus,
+      slidesUrl: speakers.slidesUrl,
       firstName: people.firstName,
       lastName: people.lastName,
       anonymizedAt: people.anonymizedAt,
@@ -111,10 +118,15 @@ export function listPublicSessions(db: Db, eventId: number): PublicSession[] {
     .where(eq(sessions.eventId, eventId))
     .orderBy(asc(sessions.startsAt), asc(sessions.stream))
     .all()
-    .map(({ proposalStatus, firstName, lastName, anonymizedAt, ...s }) => ({
-      ...s,
-      speakerName: proposalStatus === 'confirmed' && !anonymizedAt && firstName ? `${firstName} ${lastName}` : null,
-    }));
+    .map(({ proposalStatus, firstName, lastName, anonymizedAt, slidesUrl, streamTo, ...s }) => {
+      const visible = proposalStatus === 'confirmed' && !anonymizedAt && Boolean(firstName);
+      return {
+        ...s,
+        streamTo: streamTo ?? s.stream,
+        speakerName: visible ? `${firstName} ${lastName}` : null,
+        slidesUrl: visible && slidesPublic ? slidesUrl : null,
+      };
+    });
 }
 
 export function listPublicSpeakers(db: Db, eventId: number): { name: string; company: string | null }[] {

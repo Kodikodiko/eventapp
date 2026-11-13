@@ -57,6 +57,41 @@
       "when": 1793385154348,
       "tag": "0007_cost_group_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794590918966,
+      "tag": "0008_event_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794596783168,
+      "tag": "0009_event_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1794598195651,
+      "tag": "0010_sponsors_slides",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1794598779742,
+      "tag": "0011_event_streams",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794600145573,
+      "tag": "0012_certificates",
+      "breakpoints": true
     }
   ]
 }

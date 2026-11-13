@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { useTransition } from 'react';
+import { useEffect, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
@@ -16,15 +16,23 @@ type Props = {
   /** Server Action, die eine neue Version veröffentlicht */
   publish: (values: LegalDocumentFormValues) => Promise<ActionResult<{ version: number }>>;
   disabled?: boolean;
+  /** Text, der beim Einblenden als (noch nicht veröffentlichte) Änderung ins Formular gesetzt wird */
+  startValues?: LegalDocumentFormValues | null;
 };
 
 /** Neue Version eines Rechtstexts (AGB oder Datenschutzerklärung) veröffentlichen. */
-export function LegalDocumentForm({ defaultValues, publish, disabled }: Props) {
+export function LegalDocumentForm({ defaultValues, publish, disabled, startValues }: Props) {
   const t = useTranslations('legalForm');
   const router = useRouter();
   const handle = useActionFeedback();
   const [pending, startTransition] = useTransition();
   const form = useForm<LegalDocumentFormValues>({ resolver: zodResolver(legalDocumentFormSchema), defaultValues });
+
+  useEffect(() => {
+    if (!startValues) return;
+    form.setValue('content.de', startValues.content.de, { shouldDirty: true });
+    form.setValue('content.en', startValues.content.en, { shouldDirty: true });
+  }, [form, startValues]);
 
   const onSubmit = form.handleSubmit((values) =>
     startTransition(async () => {

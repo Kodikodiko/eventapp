@@ -1,12 +1,13 @@
 /**
  * Sponsorpakete und Sponsoren eines Events.
  * - Pakete lassen sich nur löschen, solange kein Sponsor sie gebucht hat.
- * - Betrag eines Sponsors = Paketpreis − Rabatt (nie negativ).
+ * - Betrag eines Sponsors = Paketpreis (ohne Paket: eigener Betrag) − Rabatt (nie negativ).
  * - Ansprechpersonen sind Personen (people) und werden bei jedem Speichern komplett ersetzt.
  * - Sponsoren mit Zahlungen oder Rechnungen können nicht gelöscht werden (Aufbewahrungspflicht).
  */
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 import { ServiceError } from '@/lib/action-result';
+import { sponsorBase } from '@/lib/sponsor-price';
 import type { PackageInput, SponsorInput } from '@/lib/validation/sponsors';
 import type { Db } from '@/server/db/core';
 import { events, invoices, payments, people, sponsorContacts, sponsorPackages, sponsors } from '@/server/db/schema';
@@ -122,7 +123,7 @@ export function listSponsors(db: Db, eventId: number): SponsorRow[] {
   const invoiceNumbers = activeInvoiceNumbersBySponsor(db, eventId);
   return rows
     .map(({ s, p }) => {
-      const price = p?.priceCents ?? 0;
+      const price = sponsorBase(s, p).priceCents;
       return {
         ...s,
         packageName: p?.name ?? null,
