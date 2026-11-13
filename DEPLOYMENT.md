@@ -1,10 +1,11 @@
 # EventFlow – Entwicklung & Deployment
 
-Stand: 26.09.2026 · Status: **Entwurf 2 zur Diskussion** – beschreibt den Zielzustand nach der Migration (siehe `MIGRATIONSPLAN.md`). Ersetzt die früheren Deployment-Anleitungen.
+Stand: 12.11.2026 · Status: **Entwurf 3 zur Diskussion** – beschreibt den Zielzustand nach der Migration (siehe `MIGRATIONSPLAN.md`). Ersetzt die früheren Deployment-Anleitungen.
 
 Kurzfassung:
 - **Jetzt bis zur Fertigstellung:** rein lokal unter Windows mit `npm run dev`, SQLite-Datei im Projektordner, Stripe im Testmodus, E-Mails als Dateien.
-- **Zum Schluss:** ein VPS bei einem EU-Hoster, Node.js als systemd-Dienst hinter Caddy (HTTPS). **Kein Docker.**
+- **Zum Schluss (Plan seit 12.11.2026, vorerst zurückgestellt):** Docker-Container auf dem Server eines Sysadmins hinter dessen nginx-Reverse-Proxy (Teil C). Offene Arbeiten dazu: `TODO.md`, Abschnitt „Hosting“.
+- **Alternative:** eigener VPS bei einem EU-Hoster, Node.js als systemd-Dienst hinter Caddy (Teil B, ursprünglicher Plan).
 
 ---
 
@@ -118,7 +119,7 @@ Es gibt bewusst keinen Umschalter zur Laufzeit.
 
 ---
 
-## Teil B – Produktivbetrieb beim EU-Hoster (am Ende der Entwicklung)
+## Teil B – Alternative: eigener VPS beim EU-Hoster (systemd + Caddy)
 
 ### B.1 Anforderungen an den Hoster
 
@@ -282,3 +283,161 @@ sudo systemctl restart eventflow
 - [ ] Backup läuft, Wiederherstellung getestet
 - [ ] Löschlauf mit `--dry-run` geprüft
 - [ ] Keine Demodaten in der Produktivdatenbank
+
+---
+
+## Teil C – Docker-Container hinter nginx beim Sysadmin (Plan, Stand 12.11.2026)
+
+Der neue Server eines Sysadmins betreibt VPN, Mail und einen nginx-Reverse-Proxy (teils mit mTLS); Zugang zum Server nur per Zertifikat. EventFlow läuft dort als Container. **Es wird kein Port geöffnet**: Der Container hängt nur im internen Docker-Netz des nginx. Dockerfile, Compose-Datei und die nötigen Code-Änderungen sind noch nicht umgesetzt (`TODO.md`, H1–H9).
+
+### C.1 Architektur
+
+```mermaid
+flowchart LR
+  T[Teilnehmende] -->|443| N
+  A[Admins: VPN + Client-Zertifikat] -->|443| N
+  S[Stripe-Webhooks] -->|443| N
+  subgraph Host[Docker-Host – offen nur 443/80]
+    N[nginx<br/>TLS, HSTS, Client-IP,<br/>mTLS für /admin] -->|intern :3000| E[eventflow<br/>Next.js]
+    E --> V[(Volume /data)]
+    J[eventflow-jobs<br/>alle 5 min] --> V
+  end
+  E -->|443 / SMTP| O[Stripe API, Mailserver]
+  J --> O
+  V -.->|verschlüsselt| B[(Externes Backup EU)]
+```
+
+Genau **eine** App-Instanz: Die Begrenzung der Anfragen liegt im Speicher des Prozesses, SQLite verträgt keine zweite App-Instanz. Kein NFS/SMB für das Volume.
+
+### C.2 Änderungen an der App gegenüber Teil B
+
+| Thema | Umsetzung |
+|---|---|
+| Image | Mehrstufiges Dockerfile auf `node:24-bookworm-slim` (glibc für `better-sqlite3`), `output: 'standalone'`, Benutzer ohne Root, `HEALTHCHECK` auf `/api/health` per `node -e "fetch(...)"` |
+| Skripte | `jobs`, `db:backup`, `admin:create` beim Build mit esbuild zu `.mjs` bündeln (kein `tsx` im Laufzeit-Image) |
+| Daten | Volume `/data`: `DATABASE_PATH=/data/eventflow.db`, `BACKUP_DIR=/data/backups`, `INVOICE_DIR=/data/invoices`, `RECEIPT_DIR=/data/receipts`, `CERTIFICATE_DIR=/data/certificates` |
+| Geheimnisse | Env-Datei auf dem Server (`chmod 600`), nie im Image oder Git; neues `BETTER_AUTH_SECRET` |
+| Client-IP | `X-Real-IP` bevorzugen; nginx setzt `X-Real-IP` und `X-Forwarded-For` auf `$remote_addr` (überschreiben, nicht anhängen) |
+| Jobs | eigener Container `eventflow-jobs` aus demselben Image, alle 300 s `node scripts/jobs.mjs` |
+| Produktion | Start bricht ab, wenn `PAYMENT_PROVIDER=fake`, `AUTO_SEED`, `DEV_LOGIN` oder `DEV_ADMIN_WITHOUT_2FA` gesetzt sind |
+| Logging | stdout, Docker-Logrotation; keine Personendaten im Log |
+
+Migrationen laufen wie bisher beim Start, mit automatischer Sicherung vorher.
+
+### C.3 docker compose
+
+```yaml
+services:
+  eventflow:
+    image: ghcr.io/kodikodiko/eventflow:1.0.0   # feste Version, kein latest
+    init: true
+    restart: unless-stopped
+    env_file: /etc/eventflow/eventflow.env       # chmod 600
+    environment: { NODE_ENV: production }
+    volumes: [ "/srv/eventflow/data:/data" ]
+    networks: [ proxy ]                          # Netz des nginx, kein ports:
+    read_only: true
+    tmpfs: [ /tmp ]
+    user: "1000:1000"
+    cap_drop: [ ALL ]
+    security_opt: [ "no-new-privileges:true" ]
+    mem_limit: 1g
+    pids_limit: 200
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "5" } }
+  eventflow-jobs:
+    image: ghcr.io/kodikodiko/eventflow:1.0.0
+    command: ["sh", "-c", "while true; do node scripts/jobs.mjs; sleep 300; done"]
+    # sonst wie eventflow (env_file, volumes, user, read_only, cap_drop …), ohne proxy-Netz
+networks:
+  proxy: { external: true }
+```
+
+Läuft nginx direkt auf dem Host statt als Container: statt des Netzes `ports: ["127.0.0.1:3000:3000"]`. Kein Zugriff auf `/var/run/docker.sock`.
+
+### C.4 nginx-Vhost
+
+```nginx
+server {
+  listen 443 ssl; http2 on;
+  server_name <domain>;
+  ssl_certificate     /etc/letsencrypt/live/<domain>/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/<domain>/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  server_tokens off;
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+  client_max_body_size 12m;                     # Belege bis 10 MB
+
+  ssl_client_certificate /etc/nginx/mtls/client-ca.pem;
+  ssl_verify_client optional;                   # verlangt nur im Admin-Bereich
+
+  proxy_set_header Host              $host;
+  proxy_set_header X-Real-IP         $remote_addr;
+  proxy_set_header X-Forwarded-For   $remote_addr;
+  proxy_set_header X-Forwarded-Proto https;
+
+  location ~ ^/(de|en)/admin|^/api/export {
+    if ($ssl_client_verify != SUCCESS) { return 403; }
+    # optional zusätzlich: allow <VPN-Netz>; deny all;
+    proxy_pass http://eventflow:3000;
+  }
+  location /api/auth/ {
+    limit_req zone=auth burst=10 nodelay;
+    proxy_pass http://eventflow:3000;
+  }
+  location /api/stripe/webhook {
+    # kein mTLS, kein Geo-Blocking; die App prüft die Stripe-Signatur
+    proxy_pass http://eventflow:3000;
+  }
+  location / { proxy_pass http://eventflow:3000; }
+}
+# http-Block: limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
+# Port 80: nur ACME und Weiterleitung auf https
+```
+
+Steht vor diesem nginx ein weiterer Proxy, übernimmt nginx die echte IP mit `real_ip_header` und `set_real_ip_from`.
+
+### C.5 Zugriff, Firewall, Geo-Blocking
+
+- **Admin-Bereich** (`/de/admin`, `/en/admin`, `/api/export`): Client-Zertifikat, wenn möglich zusätzlich nur aus dem VPN; in der App Passwort + Zwei-Faktor.
+- **Öffentlich** bleiben Anmeldeseite (`/<locale>/events/<slug>/register`), Teilnehmerportal und `/api/stripe/webhook`.
+- **Eingehend** nur 443 und 80 (ACME) über nginx. Docker umgeht `ufw` nur bei veröffentlichten Ports; EventFlow veröffentlicht keine.
+- **Ausgehend** braucht der Container nur DNS, `api.stripe.com:443` und den SMTP-Server (587/465).
+- **Geo-Blocking** (GeoIP2 oder CrowdSec) für den öffentlichen Teil möglich; `/api/stripe/webhook` ausnehmen oder nur die [Stripe-Webhook-IPs](https://stripe.com/files/ips/ips_webhooks.txt) zulassen.
+
+### C.6 Updates und CVEs
+
+- Image bei jedem Release und zusätzlich monatlich neu bauen (frisches Basis-Image), vorher mit Trivy prüfen; GitHub Actions → GHCR (privat). Der Server zieht nur feste Versionen; die letzten 5 bleiben im Registry.
+- Dependabot für npm und Basis-Image; bei kritischen CVEs (Next.js, Better Auth, better-sqlite3) Hotfix-Release.
+- Host: automatische Sicherheitsupdates, Docker-Engine aktuell (Sache des Sysadmins).
+
+Update einspielen: neue Version in der Compose-Datei eintragen, `docker compose pull && docker compose up -d`.
+
+### C.7 Backup und Notfall
+
+Die Datenbank wird über die SQLite-Sicherungsfunktion kopiert (`node scripts/db-backup.mjs` im Container), nie als rohe Dateikopie der laufenden Datei (WAL).
+
+| Was | Wie | Wie oft / wie lange |
+|---|---|---|
+| Datenbank | `db-backup.mjs` nach `/data/backups`, dann Backup-System des Servers verschlüsselt extern (restic/borg, EU) | täglich, in Anmeldephasen stündlich; 90 Tage |
+| Rechnungs-PDFs, Belege | mit demselben Lauf | 7 Jahre (§ 132 BAO) |
+| Env-Datei | getrennt, z. B. Passwortmanager | bei jeder Änderung |
+
+| Fall | Vorgehen |
+|---|---|
+| Fehlerhaftes Update | vorige Image-Version starten; nach einer Migration die Sicherung `…-vor-<migration>.db` zurückspielen |
+| Datenbank beschädigt | Container stoppen, Sicherung nach `/data/eventflow.db`, `-wal`/`-shm` entfernen, starten; Zahlungen seit der Sicherung mit dem Stripe-Dashboard abgleichen |
+| Server ausgefallen | anderer Docker-Host: Image ziehen, Daten aus dem externen Backup, Env-Datei einspielen, DNS umstellen; Ziel unter 4 Stunden |
+| Verdacht auf Einbruch | Container stoppen, Wartungsseite in nginx; `BETTER_AUTH_SECRET` erneuern, Stripe-Schlüssel und Webhook-Secret rollen, SMTP- und Admin-Passwörter ändern; Meldepflicht (72 h) prüfen |
+| Kritische CVE | gepatchtes Image bauen und einspielen; bis dahin betroffenen Pfad in nginx sperren |
+
+Wiederherstellung vor dem Go-live und danach halbjährlich durchspielen. Ist der Serverbetreiber nicht selbst Veranstalter, ist ein AVV nötig (`TODO.md`, D9).
+
+### C.8 Mit dem Sysadmin zu klären
+
+- nginx als Container (welches Docker-Netz) oder auf dem Host?
+- Deploy-Weg: Pull aus GHCR durch den Sysadmin oder eingeschränkter SSH-Zugang (Zertifikat), der nur `docker compose pull/up` für diesen Stack darf?
+- Vorhandenes Backup-System und externes Ziel?
+- GeoIP/CrowdSec vorhanden, welche Länder geblockt?
+- Monitoring für `/api/health`?
+- Client-Zertifikat für den Admin-Zugang, VPN-Zugang?
+- Serverstandort EU, AVV; Mailserver als SMTP-Relay mit SPF/DKIM für die Absenderdomain?
