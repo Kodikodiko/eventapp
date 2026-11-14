@@ -1,0 +1,13 @@
+flowchart TD
+  subgraph SICHERN["Sichern"]
+    T1((Timer: täglich,<br/>in Anmeldephase stündlich)) --> X[docker compose exec eventflow<br/>node scripts/db-backup.mjs]
+    X --> BD[saubere Kopie über SQLite-Backup-API<br/>nach /data/backups]
+    BD --> RB[Backup-System des Servers sichert<br/>/srv/eventflow/data verschlüsselt extern EU]
+    RB --> RT[Aufbewahrung: DB 90 Tage,<br/>Rechnungen/Belege 7 Jahre]
+  end
+  subgraph WIEDER["Wiederherstellen"]
+    Q{Fall?}
+    Q -- DB beschädigt --> D1[Container stoppen] --> D2[Sicherung nach /data/eventflow.db,<br/>-wal und -shm löschen] --> D3[Container starten] --> D4[Zahlungen seit Sicherung<br/>mit Stripe-Dashboard abgleichen]
+    Q -- Server ausgefallen --> S1[anderer Docker-Host] --> S2[compose + eventflow.env einspielen] --> S3["/data aus externem Backup"] --> S4[Image ziehen, starten] --> S5[DNS *.pmi-austria.org umstellen,<br/>Zertifikat neu] --> S6((Ziel: unter 4 h))
+    Q -- Einbruchsverdacht --> E1[Container stoppen, Wartungsseite] --> E2[Secrets rollen: BETTER_AUTH_SECRET,<br/>Stripe-Keys, Webhook-Secret, SMTP, Admin] --> E3[Meldepflicht DSGVO 72 h prüfen]
+  end

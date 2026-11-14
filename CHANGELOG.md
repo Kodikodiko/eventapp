@@ -1,5 +1,32 @@
 # Changelog
 
+## 14.11.2026 – Newsletter entfernt, Frist für Geschäftskontakte
+
+- Newsletter komplett entfernt: kein Häkchen mehr im Anmeldeformular, keine Einwilligungsart „Newsletter“; Migration `0014_remove_newsletter` löscht gespeicherte Newsletter-Einwilligungen.
+- Löschfristen: Speaker und Sponsor-Kontakte (Geschäftskontakte, berechtigtes Interesse) werden erst 3 Jahre nach ihrem letzten Event in dieser Rolle anonymisiert, Teilnehmende weiterhin 6 Monate nach dem Event.
+- Vorlage der Datenschutzerklärung angepasst (Newsletter entfernt, Frist für Geschäftskontakte). Die veröffentlichte Fassung ändert sich dadurch nicht.
+
+## 14.11.2026 – Preisaktionen: Early Bird, Rabattcodes, Sonderpreise
+
+- Early Bird je Event (Event-Einstellungen, Bereich Preise): Zeitraum von–bis (ohne Beginn ab Anmeldestart) und eigene Preise für Normal- und Mitgliedsticket; ein leerer Preis heißt kein Early Bird für diesen Tickettyp. Eventseite zeigt „Early Bird bis …“ mit durchgestrichenem Regulärpreis, die Anmeldung den Early-Bird-Preis. Beim Kopieren eines Events werden die Preise übernommen, der Zeitraum nicht.
+- Neue Seite „Preise & Rabatte“ (Finanzen): Überblick Early Bird, Rabattcodes und Sonderpreise.
+- Rabattcodes (für Flash Sales, z. B. per Aussendung): Code (Groß-/Kleinschreibung egal), fixer Betrag oder Prozent, optional gültig von–bis und maximale Einlösungen, aktiv/inaktiv, Notiz. Die Anmeldung zeigt das Feld „Rabattcode“, sobald es für das Event einen aktiven Code gibt. Der Code gilt nur auf Normal- bzw. Mitgliedspreis, nie auf Early Bird; ist Early Bird günstiger, gilt Early Bird und der Code wird nicht eingelöst. Preis nie unter 0 €. Einlösungen zählen nicht stornierte Anmeldungen (abgelaufene Reservierungen geben den Code frei). Eingelöste Codes lassen sich nicht löschen oder umbenennen, nur deaktivieren. Auf der Rechnung: Ticket zum Listenpreis und „Rabatt (Code …)“ als eigene Zeile.
+- Sonderpreise: Kategorien mit Namen und Preis je Event, auswählbar beim Anlegen/Bearbeiten einer Anmeldung im Admin („Anderer Betrag“ bleibt). Verwendete Kategorien nur deaktivierbar. Rechnung: „Ticket (Kategorie)“. Beim Kopieren eines Events werden die Kategorien übernommen, Codes nicht.
+- Teilnehmerliste zeigt unter dem Preis Kategorie, „Early Bird“ bzw. den Code.
+- Erfolgsrechnung (Tabelle, Excel): Normal-, Mitglieds- und Sondertickets aufgeschlüsselt nach Preis – regulär, Early Bird, je Code, je Kategorie, anderer Betrag – mit Anzahl, Ist, Offen; standardmäßig aufgeklappt.
+- Datenbank: Migration `0013_price_promotions` (Tabellen `price_categories`, `discount_codes`; Spalten für Early Bird in `events`; `price_tier`, `price_category_id`, `discount_code_id`, `discount_cents` in `registrations`). Bestehende Anmeldungen gelten als regulär.
+- 15 neue Tests (284 gesamt).
+
+## 14.11.2026 – DSGVO-Werkzeuge (D4–D7)
+
+- Neuer Menüpunkt „Datenschutz“ unter Organisation: Person suchen (E-Mail ohne Groß-/Kleinschreibung, Name oder Firma; Teilnehmende, Speaker und Sponsor-Kontakte).
+- Personenseite: Auskunft als JSON oder Excel (alle gespeicherten Daten, Datumsangaben als ISO-Text, Export im Audit-Log), Verarbeitung einschränken/aufheben, Löschen (anonymisieren).
+- Löschen mit Aufbewahrungspflicht: Rechnungen und Gutschriften bleiben unverändert bis zum Ende der Frist (§ 132 BAO), Anmeldungen und Zahlungen bleiben ohne Namen; nicht möglich bei laufender Anmeldung oder offener Erstattung.
+- Eingeschränkte Personen erscheinen nicht mehr im Excel-Export der Teilnehmenden und in Teilnahmebestätigungen (E-Mails und Portal waren schon gesperrt).
+- Anfragen Betroffener: Art, Eingang, Frist (1 Monat), Notiz, Erledigt; Einschränken und Löschen erledigen offene Anfragen derselben Art automatisch.
+- Löschfristen (Spezifikation 7.5): `npm run retention` (mit `-- --dry-run` als Probelauf), außerdem einmal am Tag automatisch mit `npm run jobs`; Vorschau und „Jetzt ausführen“ auf der Seite Datenschutz. `npm run db:backup` löscht Sicherungen älter als 90 Tage.
+- Keine Datenbank-Migration. 11 neue Tests (268 gesamt).
+
 ## 13.11.2026 – Feedback-Runde, Paket 5 (U5 Teilnahmebestätigung)
 
 - Neuer Menüpunkt „Teilnahmebestätigung“ je Event: Hintergrundbild hochladen (PNG/JPG, max. 5 MB, A4 quer; füllt die ganze Seite), Überschrift und Text de/en mit Platzhaltern `{name}`, `{event}`, `{datum}`, `{uhrzeit}` (Beginn bis Ende), `{ort}` – Werte aus den Event-Einstellungen –, Textfarbe. Zeilen nur mit `{name}` bzw. `{event}` werden hervorgehoben. Vorschau als PDF (Deutsch/Englisch) mit Beispielnamen. Ohne eigene Einrichtung gelten Standardtexte.
