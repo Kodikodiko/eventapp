@@ -19,7 +19,7 @@ Bei der Anmeldung zu einer Veranstaltung: Vor- und Nachname, E-Mail-Adresse, opt
 - Abwicklung der Anmeldung, Teilnahme, Zahlung und Stornierung: Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO).
 - Prüfung des Mitgliedspreises anhand der Mitgliederliste: Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO).
 - Rechnungslegung und Aufbewahrung der Buchhaltungsunterlagen: rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO, § 132 BAO).
-- Verwendung von Foto- und Videoaufnahmen für Werbezwecke sowie Newsletter: nur mit Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Die Einwilligung ist freiwillig und kann jederzeit mit Wirkung für die Zukunft widerrufen werden.
+- Verwendung von Foto- und Videoaufnahmen für Werbezwecke: nur mit Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Die Einwilligung ist freiwillig und kann jederzeit mit Wirkung für die Zukunft widerrufen werden.
 - Sicherheit und Nachvollziehbarkeit von Änderungen (Protokoll ohne personenbezogene Beschreibungen): berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO).
 
 # 4. Empfänger und Auftragsverarbeiter
@@ -33,7 +33,8 @@ Mit allen Auftragsverarbeitern bestehen Verträge nach Art. 28 DSGVO. Andere Tei
 - Übrige Anmeldedaten: bis spätestens 6 Monate nach der Veranstaltung, danach gelöscht oder anonymisiert.
 - Stornierte Anmeldungen und Wartelisteneinträge ohne Zahlung: 30 Tage nach der Veranstaltung.
 - Protokolleinträge: 2 Jahre. Sicherungskopien: höchstens 90 Tage.
-- Einwilligungen (Foto, Newsletter): bis zum Widerruf.
+- Speaker und Ansprechpersonen von Sponsoren (Geschäftskontakte, berechtigtes Interesse nach Art. 6 Abs. 1 lit. f DSGVO): bis 3 Jahre nach der letzten Veranstaltung, an der sie mitgewirkt haben.
+- Einwilligung zu Foto-/Videoaufnahmen: bis zum Widerruf.
 
 # 6. Cookies
 Wir verwenden nur technisch notwendige Cookies (z. B. die gewählte Sprache und die Sitzung im Verwaltungsbereich), keine Analyse- oder Tracking-Dienste.
@@ -56,7 +57,7 @@ When you register for an event: first and last name, email address, optionally c
 - Handling registration, participation, payment and cancellation: performance of a contract (Art. 6(1)(b) GDPR).
 - Checking eligibility for the member price against the member list: performance of a contract (Art. 6(1)(b) GDPR).
 - Invoicing and keeping accounting records: legal obligation (Art. 6(1)(c) GDPR, § 132 Austrian Federal Fiscal Code).
-- Use of photos and videos for promotional purposes and newsletters: only with your consent (Art. 6(1)(a) GDPR). Consent is voluntary and can be withdrawn at any time with effect for the future.
+- Use of photos and videos for promotional purposes: only with your consent (Art. 6(1)(a) GDPR). Consent is voluntary and can be withdrawn at any time with effect for the future.
 - Security and traceability of changes (log without personal descriptions): legitimate interest (Art. 6(1)(f) GDPR).
 
 # 4. Recipients and processors
@@ -70,7 +71,8 @@ Data processing agreements under Art. 28 GDPR are in place with all processors. 
 - Other registration data: no later than 6 months after the event, then deleted or anonymised.
 - Cancelled registrations and waitlist entries without payment: 30 days after the event.
 - Log entries: 2 years. Backups: at most 90 days.
-- Consents (photo, newsletter): until withdrawn.
+- Speakers and sponsor contact persons (business contacts, legitimate interest under Art. 6(1)(f) GDPR): until 3 years after the last event they took part in.
+- Consent to photos/videos: until withdrawn.
 
 # 6. Cookies
 We only use technically necessary cookies (e.g. your chosen language and the session in the admin area) and no analytics or tracking services.

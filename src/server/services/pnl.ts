@@ -22,6 +22,7 @@ import { nameKey, type ExpenseStatus } from '@/lib/validation/expenses';
 import { MAX_COMPARE_EVENTS, PLAN_VARIANT_KEYS, type PlanInput, type PlanPriceKey, type PlanTicketKey, type PlanVariant } from '@/lib/validation/pnl';
 import type { Db } from '@/server/db/core';
 import {
+  discountCodes,
   eventComparisons,
   eventCostGroups,
   eventPlanBudgets,
@@ -29,6 +30,7 @@ import {
   events,
   expenses,
   payments,
+  priceCategories,
   refunds,
   registrations,
   sponsorPackages,
@@ -45,7 +47,13 @@ export type Amounts = { actual: number; open: number };
 export type TicketKey = PlanTicketKey | 'refunds';
 export const TICKET_KEYS: TicketKey[] = ['normal', 'member', 'special', 'free', 'refunds'];
 
-export type TicketLine = Amounts & { key: TicketKey; count: number };
+/**
+ * Aufschlüsselung einer Ticketzeile nach tatsächlichem Preis: regulär, Early Bird, mit Rabattcode,
+ * Sonderpreis-Kategorie oder anderer Betrag – je mit Preis, Anzahl aktiver Anmeldungen, Ist und Offen.
+ */
+export type TicketVariantKind = 'regular' | 'early_bird' | 'code' | 'category' | 'custom';
+export type TicketVariant = Amounts & { kind: TicketVariantKind; name: string | null; priceCents: number; count: number };
+export type TicketLine = Amounts & { key: TicketKey; count: number; variants: TicketVariant[] };
 export type SponsorStatus = (typeof sponsors.$inferSelect)['paymentStatus'];
 export type SponsorLine = Amounts & { id: number; name: string; packageName: LocalizedText | null; status: SponsorStatus };
 export type ExpenseItem = { id: number; description: string; supplier: string | null; spentOn: string; status: ExpenseStatus; amountCents: number };
@@ -182,8 +190,15 @@ function computeCore(db: Db, event: EventRow, today: string): { core: PnlCore; m
     movements.push({ day: dayOf(p.paidAt ?? p.createdAt, today), cents: p.amountCents });
   }
 
-  const line = (key: TicketKey): TicketLine => ({ key, count: 0, actual: 0, open: 0 });
+  const line = (key: TicketKey): TicketLine => ({ key, count: 0, actual: 0, open: 0, variants: [] });
   const tickets = Object.fromEntries(TICKET_KEYS.map((k) => [k, line(k)])) as Record<TicketKey, TicketLine>;
+  const categoryNames = new Map(
+    db.select({ id: priceCategories.id, name: priceCategories.name }).from(priceCategories).where(eq(priceCategories.eventId, event.id)).all().map((c) => [c.id, c.name])
+  );
+  const codeNames = new Map(
+    db.select({ id: discountCodes.id, code: discountCodes.code }).from(discountCodes).where(eq(discountCodes.eventId, event.id)).all().map((c) => [c.id, c.code])
+  );
+  const variantsByKey = new Map<string, TicketVariant & { ticket: TicketKey }>();
   let openTicketCount = 0;
   for (const r of regs) {
     const paid = paidByReg.get(r.id) ?? 0;
@@ -192,11 +207,37 @@ function computeCore(db: Db, event: EventRow, today: string): { core: PnlCore; m
     const key: TicketKey = free ? 'free' : r.ticketType;
     if (active) tickets[key].count += 1;
     tickets[r.ticketType].actual += paid;
+    let open = 0;
     if (active && r.paymentStatus === 'open') {
-      const open = Math.max(0, r.priceCents - paid);
+      open = Math.max(0, r.priceCents - paid);
       tickets[r.ticketType].open += open;
       if (open > 0) openTicketCount += 1;
     }
+    if (free || (!active && paid === 0)) continue;
+    // Aufschlüsselung nach Preis (nur kostenpflichtige Tickets)
+    const kind: TicketVariantKind =
+      r.ticketType === 'special'
+        ? r.priceCategoryId
+          ? 'category'
+          : 'custom'
+        : r.discountCodeId
+          ? 'code'
+          : r.priceTier === 'early_bird'
+            ? 'early_bird'
+            : 'regular';
+    const name = kind === 'category' ? (categoryNames.get(r.priceCategoryId!) ?? null) : kind === 'code' ? (codeNames.get(r.discountCodeId!) ?? null) : null;
+    const vKey = `${r.ticketType}|${kind}|${name ?? ''}|${r.priceCents}`;
+    const v = variantsByKey.get(vKey) ?? { ticket: r.ticketType, kind, name, priceCents: r.priceCents, count: 0, actual: 0, open: 0 };
+    if (active) v.count += 1;
+    v.actual += paid;
+    v.open += open;
+    variantsByKey.set(vKey, v);
+  }
+  const KIND_ORDER: TicketVariantKind[] = ['regular', 'early_bird', 'code', 'category', 'custom'];
+  for (const { ticket, ...v } of [...variantsByKey.values()].sort(
+    (a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || (a.name ?? '').localeCompare(b.name ?? '') || b.priceCents - a.priceCents
+  )) {
+    tickets[ticket].variants.push(v);
   }
 
   // --- Sponsoren ---

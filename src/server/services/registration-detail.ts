@@ -31,7 +31,7 @@ export function getRegistrationDetail(db: Db, registrationId: number, now = new 
     .select({ c: consents, version: legalDocuments.version })
     .from(consents)
     .leftJoin(legalDocuments, eq(legalDocuments.id, consents.documentId))
-    .where(and(eq(consents.personId, row.personId), or(eq(consents.eventId, reg.eventId), eq(consents.kind, 'privacy'), eq(consents.kind, 'photo'), eq(consents.kind, 'newsletter'))))
+    .where(and(eq(consents.personId, row.personId), or(eq(consents.eventId, reg.eventId), eq(consents.kind, 'privacy'), eq(consents.kind, 'photo'))))
     .orderBy(desc(consents.grantedAt))
     .all();
   const latest = new Map<string, ConsentView>();
@@ -71,7 +71,7 @@ export function getRegistrationDetail(db: Db, registrationId: number, now = new 
       system: a.actorUserId === null,
     }));
 
-  const order = ['terms', 'privacy', 'photo', 'newsletter'];
+  const order = ['terms', 'privacy', 'photo'];
   return {
     row,
     consents: [...latest.values()].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind)),

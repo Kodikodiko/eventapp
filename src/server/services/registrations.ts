@@ -15,12 +15,13 @@ import { ServiceError } from '@/lib/action-result';
 import type { RegistrationStatusKey } from '@/lib/registrations-filter';
 import type { RegistrationAdminInput } from '@/lib/validation/registrations';
 import type { Db } from '@/server/db/core';
-import { events, people, registrationRoles, registrations, roles } from '@/server/db/schema';
+import { discountCodes, events, people, priceCategories, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { getEventStats } from './events';
 import { viennaDate } from '@/lib/dates';
 import { activeInvoiceOf, activeInvoicesByRegistration } from './invoices';
 import { updatePerson, upsertPerson } from './people';
+import { requireActiveCategory } from './pricing';
 import { cancelRegistration, refundableByRegistration } from './refunds';
 
 export type RegistrationListRow = {
@@ -31,11 +32,18 @@ export type RegistrationListRow = {
   email: string | null;
   company: string | null;
   locale: 'de' | 'en';
+  /** DSGVO: Verarbeitung eingeschränkt oder anonymisiert – nicht in Exporten */
+  restricted: boolean;
   status: RegistrationStatusKey;
   paymentStatus: (typeof registrations.$inferSelect)['paymentStatus'];
   paymentMethod: (typeof registrations.$inferSelect)['paymentMethod'];
   ticketType: 'normal' | 'member' | 'special';
   priceCents: number;
+  priceTier: (typeof registrations.$inferSelect)['priceTier'];
+  priceCategoryId: number | null;
+  /** Name der Sonderpreis-Kategorie bzw. eingelöster Rabattcode */
+  priceCategoryName: string | null;
+  discountCode: string | null;
   roles: string[];
   source: (typeof registrations.$inferSelect)['source'];
   memberNumberEntered: string | null;
@@ -71,6 +79,8 @@ export function listRegistrations(db: Db, eventId: number, now = new Date()): Re
   const activeInvoices = activeInvoicesByRegistration(db, eventId);
   const today = viennaDate(now.toISOString());
   const refundable = refundableByRegistration(db, eventId);
+  const categoryNames = new Map(db.select({ id: priceCategories.id, name: priceCategories.name }).from(priceCategories).where(eq(priceCategories.eventId, eventId)).all().map((c) => [c.id, c.name]));
+  const codeNames = new Map(db.select({ id: discountCodes.id, code: discountCodes.code }).from(discountCodes).where(eq(discountCodes.eventId, eventId)).all().map((c) => [c.id, c.code]));
   const rolesByReg = new Map<number, string[]>();
   for (const rr of roleRows) rolesByReg.set(rr.registrationId, [...(rolesByReg.get(rr.registrationId) ?? []), rr.key]);
 
@@ -84,11 +94,16 @@ export function listRegistrations(db: Db, eventId: number, now = new Date()): Re
     email: p.email,
     company: p.company,
     locale: p.locale,
+    restricted: Boolean(p.restrictedAt || p.anonymizedAt),
     status: r.status,
     paymentStatus: r.paymentStatus,
     paymentMethod: r.paymentMethod,
     ticketType: r.ticketType,
     priceCents: r.priceCents,
+    priceTier: r.priceTier,
+    priceCategoryId: r.priceCategoryId,
+    priceCategoryName: r.priceCategoryId ? (categoryNames.get(r.priceCategoryId) ?? null) : null,
+    discountCode: r.discountCodeId ? (codeNames.get(r.discountCodeId) ?? null) : null,
     roles: (rolesByReg.get(r.id) ?? []).sort(),
     source: r.source,
     memberNumberEntered: r.memberNumberEntered,
@@ -163,6 +178,8 @@ export function createRegistrationByAdmin(
         .get();
       if (active) throw new ServiceError('CONFLICT', { email: 'alreadyRegistered' });
       if (input.status === 'confirmed') assertSeatAvailable(tx, event, input.overbook);
+      const category = input.priceCategoryId && input.ticketType === 'special' ? requireActiveCategory(tx, eventId, input.priceCategoryId) : null;
+      if (category && category.priceCents !== input.priceCents) throw new ServiceError('INVALID', { price: 'categoryPrice' });
 
       const now = new Date().toISOString();
       const [reg] = tx
@@ -173,6 +190,7 @@ export function createRegistrationByAdmin(
           status: input.status,
           ...paymentFor(input.priceCents),
           ticketType: input.ticketType,
+          priceCategoryId: category?.id ?? null,
           priceCents: input.priceCents,
           billingCompany: input.billingCompany,
           billingAddress: input.billingAddress,
@@ -204,15 +222,23 @@ export function updateRegistrationByAdmin(db: Db, actor: Actor, id: number, inpu
 
     const changed: string[] = [];
     const paymentLocked = reg.paymentStatus === 'paid' || reg.paymentStatus === 'partially_refunded' || reg.paymentStatus === 'refunded';
-    if (input.priceCents !== reg.priceCents || input.ticketType !== reg.ticketType) {
+    const categoryId = input.ticketType === 'special' ? (input.priceCategoryId ?? null) : null;
+    const priceChanged = input.priceCents !== reg.priceCents || input.ticketType !== reg.ticketType || categoryId !== reg.priceCategoryId;
+    if (priceChanged) {
       if (paymentLocked) throw new ServiceError('CONFLICT', { price: 'priceLocked' });
       if (activeInvoiceOf(tx, { registrationId: id })) throw new ServiceError('CONFLICT', { price: 'priceInvoiced' });
+      if (categoryId !== null) {
+        const category = requireActiveCategory(tx, reg.eventId, categoryId);
+        if (category.priceCents !== input.priceCents) throw new ServiceError('INVALID', { price: 'categoryPrice' });
+      }
       changed.push('Preis/Tickettyp');
     }
     tx.update(registrations)
       .set({
         ticketType: input.ticketType,
         priceCents: input.priceCents,
+        // Geänderter Preis: Early Bird und Rabattcode gelten nicht mehr (Preis kommt dann vom Admin)
+        ...(priceChanged ? { priceCategoryId: categoryId, priceTier: 'regular' as const, discountCodeId: null, discountCents: 0 } : {}),
         ...(paymentLocked || reg.paymentMethod === 'stripe' ? {} : paymentFor(input.priceCents)),
         billingCompany: input.billingCompany,
         billingAddress: input.billingAddress,

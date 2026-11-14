@@ -82,7 +82,6 @@ function setup(capacity = 2) {
       billingCompany: method === 'invoice' ? 'Firma' : null,
       billingAddress: method === 'invoice' ? 'Adresse' : null,
       photoConsent: false,
-      newsletter: false,
       termsDocumentId: terms.id,
       privacyDocumentId: privacy.id,
       expectedPriceCents: 20000,

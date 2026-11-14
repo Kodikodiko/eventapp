@@ -10,6 +10,7 @@ import { initLocale } from '@/i18n/page';
 import { viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
 import { formatEuro } from '@/lib/money';
+import { earlyBirdPrice } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 import { requestDb } from '@/server/db';
 import { isOnlinePaymentEnabled } from '@/server/payments/config';
@@ -59,6 +60,18 @@ export default async function PublicEventPage({ params }: Props) {
   for (const s of sessions) days.set(viennaDate(s.startsAt), [...(days.get(viennaDate(s.startsAt)) ?? []), s]);
   const time = (iso: string) => format.dateTime(new Date(iso), { timeStyle: 'short' });
   const free = event.priceNormalCents === 0 && event.priceMemberCents === 0;
+  const now = new Date();
+  const earlyNormal = earlyBirdPrice(event, 'normal', now);
+  const earlyMember = earlyBirdPrice(event, 'member', now);
+  const priceCell = (regular: number, early: number | null) =>
+    early === null ? (
+      formatEuro(regular, locale)
+    ) : (
+      <>
+        <s className="mr-2 font-normal text-muted-foreground">{formatEuro(regular, locale)}</s>
+        {formatEuro(early, locale)}
+      </>
+    );
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
@@ -184,14 +197,19 @@ export default async function PublicEventPage({ params }: Props) {
                 </div>
               ) : (
                 <>
+                  {(earlyNormal !== null || earlyMember !== null) && event.earlyBirdEndsAt && (
+                    <div className="pb-1 text-xs font-medium text-primary">
+                      {t('earlyBirdUntil', { date: format.dateTime(new Date(event.earlyBirdEndsAt), { dateStyle: 'medium', timeStyle: 'short' }) })}
+                    </div>
+                  )}
                   <div className="flex justify-between gap-2">
                     <dt>{t('priceNormal')}</dt>
-                    <dd className="font-medium">{formatEuro(event.priceNormalCents, locale)}</dd>
+                    <dd className="font-medium">{priceCell(event.priceNormalCents, earlyNormal)}</dd>
                   </div>
-                  {event.priceMemberCents !== event.priceNormalCents && (
+                  {(event.priceMemberCents !== event.priceNormalCents || earlyMember !== earlyNormal) && (
                     <div className="flex justify-between gap-2">
                       <dt>{t('priceMember')}</dt>
-                      <dd className="font-medium">{formatEuro(event.priceMemberCents, locale)}</dd>
+                      <dd className="font-medium">{priceCell(event.priceMemberCents, earlyMember)}</dd>
                     </div>
                   )}
                 </>

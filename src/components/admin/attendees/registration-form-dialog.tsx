@@ -19,11 +19,18 @@ import type { RoleOption } from './attendees-table';
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
+export type PriceOptions = {
+  normal: string;
+  member: string;
+  /** Sonderpreis-Kategorien des Events (Preis als Formularwert) */
+  categories: { id: number; name: string; price: string; active: boolean }[];
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   roles: RoleOption[];
-  prices: { normal: string; member: string };
+  prices: PriceOptions;
   seatsFree: number;
   /** vorhandene Firmennamen als Vorschläge beim Eintippen (einheitliche Schreibweise) */
   companies?: string[];
@@ -51,6 +58,7 @@ export function RegistrationFormDialog(props: Props) {
           locale: 'de',
           roles: ['attendee'],
           ticketType: 'normal',
+          priceCategoryId: '',
           price: prices.normal,
           billingCompany: '',
           billingAddress: '',
@@ -76,6 +84,10 @@ export function RegistrationFormDialog(props: Props) {
   } = form;
   const status = useWatch({ control, name: 'status' });
   const ticketType = useWatch({ control, name: 'ticketType' });
+  const priceCategoryId = useWatch({ control, name: 'priceCategoryId' });
+  const initialCategory = mode === 'edit' ? props.defaultValues.priceCategoryId : '';
+  // aktive Kategorien; eine schon zugeordnete inaktive bleibt beim Bearbeiten wählbar
+  const categoryOptions = prices.categories.filter((c) => c.active || String(c.id) === initialCategory);
   const priceLocked = mode === 'edit' && props.priceLocked;
 
   function close(next: boolean) {
@@ -151,8 +163,12 @@ export function RegistrationFormDialog(props: Props) {
                     className={selectClass}
                     disabled={priceLocked}
                     {...register('ticketType', {
-                      // Sonderpreis startet mit 0 und wird von Hand eingetragen
-                      onChange: (e) => setValue('price', e.target.value === 'special' ? '0,00' : e.target.value === 'member' ? prices.member : prices.normal),
+                      // Sonderpreis: erste Kategorie vorbelegen, ohne Kategorien startet er mit 0 und wird von Hand eingetragen
+                      onChange: (e) => {
+                        const first = categoryOptions[0];
+                        setValue('priceCategoryId', e.target.value === 'special' && first ? String(first.id) : '');
+                        setValue('price', e.target.value === 'special' ? (first?.price ?? '0,00') : e.target.value === 'member' ? prices.member : prices.normal);
+                      },
                     })}
                   >
                     <option value="normal">{t('ticketNormal')}</option>
@@ -160,13 +176,43 @@ export function RegistrationFormDialog(props: Props) {
                     <option value="special">{t('ticketSpecial')}</option>
                   </select>
                 </Field>
+                {ticketType === 'special' && (
+                  <Field id="reg-category" label={t('priceCategory')} error={fieldError(errors, 'priceCategoryId')} className="sm:col-span-2">
+                    <select
+                      id="reg-category"
+                      className={selectClass}
+                      disabled={priceLocked}
+                      {...register('priceCategoryId', {
+                        onChange: (e) => {
+                          const c = categoryOptions.find((o) => String(o.id) === e.target.value);
+                          if (c) setValue('price', c.price);
+                        },
+                      })}
+                    >
+                      {categoryOptions.map((c) => (
+                        <option key={c.id} value={String(c.id)}>
+                          {c.name} ({c.price} €)
+                        </option>
+                      ))}
+                      <option value="">{t('priceCategoryOther')}</option>
+                    </select>
+                  </Field>
+                )}
                 <Field
                   id="reg-price"
                   label={t('price')}
-                  hint={priceLocked ? t('priceLocked') : ticketType === 'special' ? t('priceSpecialHint') : t('priceHint')}
+                  hint={
+                    priceLocked
+                      ? t('priceLocked')
+                      : ticketType === 'special' && priceCategoryId
+                        ? t('priceCategoryHint')
+                        : ticketType === 'special'
+                          ? t('priceSpecialHint')
+                          : t('priceHint')
+                  }
                   error={fieldError(errors, 'price')}
                 >
-                  <Input id="reg-price" inputMode="decimal" readOnly={priceLocked} {...register('price')} />
+                  <Input id="reg-price" inputMode="decimal" readOnly={priceLocked || (ticketType === 'special' && Boolean(priceCategoryId))} {...register('price')} />
                 </Field>
                 <Field id="reg-billing-company" label={t('billingCompany')} error={fieldError(errors, 'billingCompany')}>
                   <Input id="reg-billing-company" list="reg-company-list" autoComplete="off" {...register('billingCompany')} />

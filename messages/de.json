@@ -94,7 +94,9 @@
     "costGroups": "Kostengruppen",
     "sectionFinance": "Finanzen",
     "pnl": "Erfolgsrechnung",
-    "certificate": "Teilnahmebestätigung"
+    "certificate": "Teilnahmebestätigung",
+    "gdpr": "Datenschutz",
+    "pricing": "Preise & Rabatte"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -201,7 +203,20 @@
     "streamInUse": "In diesem Stream liegen noch Programmpunkte. Bitte zuerst verschieben oder löschen.",
     "imageType": "Bitte ein Bild als PNG oder JPG wählen.",
     "imageTooLarge": "Das Bild darf höchstens 5 MB groß sein.",
-    "imageUnreadable": "Das Bild lässt sich nicht verarbeiten. Bitte als PNG oder JPG neu speichern."
+    "imageUnreadable": "Das Bild lässt sich nicht verarbeiten. Bitte als PNG oder JPG neu speichern.",
+    "gdprActiveRegistrations": "Die Person hat noch laufende Anmeldungen – erst stornieren oder Eventende abwarten.",
+    "gdprOpenRefunds": "Es gibt noch offene Erstattungen.",
+    "gdprAnonymized": "Die Person ist bereits anonymisiert.",
+    "notInFuture": "Datum darf nicht in der Zukunft liegen.",
+    "invalidDate": "Ungültiges Datum.",
+    "earlyBirdEndRequired": "Bitte ein Ende für den Early Bird angeben.",
+    "earlyBirdPriceRequired": "Bitte mindestens einen Early-Bird-Preis angeben.",
+    "codeFormat": "3–40 Zeichen: Buchstaben, Ziffern, - und _.",
+    "codeTaken": "Diesen Code gibt es für das Event schon.",
+    "codeInUse": "Der Code wurde schon eingelöst und kann nicht mehr umbenannt werden.",
+    "priceCategoryInUse": "Die Kategorie wird von Anmeldungen verwendet. Bitte deaktivieren statt löschen.",
+    "discountCodeInUse": "Der Code wurde schon eingelöst. Bitte deaktivieren statt löschen.",
+    "categoryPrice": "Der Preis muss dem Preis der Kategorie entsprechen."
   },
   "forms": {
     "german": "Deutsch",
@@ -264,7 +279,14 @@
     "create": "Event anlegen",
     "save": "Änderungen speichern",
     "fixErrors": "Bitte die markierten Felder prüfen.",
-    "saved": "Gespeichert"
+    "saved": "Gespeichert",
+    "earlyBirdHint": "Günstigerer Preis in einem Zeitraum. Leer lassen, wenn es keinen Early Bird gibt. Rabattcodes gelten nicht auf den Early-Bird-Preis.",
+    "earlyBirdStartsAt": "Early Bird ab",
+    "earlyBirdEndsAt": "Early Bird bis",
+    "priceEarlyNormal": "Early-Bird-Normalpreis",
+    "priceEarlyMember": "Early-Bird-Mitgliedspreis",
+    "earlyBirdPriceHint": "Leer: kein Early Bird für diesen Preis.",
+    "earlyBirdStartsHint": "Leer: ab Anmeldestart."
   },
   "eventActions": {
     "pause": "Anmeldung pausieren",
@@ -595,8 +617,7 @@
       "consentKinds": {
         "terms": "AGB",
         "privacy": "Datenschutz",
-        "photo": "Fotos",
-        "newsletter": "Newsletter"
+        "photo": "Fotos"
       },
       "consentVersion": "{kind} v{version}",
       "consentRevoked": "{kind} (widerrufen)",
@@ -755,7 +776,10 @@
     "notifyConfirmed": "Bestätigung per E-Mail senden (bei Preis über 0 mit Rechnung im Anhang)",
     "notifyWaitlisted": "Wartelisten-Bestätigung per E-Mail senden",
     "ticketSpecial": "Sonderpreis",
-    "priceSpecialHint": "Sonderpreis: mit 0 vorbelegt – Betrag von Hand eintragen (0 = kostenlos)."
+    "priceSpecialHint": "Sonderpreis: mit 0 vorbelegt – Betrag von Hand eintragen (0 = kostenlos).",
+    "priceCategory": "Sonderpreis-Kategorie",
+    "priceCategoryOther": "Anderer Betrag",
+    "priceCategoryHint": "Preis aus der Kategorie (änderbar unter Preise & Rabatte)."
   },
   "members": {
     "title": "Mitgliederliste",
@@ -1144,7 +1168,9 @@
       "auth_user": "Admin-Konto",
       "expense": "Ausgabe",
       "cost_group": "Kostengruppe",
-      "cost_group_template": "Kostengruppen-Vorlage"
+      "cost_group_template": "Kostengruppen-Vorlage",
+      "person": "Person",
+      "dsr_request": "DSGVO-Anfrage"
     },
     "actions": {
       "event_created": "Event angelegt",
@@ -1194,7 +1220,14 @@
       "cost_group_template_created": "Kostengruppen-Vorlage angelegt",
       "cost_group_template_updated": "Kostengruppen-Vorlage geändert",
       "cost_group_template_activated": "Kostengruppen-Vorlage aktiviert",
-      "cost_group_template_deactivated": "Kostengruppen-Vorlage deaktiviert"
+      "cost_group_template_deactivated": "Kostengruppen-Vorlage deaktiviert",
+      "person_exported": "DSGVO-Auskunft exportiert",
+      "person_restricted": "Verarbeitung eingeschränkt",
+      "person_restriction_lifted": "Einschränkung aufgehoben",
+      "person_anonymized": "Person anonymisiert",
+      "dsr_request_created": "DSGVO-Anfrage erfasst",
+      "dsr_request_completed": "DSGVO-Anfrage erledigt",
+      "retention_run": "Löschlauf"
     }
   },
   "public": {
@@ -1236,7 +1269,8 @@
     "imprintOwner": "Medieninhaber und Veranstalter",
     "vatId": "UID-Nummer",
     "myRegistrations": "Meine Anmeldungen",
-    "time": "Zeit"
+    "time": "Zeit",
+    "earlyBirdUntil": "Early Bird bis {date}"
   },
   "publicForm": {
     "waitlistTitle": "Die Veranstaltung ist ausgebucht",
@@ -1270,7 +1304,6 @@
     "acceptPrivacy": "Ich habe die <link>Datenschutzerklärung</link> gelesen.",
     "optionalConsents": "Freiwillig – jederzeit widerrufbar, ohne Einfluss auf Ihre Anmeldung:",
     "photoConsent": "Fotos und Videos, auf denen ich zu sehen bin, dürfen für die Bewerbung der Veranstaltung verwendet werden.",
-    "newsletter": "Ich möchte per E-Mail über künftige Veranstaltungen informiert werden.",
     "submitting": "Wird gesendet …",
     "submitWaitlist": "Auf die Warteliste setzen",
     "submit": "Verbindlich anmelden",
@@ -1294,6 +1327,20 @@
       "waitlistNext": "Wird ein Platz frei, schicken wir Ihnen ein Angebot per E-Mail. Es ist 48 Stunden gültig.",
       "emailNote": "Eine Bestätigung erhalten Sie per E-Mail.",
       "back": "← Zurück zur Veranstaltung"
+    },
+    "discountCode": "Rabattcode (optional)",
+    "discountCodeHint": "Haben Sie einen Code erhalten? Er gilt auf den Normal- oder Mitgliedspreis.",
+    "discountCodeApply": "Einlösen",
+    "discountLine": "Rabatt (Code {code})",
+    "priceTotal": "Ihr Preis",
+    "earlyBirdUntil": "Early-Bird-Preis gültig bis {date}",
+    "code": {
+      "valid": "Rabattcode eingelöst.",
+      "invalid": "Diesen Rabattcode gibt es für diese Veranstaltung nicht.",
+      "notYetValid": "Dieser Rabattcode gilt noch nicht.",
+      "expired": "Dieser Rabattcode ist abgelaufen.",
+      "exhausted": "Dieser Rabattcode ist bereits ausgeschöpft.",
+      "earlyBirdCheaper": "Der Early-Bird-Preis ist günstiger als der Preis mit Rabattcode – es gilt der Early-Bird-Preis."
     }
   },
   "checkout": {
@@ -1720,6 +1767,13 @@
       "sheet": "Erfolgsrechnung",
       "fileName": "erfolgsrechnung",
       "status": "Status"
+    },
+    "priceVariant": {
+      "regular": "Regulär",
+      "early_bird": "Early Bird",
+      "code": "Code {name}",
+      "category": "{name}",
+      "custom": "Anderer Betrag"
     }
   },
   "certificate": {
@@ -1741,5 +1795,189 @@
     "previewUnsaved": "Die Vorschau zeigt den gespeicherten Stand – bitte zuerst speichern.",
     "usage": "Die Vorschau verwendet einen Beispielnamen.",
     "templateTitle": "Vorlage"
+  },
+  "gdpr": {
+    "title": "Datenschutz (DSGVO)",
+    "intro": "Auskunft, Einschränkung und Löschung für betroffene Personen, Anfragen mit Frist und die automatischen Löschfristen.",
+    "search": {
+      "title": "Person suchen",
+      "hint": "Nach E-Mail-Adresse (Groß-/Kleinschreibung egal), Name oder Firma. Gefunden werden Teilnehmende, Speaker und Sponsor-Kontakte.",
+      "placeholder": "E-Mail, Name oder Firma …",
+      "name": "Name",
+      "email": "E-Mail",
+      "company": "Firma",
+      "involvement": "Bezug",
+      "state": "Status",
+      "counts": "{registrations} Anm. · {speakers} Speaker · {contacts} Sponsor-Kontakt",
+      "none": "Keine Person gefunden. Die Anfrage kann trotzdem unten ohne Zuordnung erfasst werden."
+    },
+    "state": {
+      "anonymized": "Anonymisiert",
+      "restricted": "Eingeschränkt",
+      "anonymizedOn": "Anonymisiert am {date}",
+      "restrictedOn": "Eingeschränkt seit {date}"
+    },
+    "sections": {
+      "registrations": "Anmeldungen",
+      "consents": "Einwilligungen",
+      "speakers": "Speaker",
+      "sponsorContacts": "Sponsor-Kontakte",
+      "invoices": "Rechnungen/Gutschriften",
+      "payments": "Zahlungen",
+      "portalAccounts": "Portal-Konto",
+      "auditLog": "Protokolleinträge"
+    },
+    "person": {
+      "actionsTitle": "Auskunft und Löschung",
+      "actionsHint": "Die Auskunft enthält alle gespeicherten Daten (Art. 15/20 DSGVO) und wird protokolliert. Einschränken sperrt E-Mails, Portal und Exporte. Löschen anonymisiert die Person; Rechnungen bleiben wegen § 132 BAO bis zum Ende der Aufbewahrungsfrist erhalten.",
+      "exportJson": "Auskunft als JSON",
+      "exportXlsx": "Auskunft als Excel",
+      "restrict": "Verarbeitung einschränken",
+      "lift": "Einschränkung aufheben",
+      "erase": "Löschen (anonymisieren)",
+      "restrictTitle": "Verarbeitung einschränken?",
+      "restrictText": "Die Person bekommt keine E-Mails mehr, kann das Portal nicht nutzen und erscheint nicht mehr in Exporten und Teilnahmebestätigungen. Offene Einschränkungs-Anfragen werden als erledigt markiert.",
+      "restrictDone": "Verarbeitung eingeschränkt",
+      "liftDone": "Einschränkung aufgehoben",
+      "eraseTitle": "Person endgültig löschen?",
+      "eraseText": "Name, E-Mail, Firma, Telefon, Einwilligungen, Sponsor-Zuordnungen, Portal-Konto, Rechnungsangaben und Mitgliedsnummern der Anmeldungen werden gelöscht. Anmeldungen und Zahlungen bleiben ohne Namen für die Statistik erhalten. Das lässt sich nicht rückgängig machen.",
+      "eraseRetained": "{count, plural, one {# Rechnung bleibt} other {# Rechnungen bleiben}} mit Empfänger bis zum Ende der Aufbewahrungsfrist erhalten (§ 132 BAO).",
+      "eraseDone": "Person gelöscht (anonymisiert)",
+      "blockedActive": "Löschen ist erst möglich, wenn {count, plural, one {die laufende Anmeldung} other {die # laufenden Anmeldungen}} storniert oder das Event vorbei ist.",
+      "blockedRefunds": "Löschen ist erst möglich, wenn {count, plural, one {die offene Erstattung} other {die # offenen Erstattungen}} erledigt ist.",
+      "retained": "{count, plural, one {# Rechnung unterliegt} other {# Rechnungen unterliegen}} der Aufbewahrungspflicht (7 Jahre ab Jahresende, § 132 BAO).",
+      "storedTitle": "Gespeicherte Daten",
+      "storedHint": "Überblick; alle Einzelheiten stehen in der Auskunft.",
+      "registrationLine": "{event}: {status} ({roles})",
+      "speakerLine": "Speaker bei {event}",
+      "contactLine": "Kontakt von {sponsor} bei {event}"
+    },
+    "requests": {
+      "title": "Anfragen Betroffener",
+      "hint": "Jede Anfrage (Auskunft, Berichtigung, Löschung …) mit Eingang erfassen. Frist: ein Monat ab Eingang (Art. 12 DSGVO). Löschen und Einschränken erledigen offene Anfragen derselben Art automatisch.",
+      "type": "Art",
+      "person": "Person",
+      "receivedAt": "Eingang",
+      "dueOn": "Frist bis",
+      "status": "Status",
+      "notes": "Notiz",
+      "notesPlaceholder": "z. B. per E-Mail, Rückfrage zur Identität …",
+      "add": "Anfrage erfassen",
+      "created": "Anfrage erfasst",
+      "newWithoutPerson": "Anfrage ohne zugeordnete Person erfassen",
+      "newHint": "Zum Beispiel, wenn zur Adresse keine Daten gespeichert sind. Für eine gefundene Person die Anfrage besser auf ihrer Seite erfassen.",
+      "complete": "Erledigt",
+      "completedToast": "Anfrage als erledigt markiert",
+      "completedOn": "Erledigt am {date} ({name})",
+      "open": "Offen",
+      "overdue": "Frist überschritten",
+      "empty": "Keine Anfragen erfasst.",
+      "noPerson": "ohne Zuordnung",
+      "unnamed": "(ohne Name)",
+      "types": {
+        "access": "Auskunft",
+        "rectification": "Berichtigung",
+        "erasure": "Löschung",
+        "restriction": "Einschränkung",
+        "portability": "Datenübertragung",
+        "objection": "Widerspruch"
+      }
+    },
+    "retention": {
+      "title": "Löschfristen",
+      "hint": "Der Löschlauf läuft einmal am Tag automatisch mit den Zeitplan-Jobs (oder per „npm run retention“) und wird protokolliert.",
+      "ruleUnpaid": "Stornierte und Wartelisten-Anmeldungen ohne Zahlung: {days} Tage nach Eventende gelöscht.",
+      "rulePeople": "Übrige Personendaten: {months} Monate nach dem letzten Event, an dem die Person teilgenommen hat, anonymisiert.",
+      "ruleBusiness": "Speaker und Sponsor-Kontakte (Geschäftskontakte): erst {years} Jahre nach ihrem letzten Event in dieser Rolle.",
+      "ruleOrphans": "Personen ohne Anmeldung, Speaker-Rolle oder Sponsor-Zuordnung: nach {days} Tagen gelöscht.",
+      "ruleInvoices": "Rechnungen und Gutschriften: 7 Jahre ab Ende des Ausstellungsjahres (§ 132 BAO), danach Empfänger geleert und PDF gelöscht.",
+      "ruleAudit": "Protokoll: Einträge nach {years} Jahren gelöscht.",
+      "ruleBackups": "Datenbank-Sicherungen: nach {days} Tagen gelöscht.",
+      "lastRun": "Letzter Lauf: {date}",
+      "neverRun": "Noch kein Löschlauf ausgeführt.",
+      "previewTitle": "Der nächste Lauf würde:",
+      "previewNothing": "nichts ändern.",
+      "runNow": "Jetzt ausführen",
+      "runTitle": "Löschlauf jetzt ausführen?",
+      "runText": "Alle fälligen Daten werden jetzt gelöscht bzw. anonymisiert. Das lässt sich nicht rückgängig machen.",
+      "done": "Löschlauf ausgeführt",
+      "items": {
+        "deletedRegistrations": "{count, plural, one {# Anmeldung} other {# Anmeldungen}} löschen",
+        "anonymizedPeople": "{count, plural, one {# Person} other {# Personen}} anonymisieren",
+        "keptAsBusinessContact": "{count, plural, one {# Person} other {# Personen}} als Speaker/Sponsor-Kontakt noch behalten",
+        "deletedPeople": "{count, plural, one {# Person} other {# Personen}} ohne Bezug löschen",
+        "purgedInvoices": "bei {count, plural, one {# Beleg} other {# Belegen}} den Empfänger leeren",
+        "deletedAuditEntries": "{count, plural, one {# Protokolleintrag} other {# Protokolleinträge}} löschen",
+        "deletedVerifications": "{count, plural, one {# abgelaufenen Link} other {# abgelaufene Links}} löschen",
+        "deletedBackups": "{count, plural, one {# Sicherung} other {# Sicherungen}} löschen"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Preise & Rabatte",
+    "earlyBirdHint": "Zeitraum und Early-Bird-Preise stehen in den Event-Einstellungen bei den Preisen.",
+    "editEarlyBird": "In den Einstellungen bearbeiten",
+    "earlyBirdRunning": "läuft",
+    "earlyBirdNotRunning": "läuft gerade nicht",
+    "earlyBirdNone": "Kein Early Bird eingerichtet.",
+    "period": "Zeitraum",
+    "fromStart": "ab Anmeldestart",
+    "normal": "Normalpreis",
+    "member": "Mitgliedspreis",
+    "instead": "statt {price}",
+    "noEarlyBird": "kein Early Bird",
+    "codes": "Rabattcodes",
+    "codesHint": "Für Flash Sales und Aussendungen: Teilnehmende geben den Code bei der Anmeldung ein. Er gilt nur auf Normal- und Mitgliedspreis, nicht auf Early Bird.",
+    "addCode": "Rabattcode anlegen",
+    "editCode": "Rabattcode bearbeiten",
+    "noCodes": "Noch keine Rabattcodes.",
+    "code": "Code",
+    "codeHint": "3–40 Zeichen, Groß-/Kleinschreibung egal, z. B. HERBST20.",
+    "discount": "Rabatt",
+    "validity": "Gültig",
+    "validFromTo": "{from} – {to}",
+    "validUntil": "bis {to}",
+    "validFrom": "ab {from}",
+    "validAlways": "unbegrenzt",
+    "uses": "Einlösungen",
+    "usesOf": "{used} von {max}",
+    "status": "Status",
+    "active": "aktiv",
+    "inactive": "inaktiv",
+    "actions": "Aktionen",
+    "editNamed": "{name} bearbeiten",
+    "deleteNamed": "{name} löschen",
+    "kind": "Art",
+    "kindPercent": "Prozent vom Preis",
+    "kindFixed": "Fixer Betrag in €",
+    "valuePercent": "Prozent",
+    "valueFixed": "Betrag in € (brutto)",
+    "validFromLabel": "Gültig ab",
+    "validUntilLabel": "Gültig bis",
+    "optional": "optional",
+    "maxUses": "Max. Einlösungen",
+    "maxUsesHint": "Leer: unbegrenzt.",
+    "note": "Notiz",
+    "noteHint": "Intern, z. B. „Aussendung Oktober“.",
+    "activeLabel": "Aktiv",
+    "codeRule": "Abgezogen wird vom Normal- bzw. Mitgliedspreis, nie unter 0 €. Ist der Early-Bird-Preis günstiger, gilt dieser und der Code wird nicht eingelöst. Stornierte Anmeldungen geben die Einlösung wieder frei.",
+    "categories": "Sonderpreise",
+    "categoriesHint": "Eigene Preiskategorien für dieses Event (z. B. Studierende, Ehrenamt). Auswählbar beim Anlegen oder Bearbeiten einer Anmeldung im Admin, nicht öffentlich.",
+    "addCategory": "Sonderpreis anlegen",
+    "editCategory": "Sonderpreis bearbeiten",
+    "noCategories": "Noch keine Sonderpreise.",
+    "categoryName": "Bezeichnung",
+    "categoryNameHint": "Erscheint auf der Rechnung, z. B. „Studierende“.",
+    "price": "Preis",
+    "priceGross": "Preis in € (brutto)",
+    "registrations": "Anmeldungen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "delete": "Löschen",
+    "deleted": "Gelöscht",
+    "deleteTitle": "Wirklich löschen?",
+    "deleteCategoryText": "Der Sonderpreis „{name}“ wird gelöscht. Wird er schon verwendet, bitte stattdessen deaktivieren.",
+    "deleteCodeText": "Der Rabattcode {name} wird gelöscht. Wurde er schon eingelöst, bitte stattdessen deaktivieren."
   }
 }

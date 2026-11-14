@@ -5,34 +5,90 @@
  *   (priceChanged), damit niemand zu einem Preis angemeldet wird, den er nicht gesehen hat.
  * - Freie Plätze gehen zuerst an die Warteliste: Solange jemand wartet, kommen neue Anmeldungen ebenfalls
  *   auf die Warteliste (Nachrücken per Angebot folgt in Phase 6).
+ * - Preis: Normal- oder Mitgliederpreis, im Early-Bird-Zeitraum der Early-Bird-Preis; ein Rabattcode wirkt nur auf
+ *   den Basispreis (siehe src/lib/pricing.ts). Der Code wird in derselben Transaktion erneut geprüft (Kontingent).
  * - Stripe → „reserved“ für 30 Minuten; Rechnung → sofort „confirmed“ mit offener Zahlung; Preis 0 → „confirmed“, kostenlos.
  * - Eine bestehende Person (E-Mail) wird wiederverwendet, ihre Stammdaten werden aber nicht mit ungeprüften
  *   Eingaben überschrieben (nur leere Firma wird ergänzt). Änderungen macht die Person im Portal oder ein Admin.
- * - AGB- und Datenschutz-Fassung werden als Zustimmung mit Zeitpunkt gespeichert, Foto und Newsletter nur bei Opt-in.
+ * - AGB- und Datenschutz-Fassung werden als Zustimmung mit Zeitpunkt gespeichert, Foto nur bei Opt-in.
  */
 import { randomUUID } from 'node:crypto';
 import { and, count, eq, ne } from 'drizzle-orm';
 import { ServiceError } from '@/lib/action-result';
 import { viennaDate } from '@/lib/dates';
+import { computeTicketPrice, type PriceTier } from '@/lib/pricing';
 import type { PublicRegistrationInput } from '@/lib/validation/public-registration';
 import type { Db } from '@/server/db/core';
 import { consents, events, people, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { SYSTEM, writeAudit, type Tx } from './audit';
 import type { EventRow } from './events';
 import { findValidMember } from './members';
+import { checkDiscountCode } from './pricing';
 import { getAvailability } from './public-events';
 
 export const STRIPE_RESERVATION_MINUTES = 30;
 
 export type MemberCheck = 'none' | 'valid' | 'invalid';
-export type PriceQuote = { priceCents: number; ticketType: 'normal' | 'member'; memberId: number | null; memberCheck: MemberCheck };
+export type CodeStatus = 'none' | 'valid' | 'invalid' | 'notYetValid' | 'expired' | 'exhausted' | 'earlyBirdCheaper';
+export type PriceQuote = {
+  priceCents: number;
+  /** Preis vor Rabatt (Basis- oder Early-Bird-Preis) */
+  listPriceCents: number;
+  ticketType: 'normal' | 'member';
+  tier: PriceTier;
+  memberId: number | null;
+  memberCheck: MemberCheck;
+  codeStatus: CodeStatus;
+  discountCodeId: number | null;
+  /** eingelöster Code (normalisiert) oder null */
+  code: string | null;
+  discountCents: number;
+  /** Ende des Early-Bird-Zeitraums, wenn der Preis ein Early-Bird-Preis ist */
+  earlyBirdEndsAt: string | null;
+};
 
-export function quotePrice(db: Db | Tx, event: EventRow, memberNumber: string | null, lastName: string, now = new Date()): PriceQuote {
-  const normal: PriceQuote = { priceCents: event.priceNormalCents, ticketType: 'normal', memberId: null, memberCheck: 'none' };
-  if (!memberNumber?.trim()) return normal;
-  const member = findValidMember(db, memberNumber, lastName, viennaDate(now.toISOString()));
-  if (!member) return { ...normal, memberCheck: 'invalid' };
-  return { priceCents: event.priceMemberCents, ticketType: 'member', memberId: member.id, memberCheck: 'valid' };
+export function quotePrice(
+  db: Db | Tx,
+  event: EventRow,
+  memberNumber: string | null,
+  lastName: string,
+  now = new Date(),
+  discountCode: string | null = null
+): PriceQuote {
+  let ticketType: 'normal' | 'member' = 'normal';
+  let memberId: number | null = null;
+  let memberCheck: MemberCheck = 'none';
+  if (memberNumber?.trim()) {
+    const member = findValidMember(db, memberNumber, lastName, viennaDate(now.toISOString()));
+    if (member) {
+      ticketType = 'member';
+      memberId = member.id;
+      memberCheck = 'valid';
+    } else memberCheck = 'invalid';
+  }
+  let codeStatus: CodeStatus = 'none';
+  let discount: { id: number; code: string; kind: 'fixed' | 'percent'; value: number } | null = null;
+  if (discountCode?.trim()) {
+    const check = checkDiscountCode(db, event.id, discountCode, now);
+    codeStatus = check.status;
+    if (check.status === 'valid') discount = check.code;
+  }
+  const price = computeTicketPrice(event, ticketType, discount, now);
+  if (discount && price.earlyBirdCheaper) codeStatus = 'earlyBirdCheaper';
+  const applied = discount && !price.earlyBirdCheaper ? discount : null;
+  return {
+    priceCents: price.priceCents,
+    listPriceCents: price.listPriceCents,
+    ticketType,
+    tier: price.tier,
+    memberId,
+    memberCheck,
+    codeStatus,
+    discountCodeId: applied?.id ?? null,
+    code: applied?.code ?? null,
+    discountCents: price.discountCents,
+    earlyBirdEndsAt: price.tier === 'early_bird' ? event.earlyBirdEndsAt : null,
+  };
 }
 
 export type PublicRegistrationResult = {
@@ -41,7 +97,10 @@ export type PublicRegistrationResult = {
   paymentMethod: 'stripe' | 'invoice' | 'free';
   priceCents: number;
   ticketType: 'normal' | 'member';
+  tier: PriceTier;
   memberCheck: MemberCheck;
+  code: string | null;
+  discountCents: number;
   reservedUntil: string | null;
 };
 
@@ -79,7 +138,7 @@ export function registerPublic(
         throw new ServiceError('CONFLICT', { _form: 'legalChanged' });
       }
 
-      const quote = quotePrice(tx, event, input.memberNumber, input.lastName, now);
+      const quote = quotePrice(tx, event, input.memberNumber, input.lastName, now, input.discountCode ?? null);
       if (quote.priceCents !== input.expectedPriceCents) throw new ServiceError('CONFLICT', { _form: 'priceChanged' });
 
       let paymentMethod: PublicRegistrationResult['paymentMethod'] = 'free';
@@ -124,6 +183,9 @@ export function registerPublic(
           paymentMethod,
           paymentStatus: paymentMethod === 'free' ? 'not_required' : 'open',
           ticketType: quote.ticketType,
+          priceTier: quote.tier,
+          discountCodeId: quote.discountCodeId,
+          discountCents: quote.discountCents,
           memberId: quote.memberId,
           memberNumberEntered: input.memberNumber,
           priceCents: quote.priceCents,
@@ -146,7 +208,6 @@ export function registerPublic(
         { personId, kind: 'privacy', documentId: input.privacyDocumentId, eventId, grantedAt: nowIso, source: 'public' },
       ];
       if (input.photoConsent) consentRows.push({ personId, kind: 'photo', eventId, grantedAt: nowIso, source: 'public' });
-      if (input.newsletter) consentRows.push({ personId, kind: 'newsletter', eventId, grantedAt: nowIso, source: 'public' });
       tx.insert(consents).values(consentRows).run();
 
       writeAudit(tx, SYSTEM, {
@@ -154,7 +215,9 @@ export function registerPublic(
         entity: 'registration',
         entityId: reg.id,
         eventId,
-        summary: `Öffentliche Anmeldung (${status}, ${paymentMethod}, ${quote.ticketType}${quote.memberCheck === 'invalid' ? ', Mitgliedsnummer ungültig' : ''})`,
+        summary: `Öffentliche Anmeldung (${status}, ${paymentMethod}, ${quote.ticketType}${quote.tier === 'early_bird' ? ', Early Bird' : ''}${
+          quote.code ? `, Code ${quote.code}` : ''
+        }${quote.memberCheck === 'invalid' ? ', Mitgliedsnummer ungültig' : ''})`,
       });
 
       return {
@@ -163,7 +226,10 @@ export function registerPublic(
         paymentMethod,
         priceCents: quote.priceCents,
         ticketType: quote.ticketType,
+        tier: quote.tier,
         memberCheck: quote.memberCheck,
+        code: quote.code,
+        discountCents: quote.discountCents,
         reservedUntil,
       };
     },

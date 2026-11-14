@@ -3,6 +3,7 @@ import { localized } from '@/lib/localized';
 import { centsToInput } from '@/lib/money';
 import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { getEventStats } from '@/server/services/events';
+import { listPriceCategories } from '@/server/services/pricing';
 import { listRegistrations, listRoles } from '@/server/services/registrations';
 
 type Props = EventParams & { searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -25,7 +26,11 @@ export default async function AttendeesPage({ params, searchParams }: Props) {
       roles={roles}
       seatsFree={stats.seatsFree}
       readOnly={Boolean(event.archivedAt)}
-      prices={{ normal: centsToInput(event.priceNormalCents), member: centsToInput(event.priceMemberCents) }}
+      prices={{
+        normal: centsToInput(event.priceNormalCents),
+        member: centsToInput(event.priceMemberCents),
+        categories: listPriceCategories(db, event.id).map((c) => ({ id: c.id, name: c.name, price: centsToInput(c.priceCents), active: c.active })),
+      }}
       initialView={one('view') || undefined}
       openId={Number.isSafeInteger(openId) && rows.some((r) => r.id === openId) ? openId : null}
       openCreate={one('new') === '1'}

@@ -94,7 +94,9 @@
     "costGroups": "Cost groups",
     "sectionFinance": "Finance",
     "pnl": "Profit and loss",
-    "certificate": "Certificate of attendance"
+    "certificate": "Certificate of attendance",
+    "gdpr": "Data protection",
+    "pricing": "Prices & discounts"
   },
   "security": {
     "title": "Two-factor authentication",
@@ -201,7 +203,20 @@
     "streamInUse": "There are still sessions in this stream. Please move or delete them first.",
     "imageType": "Please choose a PNG or JPG image.",
     "imageTooLarge": "The image must not exceed 5 MB.",
-    "imageUnreadable": "The image cannot be processed. Please save it again as PNG or JPG."
+    "imageUnreadable": "The image cannot be processed. Please save it again as PNG or JPG.",
+    "gdprActiveRegistrations": "The person still has active registrations – cancel them first or wait until the event is over.",
+    "gdprOpenRefunds": "There are still open refunds.",
+    "gdprAnonymized": "The person is already anonymised.",
+    "notInFuture": "Date must not be in the future.",
+    "invalidDate": "Invalid date.",
+    "earlyBirdEndRequired": "Please set an end for the early bird.",
+    "earlyBirdPriceRequired": "Please enter at least one early bird price.",
+    "codeFormat": "3–40 characters: letters, digits, - and _.",
+    "codeTaken": "This code already exists for the event.",
+    "codeInUse": "The code has already been redeemed and cannot be renamed.",
+    "priceCategoryInUse": "The category is used by registrations. Please deactivate instead of deleting.",
+    "discountCodeInUse": "The code has already been redeemed. Please deactivate instead of deleting.",
+    "categoryPrice": "The price must match the category price."
   },
   "forms": {
     "german": "German",
@@ -264,7 +279,14 @@
     "create": "Create event",
     "save": "Save changes",
     "fixErrors": "Please check the highlighted fields.",
-    "saved": "Saved"
+    "saved": "Saved",
+    "earlyBirdHint": "Lower price during a period. Leave empty if there is no early bird. Discount codes do not apply to early bird prices.",
+    "earlyBirdStartsAt": "Early bird from",
+    "earlyBirdEndsAt": "Early bird until",
+    "priceEarlyNormal": "Early bird regular price",
+    "priceEarlyMember": "Early bird member price",
+    "earlyBirdPriceHint": "Empty: no early bird for this price.",
+    "earlyBirdStartsHint": "Empty: from registration start."
   },
   "eventActions": {
     "pause": "Pause registration",
@@ -595,8 +617,7 @@
       "consentKinds": {
         "terms": "Terms",
         "privacy": "Privacy",
-        "photo": "Photos",
-        "newsletter": "Newsletter"
+        "photo": "Photos"
       },
       "consentVersion": "{kind} v{version}",
       "consentRevoked": "{kind} (revoked)",
@@ -755,7 +776,10 @@
     "notifyConfirmed": "Send confirmation by e-mail (with the invoice attached if the price is above 0)",
     "notifyWaitlisted": "Send waitlist confirmation by e-mail",
     "ticketSpecial": "Special price",
-    "priceSpecialHint": "Special price: starts at 0 – enter the amount manually (0 = free)."
+    "priceSpecialHint": "Special price: starts at 0 – enter the amount manually (0 = free).",
+    "priceCategory": "Special price category",
+    "priceCategoryOther": "Other amount",
+    "priceCategoryHint": "Price from the category (editable under Prices & discounts)."
   },
   "members": {
     "title": "Member list",
@@ -1144,7 +1168,9 @@
       "auth_user": "Admin account",
       "expense": "Expense",
       "cost_group": "Cost group",
-      "cost_group_template": "Cost group template"
+      "cost_group_template": "Cost group template",
+      "person": "Person",
+      "dsr_request": "GDPR request"
     },
     "actions": {
       "event_created": "Event created",
@@ -1194,7 +1220,14 @@
       "cost_group_template_created": "Cost group template created",
       "cost_group_template_updated": "Cost group template changed",
       "cost_group_template_activated": "Cost group template activated",
-      "cost_group_template_deactivated": "Cost group template deactivated"
+      "cost_group_template_deactivated": "Cost group template deactivated",
+      "person_exported": "GDPR data export",
+      "person_restricted": "Processing restricted",
+      "person_restriction_lifted": "Restriction lifted",
+      "person_anonymized": "Person anonymised",
+      "dsr_request_created": "GDPR request recorded",
+      "dsr_request_completed": "GDPR request completed",
+      "retention_run": "Retention run"
     }
   },
   "public": {
@@ -1236,7 +1269,8 @@
     "imprintOwner": "Owner and organizer",
     "vatId": "VAT ID",
     "myRegistrations": "My registrations",
-    "time": "Time"
+    "time": "Time",
+    "earlyBirdUntil": "Early bird until {date}"
   },
   "publicForm": {
     "waitlistTitle": "This event is sold out",
@@ -1270,7 +1304,6 @@
     "acceptPrivacy": "I have read the <link>privacy notice</link>.",
     "optionalConsents": "Optional – can be withdrawn at any time and does not affect your registration:",
     "photoConsent": "Photos and videos showing me may be used to promote the event.",
-    "newsletter": "I would like to receive emails about future events.",
     "submitting": "Sending …",
     "submitWaitlist": "Join the waitlist",
     "submit": "Register now (binding)",
@@ -1294,6 +1327,20 @@
       "waitlistNext": "If a seat becomes available, we will email you an offer. It is valid for 48 hours.",
       "emailNote": "You will receive a confirmation by email.",
       "back": "← Back to the event"
+    },
+    "discountCode": "Discount code (optional)",
+    "discountCodeHint": "Received a code? It applies to the regular or member price.",
+    "discountCodeApply": "Apply",
+    "discountLine": "Discount (code {code})",
+    "priceTotal": "Your price",
+    "earlyBirdUntil": "Early bird price valid until {date}",
+    "code": {
+      "valid": "Discount code applied.",
+      "invalid": "This discount code does not exist for this event.",
+      "notYetValid": "This discount code is not valid yet.",
+      "expired": "This discount code has expired.",
+      "exhausted": "This discount code has been fully redeemed.",
+      "earlyBirdCheaper": "The early bird price is lower than the price with this code – the early bird price applies."
     }
   },
   "checkout": {
@@ -1720,6 +1767,13 @@
       "sheet": "Profit and loss",
       "fileName": "profit-and-loss",
       "status": "Status"
+    },
+    "priceVariant": {
+      "regular": "Regular",
+      "early_bird": "Early bird",
+      "code": "Code {name}",
+      "category": "{name}",
+      "custom": "Other amount"
     }
   },
   "certificate": {
@@ -1741,5 +1795,189 @@
     "previewUnsaved": "The preview shows the saved version – please save first.",
     "usage": "The preview uses a sample name.",
     "templateTitle": "Template"
+  },
+  "gdpr": {
+    "title": "Data protection (GDPR)",
+    "intro": "Access, restriction and erasure for data subjects, requests with deadlines and the automatic retention periods.",
+    "search": {
+      "title": "Find person",
+      "hint": "By e-mail address (case-insensitive), name or company. Finds attendees, speakers and sponsor contacts.",
+      "placeholder": "E-mail, name or company …",
+      "name": "Name",
+      "email": "E-mail",
+      "company": "Company",
+      "involvement": "Involvement",
+      "state": "Status",
+      "counts": "{registrations} reg. · {speakers} speaker · {contacts} sponsor contact",
+      "none": "No person found. You can still record the request below without a person."
+    },
+    "state": {
+      "anonymized": "Anonymised",
+      "restricted": "Restricted",
+      "anonymizedOn": "Anonymised on {date}",
+      "restrictedOn": "Restricted since {date}"
+    },
+    "sections": {
+      "registrations": "Registrations",
+      "consents": "Consents",
+      "speakers": "Speaker",
+      "sponsorContacts": "Sponsor contacts",
+      "invoices": "Invoices/credit notes",
+      "payments": "Payments",
+      "portalAccounts": "Portal account",
+      "auditLog": "Audit log entries"
+    },
+    "person": {
+      "actionsTitle": "Access and erasure",
+      "actionsHint": "The export contains all stored data (Art. 15/20 GDPR) and is logged. Restricting blocks e-mails, portal and exports. Erasing anonymises the person; invoices are kept until the end of the retention period (§ 132 BAO).",
+      "exportJson": "Export as JSON",
+      "exportXlsx": "Export as Excel",
+      "restrict": "Restrict processing",
+      "lift": "Lift restriction",
+      "erase": "Erase (anonymise)",
+      "restrictTitle": "Restrict processing?",
+      "restrictText": "The person no longer receives e-mails, cannot use the portal and no longer appears in exports and certificates. Open restriction requests are marked as completed.",
+      "restrictDone": "Processing restricted",
+      "liftDone": "Restriction lifted",
+      "eraseTitle": "Erase person permanently?",
+      "eraseText": "Name, e-mail, company, phone, consents, sponsor assignments, portal account, billing details and member numbers of registrations are deleted. Registrations and payments remain without a name for statistics. This cannot be undone.",
+      "eraseRetained": "{count, plural, one {# invoice is} other {# invoices are}} kept with the recipient until the end of the retention period (§ 132 BAO).",
+      "eraseDone": "Person erased (anonymised)",
+      "blockedActive": "Erasure is possible once {count, plural, one {the active registration is} other {the # active registrations are}} cancelled or the event is over.",
+      "blockedRefunds": "Erasure is possible once {count, plural, one {the open refund is} other {the # open refunds are}} settled.",
+      "retained": "{count, plural, one {# invoice is} other {# invoices are}} subject to the retention obligation (7 years from year end, § 132 BAO).",
+      "storedTitle": "Stored data",
+      "storedHint": "Overview; the export contains all details.",
+      "registrationLine": "{event}: {status} ({roles})",
+      "speakerLine": "Speaker at {event}",
+      "contactLine": "Contact of {sponsor} at {event}"
+    },
+    "requests": {
+      "title": "Data subject requests",
+      "hint": "Record every request (access, rectification, erasure …) with its date of receipt. Deadline: one month from receipt (Art. 12 GDPR). Erasing and restricting complete open requests of the same type automatically.",
+      "type": "Type",
+      "person": "Person",
+      "receivedAt": "Received",
+      "dueOn": "Due",
+      "status": "Status",
+      "notes": "Note",
+      "notesPlaceholder": "e.g. by e-mail, identity check …",
+      "add": "Record request",
+      "created": "Request recorded",
+      "newWithoutPerson": "Record a request without a person",
+      "newHint": "For example if no data is stored for the address. For a person you found, record the request on their page.",
+      "complete": "Done",
+      "completedToast": "Request marked as completed",
+      "completedOn": "Completed on {date} ({name})",
+      "open": "Open",
+      "overdue": "Overdue",
+      "empty": "No requests recorded.",
+      "noPerson": "no person",
+      "unnamed": "(no name)",
+      "types": {
+        "access": "Access",
+        "rectification": "Rectification",
+        "erasure": "Erasure",
+        "restriction": "Restriction",
+        "portability": "Portability",
+        "objection": "Objection"
+      }
+    },
+    "retention": {
+      "title": "Retention periods",
+      "hint": "The retention run happens once a day with the scheduled jobs (or via “npm run retention”) and is logged.",
+      "ruleUnpaid": "Cancelled and waitlisted registrations without payment: deleted {days} days after the event.",
+      "rulePeople": "Other personal data: anonymised {months} months after the last event the person attended.",
+      "ruleBusiness": "Speakers and sponsor contacts (business contacts): only {years} years after their last event in that role.",
+      "ruleOrphans": "People without registration, speaker role or sponsor assignment: deleted after {days} days.",
+      "ruleInvoices": "Invoices and credit notes: 7 years from the end of the year of issue (§ 132 BAO), then recipient cleared and PDF deleted.",
+      "ruleAudit": "Audit log: entries deleted after {years} years.",
+      "ruleBackups": "Database backups: deleted after {days} days.",
+      "lastRun": "Last run: {date}",
+      "neverRun": "No retention run yet.",
+      "previewTitle": "The next run would:",
+      "previewNothing": "change nothing.",
+      "runNow": "Run now",
+      "runTitle": "Run retention now?",
+      "runText": "All due data will be deleted or anonymised now. This cannot be undone.",
+      "done": "Retention run completed",
+      "items": {
+        "deletedRegistrations": "delete {count, plural, one {# registration} other {# registrations}}",
+        "anonymizedPeople": "anonymise {count, plural, one {# person} other {# people}}",
+        "keptAsBusinessContact": "keep {count, plural, one {# person} other {# people}} as speaker/sponsor contact for now",
+        "deletedPeople": "delete {count, plural, one {# person} other {# people}} without involvement",
+        "purgedInvoices": "clear the recipient of {count, plural, one {# document} other {# documents}}",
+        "deletedAuditEntries": "delete {count, plural, one {# audit entry} other {# audit entries}}",
+        "deletedVerifications": "delete {count, plural, one {# expired link} other {# expired links}}",
+        "deletedBackups": "delete {count, plural, one {# backup} other {# backups}}"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Prices & discounts",
+    "earlyBirdHint": "Period and early bird prices are set in the event settings next to the prices.",
+    "editEarlyBird": "Edit in settings",
+    "earlyBirdRunning": "running",
+    "earlyBirdNotRunning": "not running",
+    "earlyBirdNone": "No early bird set up.",
+    "period": "Period",
+    "fromStart": "from registration start",
+    "normal": "Regular price",
+    "member": "Member price",
+    "instead": "instead of {price}",
+    "noEarlyBird": "no early bird",
+    "codes": "Discount codes",
+    "codesHint": "For flash sales and mailings: attendees enter the code when registering. It applies to the regular and member price only, not to early bird.",
+    "addCode": "Add discount code",
+    "editCode": "Edit discount code",
+    "noCodes": "No discount codes yet.",
+    "code": "Code",
+    "codeHint": "3–40 characters, case-insensitive, e.g. AUTUMN20.",
+    "discount": "Discount",
+    "validity": "Valid",
+    "validFromTo": "{from} – {to}",
+    "validUntil": "until {to}",
+    "validFrom": "from {from}",
+    "validAlways": "unlimited",
+    "uses": "Redemptions",
+    "usesOf": "{used} of {max}",
+    "status": "Status",
+    "active": "active",
+    "inactive": "inactive",
+    "actions": "Actions",
+    "editNamed": "Edit {name}",
+    "deleteNamed": "Delete {name}",
+    "kind": "Type",
+    "kindPercent": "Percent of price",
+    "kindFixed": "Fixed amount in €",
+    "valuePercent": "Percent",
+    "valueFixed": "Amount in € (gross)",
+    "validFromLabel": "Valid from",
+    "validUntilLabel": "Valid until",
+    "optional": "optional",
+    "maxUses": "Max. redemptions",
+    "maxUsesHint": "Empty: unlimited.",
+    "note": "Note",
+    "noteHint": "Internal, e.g. “Mailing October”.",
+    "activeLabel": "Active",
+    "codeRule": "Deducted from the regular or member price, never below €0. If the early bird price is lower, it applies and the code is not redeemed. Cancelled registrations release the redemption.",
+    "categories": "Special prices",
+    "categoriesHint": "Custom price categories for this event (e.g. students, volunteers). Selectable when adding or editing a registration in the admin area, not public.",
+    "addCategory": "Add special price",
+    "editCategory": "Edit special price",
+    "noCategories": "No special prices yet.",
+    "categoryName": "Name",
+    "categoryNameHint": "Shown on the invoice, e.g. “Students”.",
+    "price": "Price",
+    "priceGross": "Price in € (gross)",
+    "registrations": "Registrations",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "Saved",
+    "delete": "Delete",
+    "deleted": "Deleted",
+    "deleteTitle": "Really delete?",
+    "deleteCategoryText": "The special price “{name}” will be deleted. If it is already in use, please deactivate it instead.",
+    "deleteCodeText": "The discount code {name} will be deleted. If it has already been redeemed, please deactivate it instead."
   }
 }

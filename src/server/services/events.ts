@@ -13,6 +13,7 @@ import { copyEventCostGroups, instantiateTemplates } from './expenses';
 import { latestGlobalTerms } from './legal';
 import { copyCertificate } from './certificates';
 import { copyStreams, createDefaultStream } from './program';
+import { copyPriceCategories } from './pricing';
 
 export type EventRow = typeof events.$inferSelect;
 export type CancellationRuleRow = typeof cancellationRules.$inferSelect;
@@ -214,7 +215,7 @@ export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug
     const { id: _id, createdAt: _c, archivedAt: _a, termsDocumentId, ...copyable } = source;
     const [row] = tx
       .insert(events)
-      .values({ ...copyable, slug: target.slug, name: target.name, registrationPaused: false })
+      .values({ ...copyable, slug: target.slug, name: target.name, registrationPaused: false, earlyBirdStartsAt: null, earlyBirdEndsAt: null })
       .returning()
       .all();
 
@@ -247,6 +248,7 @@ export function copyEvent(db: Db, actor: Actor, sourceId: number, target: { slug
     copyEventCostGroups(tx, sourceId, row.id);
     copyStreams(tx, sourceId, row.id);
     copyCertificate(tx, sourceId, row.id);
+    copyPriceCategories(tx, sourceId, row.id);
 
     writeAudit(tx, actor, {
       action: 'event.copied',

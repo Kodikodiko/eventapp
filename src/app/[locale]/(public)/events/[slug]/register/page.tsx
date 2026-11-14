@@ -8,6 +8,8 @@ import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
 import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import { getOrganizerSettings } from '@/server/services/organizer';
+import { hasActiveDiscountCodes } from '@/server/services/pricing';
+import { quotePrice } from '@/server/services/public-registration';
 import { getAvailability, getPublicEventBySlug } from '@/server/services/public-events';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
@@ -30,6 +32,7 @@ export default async function RegisterPage({ params }: Props) {
   const availability = getAvailability(db, event, isOnlinePaymentEnabled());
   const organizer = getOrganizerSettings(db);
   const name = localized(event.name, locale);
+  const { memberId: _m, discountCodeId: _d, ...initialQuote } = quotePrice(db, event, null, '');
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -51,6 +54,8 @@ export default async function RegisterPage({ params }: Props) {
             priceNormalCents: event.priceNormalCents,
             priceMemberCents: event.priceMemberCents,
           }}
+          initialQuote={initialQuote}
+          hasDiscountCodes={hasActiveDiscountCodes(db, event.id)}
           waitlistOnly={availability.waitlistOnly}
           paymentMethods={availability.paymentMethods}
           termsDocumentId={availability.termsDocumentId}

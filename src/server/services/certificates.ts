@@ -172,12 +172,12 @@ export async function certificatesPdf(db: Db, actor: Actor, eventId: number, reg
   const ids = [...new Set(registrationIds)].filter((id) => Number.isSafeInteger(id) && id > 0);
   if (ids.length === 0) return null;
   const rows = db
-    .select({ id: registrations.id, firstName: people.firstName, lastName: people.lastName, locale: people.locale, anonymizedAt: people.anonymizedAt })
+    .select({ id: registrations.id, firstName: people.firstName, lastName: people.lastName, locale: people.locale, anonymizedAt: people.anonymizedAt, restrictedAt: people.restrictedAt })
     .from(registrations)
     .innerJoin(people, eq(people.id, registrations.personId))
     .where(and(eq(registrations.eventId, eventId), inArray(registrations.id, ids)))
     .all()
-    .filter((r) => !r.anonymizedAt)
+    .filter((r) => !r.anonymizedAt && !r.restrictedAt)
     .sort((a, b) => a.lastName.localeCompare(b.lastName, 'de') || a.firstName.localeCompare(b.firstName, 'de'));
   if (rows.length === 0) return null;
   const settings = getCertificateSettings(db, eventId);

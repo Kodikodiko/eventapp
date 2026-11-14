@@ -92,6 +92,20 @@
       "when": 1794600145573,
       "tag": "0012_certificates",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794645219921,
+      "tag": "0013_price_promotions",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794648000000,
+      "tag": "0014_remove_newsletter",
+      "breakpoints": true
     }
   ]
 }

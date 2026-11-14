@@ -32,7 +32,8 @@ export async function GET(request: Request) {
   if (!event) return new Response('Not found', { status: 404 });
 
   const { filter, sort } = filterFromSearchParams(url.searchParams);
-  const rows = filterAndSort(listRegistrations(db, event.id), filter, sort);
+  // eingeschränkte Personen (DSGVO 7.4) nie exportieren
+  const rows = filterAndSort(listRegistrations(db, event.id), filter, sort).filter((r) => !r.restricted);
 
   const t = await getTranslations({ locale, namespace: 'attendees' });
   const roleLabels = Object.fromEntries(listRoles(db).map((r) => [r.key, locale === 'en' && r.label.en ? r.label.en : r.label.de]));

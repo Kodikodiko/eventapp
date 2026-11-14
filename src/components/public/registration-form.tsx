@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { formatEuro } from '@/lib/money';
@@ -18,15 +19,19 @@ import {
   type PublicPaymentMethod,
   type PublicRegistrationValues,
 } from '@/lib/validation/public-registration';
-import { quotePriceAction, registerPublicAction, type PublicRegistrationOutcome } from '@/server/actions/public-registration';
+import { quotePriceAction, registerPublicAction, type PublicQuote, type PublicRegistrationOutcome } from '@/server/actions/public-registration';
 
-type Quote = { priceCents: number; ticketType: 'normal' | 'member'; memberCheck: 'none' | 'valid' | 'invalid'; /** Nummer|Nachname, für die der Preis gilt */ key: string };
+type Quote = PublicQuote & { /** Nummer|Nachname|Code, für die der Preis gilt */ key: string };
 
 const TOP_ID = 'registration-top';
 const scrollToTop = () => document.getElementById(TOP_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 type Props = {
   event: { id: number; slug: string; name: string; priceNormalCents: number; priceMemberCents: number };
+  /** Preis ohne Mitgliedsnummer und Code zum Zeitpunkt des Seitenaufrufs (berücksichtigt Early Bird) */
+  initialQuote: PublicQuote;
+  /** Feld „Rabattcode“ anzeigen */
+  hasDiscountCodes: boolean;
   waitlistOnly: boolean;
   paymentMethods: PublicPaymentMethod[];
   termsDocumentId: number;
@@ -36,13 +41,22 @@ type Props = {
 
 const checkboxClass = 'mt-0.5 size-4 shrink-0 accent-primary';
 
-export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDocumentId, privacyDocumentId, paymentTermDays }: Props) {
+export function RegistrationForm({
+  event,
+  initialQuote,
+  hasDiscountCodes,
+  waitlistOnly,
+  paymentMethods,
+  termsDocumentId,
+  privacyDocumentId,
+  paymentTermDays,
+}: Props) {
   const t = useTranslations('publicForm');
   const tAction = useTranslations('actionErrors');
   const validation = useValidationMessage();
   const locale = useLocale() as Locale;
   const [pending, startTransition] = useTransition();
-  const normal: Quote = { priceCents: event.priceNormalCents, ticketType: 'normal', memberCheck: 'none', key: '|' };
+  const normal: Quote = { ...initialQuote, key: '||' };
   const [quote, setQuote] = useState<Quote>(normal);
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<PublicRegistrationOutcome | null>(null);
@@ -55,13 +69,13 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
       email: '',
       company: '',
       memberNumber: '',
+      discountCode: '',
       paymentMethod: paymentMethods.length === 1 ? paymentMethods[0] : '',
       billingCompany: '',
       billingAddress: '',
       acceptTerms: false,
       acceptPrivacy: false,
       photoConsent: false,
-      newsletter: false,
       website: '',
     },
   });
@@ -78,19 +92,21 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
   const memberNumber = useWatch({ control, name: 'memberNumber' });
   const needsPayment = quote.priceCents > 0;
   const memberPriceDiffers = event.priceMemberCents !== event.priceNormalCents;
+  const codeMessage = codeStatusMessage(quote.codeStatus);
 
   /** Preis beim Server erfragen; gibt den neuen Preis zurück (null bei Fehler). */
   async function refreshQuote(force = false): Promise<Quote | null> {
     const number = getValues('memberNumber').trim();
     const lastName = getValues('lastName').trim();
-    const key = `${number}|${lastName.toLowerCase()}`;
+    const code = (getValues('discountCode') ?? '').trim();
+    const key = `${number}|${lastName.toLowerCase()}|${code.toUpperCase()}`;
     if (!force && key === quote.key) return quote;
-    if (!number) {
+    if (!force && !number && !code) {
       const q = { ...normal, key };
       setQuote(q);
       return q;
     }
-    const res = await quotePriceAction({ eventId: event.id, memberNumber: number, lastName });
+    const res = await quotePriceAction({ eventId: event.id, memberNumber: number, lastName, discountCode: code });
     if (!res.ok) {
       setFormError(res.fieldErrors?._form ? validation(res.fieldErrors._form)! : tAction(res.error));
       return null;
@@ -178,13 +194,50 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
               <Input id="memberNumber" autoComplete="off" {...register('memberNumber', { onBlur: () => startTransition(async () => void (await refreshQuote())) })} />
             </Field>
           )}
+          {hasDiscountCodes && (
+            <Field id="discountCode" label={t('discountCode')} hint={t('discountCodeHint')} error={fieldError(errors, 'discountCode')}>
+              <div className="flex gap-2">
+                <Input
+                  id="discountCode"
+                  autoComplete="off"
+                  className="uppercase"
+                  {...register('discountCode', { onBlur: () => startTransition(async () => void (await refreshQuote())) })}
+                />
+                <Button type="button" variant="outline" disabled={pending} onClick={() => startTransition(async () => void (await refreshQuote()))}>
+                  {t('discountCodeApply')}
+                </Button>
+              </div>
+            </Field>
+          )}
           <div className="rounded-lg border bg-muted/40 p-4" aria-live="polite">
+            {quote.discountCents > 0 && (
+              <>
+                <p className="flex items-baseline justify-between gap-4 text-sm text-muted-foreground">
+                  <span>{quote.ticketType === 'member' ? t('priceMember') : t('priceNormal')}</span>
+                  <span>{formatEuro(quote.listPriceCents, locale)}</span>
+                </p>
+                <p className="flex items-baseline justify-between gap-4 text-sm text-muted-foreground">
+                  <span>{t('discountLine', { code: quote.code ?? '' })}</span>
+                  <span>−{formatEuro(quote.discountCents, locale)}</span>
+                </p>
+              </>
+            )}
             <p className="flex items-baseline justify-between gap-4">
-              <span>{quote.ticketType === 'member' ? t('priceMember') : t('priceNormal')}</span>
+              <span>
+                {quote.discountCents > 0 ? t('priceTotal') : quote.ticketType === 'member' ? t('priceMember') : t('priceNormal')}
+                {quote.tier === 'early_bird' && <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">Early Bird</span>}
+              </span>
               <span className="text-xl font-semibold">{quote.priceCents === 0 ? t('free') : formatEuro(quote.priceCents, locale)}</span>
             </p>
+            {quote.tier === 'early_bird' && quote.earlyBirdEndsAt && (
+              <p className="mt-1 text-sm text-muted-foreground">{t('earlyBirdUntil', { date: formatDateTime(quote.earlyBirdEndsAt, locale) })}</p>
+            )}
             {quote.memberCheck === 'valid' && <p className="mt-1 text-sm text-green-700 dark:text-green-400">{t('memberValid')}</p>}
             {quote.memberCheck === 'invalid' && <p className="mt-1 text-sm text-destructive">{t('memberInvalid')}</p>}
+            {quote.codeStatus === 'valid' && quote.discountCents > 0 && (
+              <p className="mt-1 text-sm text-green-700 dark:text-green-400">{t('code.valid')}</p>
+            )}
+            {codeMessage && <p className={cn('mt-1 text-sm', quote.codeStatus === 'earlyBirdCheaper' ? 'text-muted-foreground' : 'text-destructive')}>{t(codeMessage)}</p>}
           </div>
         </fieldset>
 
@@ -249,7 +302,6 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
           </Consent>
           <p className="pt-2 text-sm text-muted-foreground">{t('optionalConsents')}</p>
           <Consent name="photoConsent">{t('photoConsent')}</Consent>
-          <Consent name="newsletter">{t('newsletter')}</Consent>
         </fieldset>
 
         {/* Honeypot: für Menschen unsichtbar */}
@@ -266,7 +318,28 @@ export function RegistrationForm({ event, waitlistOnly, paymentMethods, termsDoc
   );
 }
 
-function Consent({ name, error, children }: { name: 'acceptTerms' | 'acceptPrivacy' | 'photoConsent' | 'newsletter'; error?: string; children: React.ReactNode }) {
+function codeStatusMessage(status: PublicQuote['codeStatus']) {
+  switch (status) {
+    case 'invalid':
+      return 'code.invalid' as const;
+    case 'notYetValid':
+      return 'code.notYetValid' as const;
+    case 'expired':
+      return 'code.expired' as const;
+    case 'exhausted':
+      return 'code.exhausted' as const;
+    case 'earlyBirdCheaper':
+      return 'code.earlyBirdCheaper' as const;
+    default:
+      return null;
+  }
+}
+
+function formatDateTime(iso: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'de-AT', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Vienna' }).format(new Date(iso));
+}
+
+function Consent({ name, error, children }: { name: 'acceptTerms' | 'acceptPrivacy' | 'photoConsent'; error?: string; children: React.ReactNode }) {
   const validation = useValidationMessage();
   const { register } = useFormContext<PublicRegistrationValues>();
   return (
@@ -307,7 +380,9 @@ function RegistrationDone({
       <dl className="grid gap-1 text-sm sm:grid-cols-[10rem_1fr]">
         <dt className="text-muted-foreground">{t('done.ticket')}</dt>
         <dd>
-          {result.ticketType === 'member' ? t('priceMember') : t('priceNormal')} · {price}
+          {result.ticketType === 'member' ? t('priceMember') : t('priceNormal')}
+          {result.tier === 'early_bird' ? ' (Early Bird)' : ''}
+          {result.code ? ` · ${t('discountLine', { code: result.code })}` : ''} · {price}
         </dd>
         {result.paymentMethod !== 'free' && (
           <>

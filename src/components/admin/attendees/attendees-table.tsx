@@ -31,7 +31,7 @@ import { useActionFeedback } from '../use-action-feedback';
 import { AttendeesToolbar, type ViewTab } from './attendees-toolbar';
 import { BulkRefundDialog } from './bulk-refund-dialog';
 import { RegistrationDetailPanel } from './registration-detail-panel';
-import { RegistrationFormDialog } from './registration-form-dialog';
+import { RegistrationFormDialog, type PriceOptions } from './registration-form-dialog';
 import {
   CancelDialog,
   canIssueInvoice,
@@ -52,7 +52,7 @@ type Props = {
   roles: RoleOption[];
   seatsFree: number;
   readOnly: boolean;
-  prices: { normal: string; member: string };
+  prices: PriceOptions;
   /** aus der URL: Ansicht, geöffnete Anmeldung, Dialog „Neue Anmeldung“ */
   initialView?: string;
   openId?: number | null;
@@ -459,7 +459,17 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
           </td>
           <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
             {formatEuro(r.priceCents, locale)}
-            {r.ticketType !== 'normal' && <div className="text-xs text-muted-foreground">{t(`ticket.${r.ticketType}`)}</div>}
+            {(r.ticketType !== 'normal' || r.priceTier === 'early_bird' || r.discountCode) && (
+              <div className="text-xs text-muted-foreground">
+                {[
+                  r.ticketType === 'special' && r.priceCategoryName ? r.priceCategoryName : r.ticketType !== 'normal' ? t(`ticket.${r.ticketType}`) : null,
+                  r.priceTier === 'early_bird' ? 'Early Bird' : null,
+                  r.discountCode ? `Code ${r.discountCode}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </div>
+            )}
           </td>
           <td className={cn('px-3 py-2.5 whitespace-nowrap text-muted-foreground', panel && wide && 'hidden')}>
             {format.dateTime(new Date(r.createdAt), { dateStyle: 'short', timeStyle: 'short' })}
@@ -751,6 +761,7 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
               locale: active.row.locale,
               roles: active.row.roles,
               ticketType: active.row.ticketType,
+              priceCategoryId: active.row.priceCategoryId ? String(active.row.priceCategoryId) : '',
               price: centsToInput(active.row.priceCents),
               billingCompany: active.row.billingCompany ?? '',
               billingAddress: active.row.billingAddress ?? '',

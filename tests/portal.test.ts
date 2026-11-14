@@ -71,7 +71,6 @@ function setup() {
       billingCompany: 'Firma',
       billingAddress: 'Adresse',
       photoConsent: false,
-      newsletter: false,
       termsDocumentId: terms.id,
       privacyDocumentId: privacy.id,
       expectedPriceCents: 20000,

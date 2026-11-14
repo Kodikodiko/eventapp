@@ -19,7 +19,7 @@ import { clientIp, RATE_LIMITS, takeToken } from '@/server/rate-limit';
 import { beginCheckout } from '@/server/services/checkout';
 import { getEvent } from '@/server/services/events';
 import { notifyRegistrationSafely } from '@/server/services/notifications';
-import { quotePrice, registerPublic, type MemberCheck, type PublicRegistrationResult } from '@/server/services/public-registration';
+import { quotePrice, registerPublic, type PriceQuote, type PublicRegistrationResult } from '@/server/services/public-registration';
 
 async function limited(kind: keyof typeof RATE_LIMITS): Promise<boolean> {
   return !takeToken(`${kind}:${clientIp(await headers())}`, RATE_LIMITS[kind]);
@@ -29,20 +29,34 @@ const quoteSchema = z.object({
   eventId: z.number().int().positive(),
   memberNumber: z.string().trim().max(50),
   lastName: z.string().trim().max(100),
+  discountCode: z.string().trim().max(40).optional(),
 });
 
 export async function quotePriceAction(
   values: unknown
-): Promise<ActionResult<{ priceCents: number; ticketType: 'normal' | 'member'; memberCheck: MemberCheck }>> {
+): Promise<ActionResult<PublicQuote>> {
   const parsed = quoteSchema.safeParse(values);
   if (!parsed.success) return fail('INVALID');
   if (await limited('quote')) return fail('CONFLICT', { _form: 'tooManyRequests' });
   const db = getDb();
   const event = getEvent(db, parsed.data.eventId);
   if (!event || event.archivedAt) return fail('NOT_FOUND');
-  const q = quotePrice(db, event, parsed.data.memberNumber || null, parsed.data.lastName);
-  return ok({ priceCents: q.priceCents, ticketType: q.ticketType, memberCheck: q.memberCheck });
+  const q = quotePrice(db, event, parsed.data.memberNumber || null, parsed.data.lastName, new Date(), parsed.data.discountCode || null);
+  return ok({
+    priceCents: q.priceCents,
+    listPriceCents: q.listPriceCents,
+    ticketType: q.ticketType,
+    tier: q.tier,
+    memberCheck: q.memberCheck,
+    codeStatus: q.codeStatus,
+    code: q.code,
+    discountCents: q.discountCents,
+    earlyBirdEndsAt: q.earlyBirdEndsAt,
+  });
 }
+
+/** Preis, wie ihn das Anmeldeformular anzeigt (ohne interne IDs). */
+export type PublicQuote = Omit<PriceQuote, 'memberId' | 'discountCodeId'>;
 
 export type PublicRegistrationOutcome = Omit<PublicRegistrationResult, 'registrationId'> & {
   /** bei Online-Zahlung: hierhin weiterleiten */
@@ -59,7 +73,18 @@ export async function registerPublicAction(meta: unknown, values: unknown): Prom
   const input = toPublicRegistrationInput(parsed.data, m.data);
   if (parsed.data.website) {
     // Honeypot ausgefüllt: vermutlich ein Bot. Scheinbar erfolgreich antworten, nichts speichern.
-    return ok({ status: 'confirmed', paymentMethod: 'free', priceCents: 0, ticketType: 'normal', memberCheck: 'none', reservedUntil: null, checkoutUrl: null });
+    return ok({
+      status: 'confirmed',
+      paymentMethod: 'free',
+      priceCents: 0,
+      ticketType: 'normal',
+      tier: 'regular',
+      memberCheck: 'none',
+      code: null,
+      discountCents: 0,
+      reservedUntil: null,
+      checkoutUrl: null,
+    });
   }
   const db = getDb();
   try {

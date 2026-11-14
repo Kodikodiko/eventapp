@@ -104,7 +104,7 @@ Echte Personendaten gehören nie ins Repository. Für Tests und Vorführungen nu
 | `admin:create` | Admin anlegen: `npm run admin:create -- --email … --name "…"` (Passwort wird verdeckt abgefragt); mit `--reset-password` Passwort neu setzen. Mit `--reset-2fa` die Zwei-Faktor-Anmeldung entfernen (verlorenes Gerät, lokale Entwicklung). Bei der ersten Anmeldung wird die Zwei-Faktor-Anmeldung eingerichtet (Pflicht) |
 | `seed:demo` | Demodaten in eine **leere** Datenbank schreiben; verweigert bei vorhandenen Daten |
 | `db:backup` | konsistente Sicherung der laufenden Datenbank nach `BACKUP_DIR` |
-| `retention` | Löschfristen anwenden (Spec 7.5); `--dry-run` zeigt nur an, was passieren würde |
+| `retention` | Löschfristen anwenden (Spec 7.5); `--dry-run` zeigt nur an, was passieren würde. Läuft außerdem einmal am Tag automatisch mit `jobs` |
 | `jobs` | zeitgesteuerte Abläufe einmal ausführen: abgelaufene Reservierungen freigeben, Wartelisten-Angebote verschicken/weitergeben, Zahlungserinnerungen. Lokal bei Bedarf von Hand, produktiv per Timer |
 
 ### A.8 Getrennte Datenbanken statt Testmodus

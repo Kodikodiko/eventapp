@@ -57,7 +57,6 @@ function setup(o: EventOverrides = {}) {
     billingCompany: 'Gruber KG',
     billingAddress: 'Ring 1, 1010 Wien',
     photoConsent: false,
-    newsletter: false,
     termsDocumentId: terms.id,
     privacyDocumentId: privacy.id,
     expectedPriceCents: 20000,
@@ -84,7 +83,7 @@ describe('Formular', () => {
   it('verlangt AGB, Datenschutz und bei Rechnung Firma + Adresse', () => {
     const base = {
       firstName: 'Eva', lastName: 'Gruber', email: ' Eva@Example.org ', company: '', memberNumber: '', paymentMethod: 'invoice',
-      billingCompany: '', billingAddress: '', acceptTerms: false, acceptPrivacy: false, photoConsent: false, newsletter: false, website: '',
+      billingCompany: '', billingAddress: '', acceptTerms: false, acceptPrivacy: false, photoConsent: false, website: '',
     };
     const r = publicRegistrationSchema.safeParse(base);
     const msgs = Object.fromEntries(r.error!.issues.map((i) => [i.path.join('.'), i.message]));

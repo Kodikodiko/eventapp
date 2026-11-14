@@ -5,12 +5,13 @@
 import type { LocalizedText } from '@/lib/localized';
 import type { ExpenseStatus } from '@/lib/validation/expenses';
 import type { PlanVariant } from '@/lib/validation/pnl';
-import type { Pnl, SponsorStatus, TicketKey } from '@/server/services/pnl';
+import type { Pnl, SponsorStatus, TicketKey, TicketVariant } from '@/server/services/pnl';
 
 export type PnlRowKind = 'section' | 'heading' | 'line' | 'item' | 'subtotal' | 'total' | 'result';
 export type PnlLabel =
   | { key: 'income' | 'expenses' | 'tickets' | 'sponsors' | 'sumTickets' | 'sumSponsors' | 'sumIncome' | 'sumExpenses' | 'result' | 'otherSponsors' }
   | { ticket: TicketKey }
+  | { variant: Pick<TicketVariant, 'kind' | 'name' | 'priceCents'> }
   | { text: string };
 
 export type PnlRow = {
@@ -48,9 +49,12 @@ export function buildPnlRows(pnl: Pnl, variant: PlanVariant): PnlRow[] {
 
   rows.push({ id: 'income', kind: 'section', side: 'income', label: { key: 'income' } });
   rows.push({ id: 'tickets', kind: 'heading', side: 'income', label: { key: 'tickets' } });
-  for (const t of core.tickets) {
+  core.tickets.forEach((t, index) => {
     const isFree = t.key === 'free';
     const forecast = t.actual + t.open;
+    // Aufschlüsseln nach Preis, sobald es mehr als den regulären Preis gibt (negative ID: keine Kostengruppe)
+    const breakdown = t.variants.length > 1 || (t.variants.length === 1 && t.variants[0].kind !== 'regular');
+    const groupId = breakdown ? -(index + 1) : undefined;
     rows.push({
       id: `ticket-${t.key}`,
       kind: 'line',
@@ -62,8 +66,22 @@ export function buildPnlRows(pnl: Pnl, variant: PlanVariant): PnlRow[] {
       plan: plan ? plan.tickets[t.key] : null,
       deviation: isFree ? undefined : dev(forecast, plan?.tickets[t.key]),
       compare: compare.map((c) => (isFree ? null : c.tickets[t.key])),
+      groupId,
     });
-  }
+    if (groupId === undefined) return;
+    t.variants.forEach((v, i) => {
+      rows.push({
+        id: `ticket-${t.key}-${i}`,
+        kind: 'item',
+        side: 'income',
+        label: { variant: { kind: v.kind, name: v.name, priceCents: v.priceCents } },
+        count: v.count,
+        actual: v.actual,
+        open: v.open,
+        parentGroupId: groupId,
+      });
+    });
+  });
   rows.push({
     id: 'sum-tickets',
     kind: 'subtotal',
@@ -195,4 +213,13 @@ export function buildPnlRows(pnl: Pnl, variant: PlanVariant): PnlRow[] {
     compare: compare.map((c) => c.result),
   });
   return rows;
+}
+
+/** Bezeichnung einer Preis-Aufschlüsselung, z. B. „Early Bird · 240,00 €“ oder „Code HERBST20 · 232,00 €“. */
+export function variantLabel(
+  v: Pick<TicketVariant, 'kind' | 'name' | 'priceCents'>,
+  words: (kind: TicketVariant['kind'], name: string) => string,
+  formatPrice: (cents: number) => string
+): string {
+  return `${words(v.kind, v.name ?? '')} · ${formatPrice(v.priceCents)}`;
 }

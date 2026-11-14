@@ -19,7 +19,8 @@
     "seed:herbstforum": "tsx scripts/seed-herbstforum.ts",
     "db:backup": "tsx scripts/db-backup.ts",
     "admin:create": "tsx scripts/admin-create.ts",
-    "jobs": "tsx scripts/jobs.ts"
+    "jobs": "tsx scripts/jobs.ts",
+    "retention": "tsx scripts/retention.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

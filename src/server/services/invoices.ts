@@ -20,6 +20,7 @@ import { splitGross } from '@/lib/money';
 import { sponsorBase } from '@/lib/sponsor-price';
 import type { Db } from '@/server/db/core';
 import {
+  discountCodes,
   events,
   invoiceCounters,
   invoices,
@@ -27,6 +28,7 @@ import {
   paymentReminders,
   payments,
   people,
+  priceCategories,
   refunds,
   registrations,
   sponsorContacts,
@@ -209,10 +211,21 @@ export function issueRegistrationInvoice(db: Db, actor: Actor, registrationId: n
       const { org, party, vatMode } = organizerSnapshot(tx, event.vatMode);
 
       const locale = person.locale;
-      const description = [`${localized(event.name, locale)} – ${TICKET_LABEL[locale][reg.ticketType]}`, event.location.trim()]
-        .filter(Boolean)
-        .join('\n');
-      const items = [invoiceLine(description, reg.priceCents, vatMode, event.ticketVatRateBp)];
+      const category = reg.priceCategoryId ? tx.select().from(priceCategories).where(eq(priceCategories.id, reg.priceCategoryId)).get() : undefined;
+      const code = reg.discountCodeId ? tx.select().from(discountCodes).where(eq(discountCodes.id, reg.discountCodeId)).get() : undefined;
+      const ticketLabel =
+        reg.ticketType === 'special' && category
+          ? `${TICKET_LABEL[locale].normal} (${category.name})`
+          : `${TICKET_LABEL[locale][reg.ticketType]}${reg.priceTier === 'early_bird' ? ' (Early Bird)' : ''}`;
+      const description = [`${localized(event.name, locale)} – ${ticketLabel}`, event.location.trim()].filter(Boolean).join('\n');
+      // Rabattcode als eigene Position: Ticket zum Listenpreis, darunter der Abzug
+      const items =
+        reg.discountCents > 0
+          ? [
+              invoiceLine(description, reg.priceCents + reg.discountCents, vatMode, event.ticketVatRateBp),
+              invoiceLine(`${locale === 'en' ? 'Discount' : 'Rabatt'}${code ? ` (Code ${code.code})` : ''}`, -reg.discountCents, vatMode, event.ticketVatRateBp),
+            ]
+          : [invoiceLine(description, reg.priceCents, vatMode, event.ticketVatRateBp)];
       const paid = paidCentsOf(tx, { registrationId }) >= reg.priceCents || reg.paymentStatus === 'paid';
       const issueDay = viennaDate(now.toISOString());
 

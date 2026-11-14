@@ -2,6 +2,7 @@
 
 import {
   Award,
+  BadgePercent,
   Building2,
   CalendarDays,
   CalendarRange,
@@ -13,6 +14,7 @@ import {
   History,
   IdCard,
   LayoutDashboard,
+  Lock,
   Mic,
   PanelLeftClose,
   PanelLeftOpen,
@@ -103,6 +105,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
     ...(base ? [{ href: `${base}/settings`, label: t('eventSettings'), icon: Settings }] : []),
     { href: '/admin/members', label: t('members'), icon: IdCard },
     { href: '/admin/audit', label: t('audit'), icon: History },
+    { href: '/admin/gdpr', label: t('gdpr'), icon: Lock },
     { href: '/admin/settings', label: t('organizer'), icon: Building2 },
     { href: '/admin/security', label: t('security'), icon: ShieldCheck },
   ];
@@ -110,6 +113,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
   // Erfolgsrechnung des gewählten Events steht unter „Finanzen“ (Wunsch 13.11.2026), Kostengruppen sind global
   const financeItems: Item[] = [
     ...(base ? [{ href: `${base}/pnl`, label: t('pnl'), icon: ChartNoAxesCombined }] : []),
+    ...(base ? [{ href: `${base}/pricing`, label: t('pricing'), icon: BadgePercent }] : []),
     { href: '/admin/cost-groups', label: t('costGroups'), icon: Tags },
   ];
 

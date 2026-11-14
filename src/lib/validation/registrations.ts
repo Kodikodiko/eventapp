@@ -13,6 +13,8 @@ const base = {
   locale: z.enum(['de', 'en'], 'required'),
   roles: z.array(z.string()).min(1, 'roleRequired'),
   ticketType: z.enum(['normal', 'member', 'special'], 'required'),
+  /** nur bei Sonderpreis: ID der Kategorie als Text, '' = anderer Betrag */
+  priceCategoryId: z.string().regex(/^\d*$/, 'invalid'),
   price: z.string().refine((v) => parseEuroToCents(v) !== null, 'amount'),
   billingCompany: optionalText(200),
   billingAddress: optionalText(500),
@@ -60,6 +62,8 @@ export type RegistrationPersonInput = {
 export type RegistrationAdminInput = RegistrationPersonInput & {
   roles: string[];
   ticketType: 'normal' | 'member' | 'special';
+  /** Sonderpreis-Kategorie (nur bei ticketType special) */
+  priceCategoryId?: number | null;
   priceCents: number;
   billingCompany: string | null;
   billingAddress: string | null;
@@ -76,6 +80,7 @@ export function toRegistrationInput(v: RegistrationUpdateValues): RegistrationAd
     locale: v.locale,
     roles: [...new Set(v.roles)],
     ticketType: v.ticketType,
+    priceCategoryId: v.ticketType === 'special' && v.priceCategoryId ? Number(v.priceCategoryId) : null,
     priceCents: parseEuroToCents(v.price)!,
     billingCompany: orNull(v.billingCompany),
     billingAddress: orNull(v.billingAddress),

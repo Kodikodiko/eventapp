@@ -19,6 +19,10 @@ type EventLike = {
   capacity: number;
   priceNormalCents: number;
   priceMemberCents: number;
+  earlyBirdStartsAt?: string | null;
+  earlyBirdEndsAt?: string | null;
+  priceEarlyNormalCents?: number | null;
+  priceEarlyMemberCents?: number | null;
   ticketVatRateBp: number;
   vatMode?: 'small_business' | 'standard' | null;
   allowStripe: boolean;
@@ -42,6 +46,10 @@ export function emptyEventFormValues(): EventFormValues {
     capacity: '100',
     priceNormal: '',
     priceMember: '',
+    earlyBirdStartsAt: '',
+    earlyBirdEndsAt: '',
+    priceEarlyNormal: '',
+    priceEarlyMember: '',
     ticketVatRateBp: '2000',
     vatMode: '',
     allowStripe: true,
@@ -72,6 +80,10 @@ export function eventToFormValues(
     capacity: String(event.capacity),
     priceNormal: centsToInput(event.priceNormalCents),
     priceMember: centsToInput(event.priceMemberCents),
+    earlyBirdStartsAt: utcToViennaInput(event.earlyBirdStartsAt),
+    earlyBirdEndsAt: utcToViennaInput(event.earlyBirdEndsAt),
+    priceEarlyNormal: event.priceEarlyNormalCents == null ? '' : centsToInput(event.priceEarlyNormalCents),
+    priceEarlyMember: event.priceEarlyMemberCents == null ? '' : centsToInput(event.priceEarlyMemberCents),
     ticketVatRateBp: (['0', '1000', '1300', '2000'].includes(vat) ? vat : '2000') as EventFormValues['ticketVatRateBp'],
     vatMode: event.vatMode ?? '',
     allowStripe: event.allowStripe,
