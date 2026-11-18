@@ -73,6 +73,14 @@ Quelle: https://insights.squer.io/pmi-austria-forum-day-2026?eventId=382 (bisher
 - [x] **W3 – Fehlende Bausteine der Eventseite** (15.11.2026 erledigt, neue Admin-Seite „Eventseite“, Migration 0015): Kopfbereich mit Motto („Power Skills: Lead People, Win Projects“), Einleitungstext, drei Nutzen-Blöcke, Bildergalerie „Impressionen vom Vorjahr“, Speaker-Karten mit Bio, Sponsor-Logos, Abschluss-Aufruf zur Anmeldung, Hinweis auf PDUs.
 - [ ] **W4 – Gruppentickets** (10 Personen 2.200 €, 15 Personen 3.200 €) – mit Sonderpreisen (P1) abbildbar oder eigener Tickettyp? Klären.
 
+## UI-Redesign (Vorschlag vom 18.11.2026 – noch nicht übernommen)
+
+Umgesetzt als Entwurf auf dem lokalen Branch `ui-redesign` (Commits `73e45c4`, `34015ea`), main unverändert. Plan und Befund: Claude-Doc „UI-Redesign EventFlow – Audit und Umbauplan“. Werkzeug: Impeccable, projektlokal unter `.claude/`.
+
+- [ ] **U1 – Admin-Sidebar neu gruppieren:** Cockpit, Anmeldung (Teilnehmende, Preise & Rabatte, Teilnahmebestätigung), Programm & Auftritt (Programm, Speaker, Sponsoren, Eventseite), Finanzen (Rechnungen, Erstattungen, Ausgaben, Erfolgsrechnung), Event-Einstellungen; darunter getrennt und einklappbar „Organisation“ nur mit Globalem. Fußlink öffnet die öffentliche Seite des gewählten Events.
+- [ ] **U2 – Öffentliche Eventseite als Vorlage:** Hero mit Faktenzeile und Status-Button, mitlaufende Abschnittsnavigation, ruhiger Farbrhythmus, Plenum-Vorträge hervorgehoben, Pausen dezent, Keynote-Speaker groß, Rückblick-Modus nach Eventende, Galerie ohne Lücken, Partner auf hellem Grund; Kontrast der Speaker-Links (2,5:1) behoben.
+- [ ] **U3 – Admin-Seiten entlang der Hauptprozesse überarbeiten** (Analyse läuft, Schwerpunkt Teilnehmerliste).
+
 ## Hosting (Docker hinter nginx beim Sysadmin, Plan seit 12.11.2026 – zurückgestellt am 13.11.2026)
 
 Details: `DEPLOYMENT.md`, Teil C.
