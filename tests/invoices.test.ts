@@ -428,6 +428,22 @@ describe('E-Mails und Zahlungserinnerungen', () => {
     expect(inv.id).toBeGreaterThan(0);
   });
 
+  it('Sammelaktion „jetzt erinnern“: nur gewählte Rechnungen, ohne 14-Tage-Abstand, höchstens zwei', async () => {
+    const { db, register } = setup();
+    const a = issueRegistrationInvoice(db, actor, register('a@example.org'), NOW);
+    const b = issueRegistrationInvoice(db, actor, register('b@example.org'), NOW);
+    const { sent, mailer } = capture();
+    const manual = { ids: [a.id], actor };
+    expect(await sendDueReminders(db, mailer, days(14), manual)).toEqual({ sent: 0, failed: 0, skipped: 0 }); // noch nicht fällig
+    expect((await sendDueReminders(db, mailer, days(15), manual)).sent).toBe(1);
+    expect((await sendDueReminders(db, mailer, days(16), manual)).sent).toBe(1); // sofort die zweite
+    expect((await sendDueReminders(db, mailer, days(17), manual)).sent).toBe(0); // mehr als zwei gibt es nicht
+    expect(sent).toHaveLength(2);
+    expect(db.select().from(paymentReminders).all().every((r) => r.invoiceId === a.id)).toBe(true);
+    expect(db.select().from(auditLog).all().filter((x) => x.action === 'invoice.reminder_sent').map((x) => x.actorUserId)).toEqual([actor.userId, actor.userId]);
+    expect(b.id).toBeGreaterThan(a.id);
+  });
+
   it('keine Erinnerung für bezahlte, stornierte oder abgesagte; Fehlversand wird wiederholt', async () => {
     const { db, register } = setup();
     const paid = issueRegistrationInvoice(db, actor, register('a@example.org'), NOW);

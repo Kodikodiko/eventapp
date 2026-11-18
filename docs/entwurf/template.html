@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EventFlow – Entwurf Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'], display: ['Plus Jakarta Sans', 'IBM Plex Sans', 'sans-serif'] },
+        colors: {
+          ink: { DEFAULT: '#15172B', 2: '#3B3E57', 3: '#6B6E85' },
+          canvas: '#F4F3F0',
+          line: '#E4E2DC',
+          side: { DEFAULT: '#181A33', 2: '#23264A', fg: '#B9BBD3' },
+          brand: { DEFAULT: '#3B2A8F', 50: '#F0EEFA', 100: '#E2DDF6', 600: '#3B2A8F', 700: '#2E2073' },
+          ok: { DEFAULT: '#1F7A4D', bg: '#E6F4EC' },
+          warn: { DEFAULT: '#9A5B00', bg: '#FDF1DC' },
+          bad: { DEFAULT: '#B4232A', bg: '#FCE8E8' },
+          wait: { DEFAULT: '#5B3FB8', bg: '#EEE9FB' },
+        },
+        boxShadow: { pop: '0 12px 32px -8px rgba(21,23,43,.28), 0 2px 6px rgba(21,23,43,.08)' },
+      },
+    },
+  };
+</script>
+<style>
+  html { -webkit-font-smoothing: antialiased; }
+  ::selection { background: #3B2A8F; color: #fff; }
+  .num { font-variant-numeric: tabular-nums; }
+  .kbd { font: 500 11px/1 'IBM Plex Sans'; padding: 3px 5px; border-radius: 5px; border: 1px solid #D7D4CC; background: #fff; color: #6B6E85; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #CFCCC4 transparent; }
+  tbody tr:hover .row-actions { opacity: 1; }
+  .row-actions { opacity: 0; transition: opacity .12s; }
+  [data-screen] { display: none; }
+  [data-screen].on { display: flex; }
+  .ann { position: absolute; z-index: 60; background: #FFE36E; color: #15172B; font: 600 12px/1.35 'IBM Plex Sans'; padding: 6px 9px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.18); max-width: 230px; }
+  .ann b { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:99px; background:#15172B; color:#FFE36E; font-size:11px; margin-right:6px; }
+  body.no-ann .ann { display: none; }
+</style>
+</head>
+<body class="bg-canvas font-sans text-ink">
+
+<!-- Umschalter zwischen den Entwurfsansichten (nur im Entwurf) -->
+<div id="switcher" class="fixed bottom-3 left-1/2 z-[80] flex -translate-x-1/2 gap-1 rounded-full bg-ink/90 p-1 text-xs font-medium text-white shadow-pop backdrop-blur">
+</div>
+
+<div id="app"></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script id="data-fd" type="application/json">__DATAFD__</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const FD = JSON.parse(document.getElementById('data-fd').textContent);
+const MEDIA = 'http://localhost:3000/api/media/';
+const TODAY = new Date('2026-11-18T12:00:00Z');
+const eur = (c) => (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' });
+const dt = (s) => new Date(s).toLocaleString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+const dts = (s) => new Date(s).toLocaleString('de-AT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+const tm = (s) => new Date(s).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' });
+const loc = (j) => { try { const o = JSON.parse(j); return o.de || o.en || ''; } catch { return j || ''; } };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const initials = (n) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+
+// ---------- Icons (Lucide-Pfade, 1.8 Strich) ----------
+const ICON = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  chevDown: '<path d="m6 9 6 6 6-6"/>',
+  chevUp: '<path d="m18 15-6-6-6 6"/>',
+  chevRight: '<path d="m9 18 6-6-6-6"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+  euro: '<path d="M18 7a7 7 0 1 0 0 10M4 10h10M4 14h10"/>',
+  pencil: '<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  award: '<circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/>',
+  bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/>',
+  filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54Z"/>',
+  qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>',
+  door: '<path d="M13 4h3a2 2 0 0 1 2 2v14M2 20h3M13 20h9M10 12v.01M13 4.56v16.157a.5.5 0 0 1-.596.49l-7-1.4A.5.5 0 0 1 5 19.317V5.683a1 1 0 0 1 .804-.98l6-1.2A1 1 0 0 1 13 4.56Z"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+  file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+  grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+  print: '<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/>',
+  arrowUD: '<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>',
+};
+const ic = (n, c = 'size-4') => `<svg class="${c} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+
+// ---------- Sidebar (neue Gruppierung) ----------
+const NAV = [
+  [null, [['Cockpit', 'cockpit']]],
+  ['Anmeldung', [['Teilnehmende', 'tn', 89], ['Preise & Rabatte'], ['Teilnahmebestätigung'], ['Check-in', 'checkin', null, 'neu']]],
+  ['Programm & Auftritt', [['Programm & Speaker', 'programm'], ['Sponsoren'], ['Eventseite']]],
+  ['Finanzen', [['Rechnungen', 'rechnungen', 20, 'bad'], ['Erstattungen', null, 9, 'warn'], ['Ausgaben'], ['Erfolgsrechnung']]],
+  [null, [['Event-Einstellungen']]],
+];
+function sidebar(active, eventName = 'Herbstforum 2026', eventMeta = '20.11.2026 · Graz') {
+  const items = NAV.map(([label, list], gi) => `
+    ${label ? `<div class="px-2.5 pt-3 pb-1 text-[11px] font-medium uppercase tracking-[.08em] text-side-fg/60">${label}</div>` : gi ? '<div class="mx-2.5 my-2 border-t border-white/10"></div>' : ''}
+    ${list.map(([t, key, badge, tone]) => `
+      <a class="flex min-h-8 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm ${key === active ? 'bg-brand font-semibold text-white' : 'text-side-fg hover:bg-white/5 hover:text-white'}">
+        <span class="size-[7px] rounded-full ${key === active ? 'bg-white' : 'bg-side-fg/40'}"></span>
+        <span class="flex-1 truncate">${t}</span>
+        ${tone === 'neu' ? '<span class="rounded-full bg-[#FFE36E] px-1.5 text-[10px] font-bold text-ink">NEU</span>' : ''}
+        ${badge ? `<span class="num rounded-full px-1.5 text-xs font-semibold ${tone === 'bad' ? 'bg-[#E5484D] text-white' : tone === 'warn' ? 'bg-[#F4A261] text-ink' : 'text-side-fg/80'}">${badge}</span>` : ''}
+      </a>`).join('')}`).join('');
+  return `
+  <aside class="flex w-[248px] shrink-0 flex-col gap-4 bg-side px-3.5 py-4 text-side-fg">
+    <div class="flex items-center gap-2.5 px-1"><span class="flex size-8 items-center justify-center rounded-lg bg-brand font-display font-extrabold text-white">E</span><span class="font-display font-bold text-white">EventFlow</span></div>
+    <div class="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-white"><span><span class="block text-sm font-semibold">${eventName}</span><span class="block text-xs text-side-fg/75">${eventMeta}</span></span>${ic('arrowUD', 'size-4 text-side-fg/70')}</div>
+    <nav class="flex flex-1 flex-col gap-0.5 overflow-hidden">${items}
+      <div class="mt-3 flex items-center justify-between border-t-2 border-white/10 px-2.5 pt-3 text-[11px] font-medium uppercase tracking-[.08em] text-side-fg/60">Organisation ${ic('chevRight', 'size-3.5')}</div>
+    </nav>
+    <div class="flex items-center gap-2 border-t border-white/10 px-1 pt-3 text-sm"><span class="flex-1"><span class="block font-semibold text-white">stefan</span><span class="text-xs text-side-fg/75">Admin</span></span><span class="rounded bg-white/10 px-1.5 text-xs font-semibold text-white">DE</span><span class="text-xs">EN</span></div>
+  </aside>`;
+}
+function topbar() {
+  return `<div class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white/70 px-8 backdrop-blur">
+    <div class="flex w-[380px] items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink-3">${ic('search')}Suchen oder Befehl … <span class="ml-auto kbd">Strg K</span></div>
+    <div class="ml-auto flex items-center gap-2 text-sm"><span class="text-ink-3">Anmeldung offen · noch 2 Tage</span></div>
+  </div>`;
+}
+const shell = (active, body, ev) => `<div class="flex h-screen w-full">${sidebar(active, ...(ev || []))}<div class="relative flex min-w-0 flex-1 flex-col">${topbar()}<main class="relative min-h-0 flex-1 overflow-hidden">${body}</main></div></div>`;
+const ann = (n, text, style) => `<div class="ann" style="${style}"><b>${n}</b>${text}</div>`;
+
+// ---------- Teilnehmende ----------
+const ST = {
+  confirmed: ['Bestätigt', 'text-ok bg-ok-bg'],
+  reserved: ['Reserviert', 'text-warn bg-warn-bg'],
+  waitlisted: ['Warteliste', 'text-wait bg-wait-bg'],
+  cancelled: ['Storniert', 'text-ink-3 bg-[#EEEDE9]'],
+};
+const PS = {
+  open: ['Offen', 'text-warn', 'bg-warn'],
+  paid: ['Bezahlt', 'text-ok', 'bg-ok'],
+  partially_refunded: ['Teilerstattet', 'text-ink-2', 'bg-ink-3'],
+  refunded: ['Erstattet', 'text-ink-2', 'bg-ink-3'],
+  not_required: ['Kostenlos', 'text-ink-3', 'bg-[#CFCCC4]'],
+};
+const ROLE = { attendee: ['Teilnahme', '#5C6BC0'], speaker: ['Speaker', '#C2185B'], organizer: ['Organisation', '#00897B'], orga: ['Organisation', '#00897B'], staff: ['Organisation', '#00897B'], sponsor: ['Sponsor', '#EF6C00'] };
+const regs = D.regs.slice().sort((a, b) => b.created.localeCompare(a.created));
+const count = (f) => regs.filter(f).length;
+const overdue = (r) => r.ps === 'open' && r.status !== 'cancelled' && r.inv && new Date(r.created) < new Date('2026-11-01');
+
+function pill(cls, text) { return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${cls}">${text}</span>`; }
+function payCell(r) {
+  const [t, tc, dot] = PS[r.ps] || [r.ps, '', ''];
+  const od = overdue(r);
+  return `<span class="inline-flex items-center gap-1.5 text-sm ${od ? 'font-semibold text-bad' : tc}"><span class="size-1.5 rounded-full ${od ? 'bg-bad' : dot}"></span>${od ? 'Überfällig' : t}</span>`;
+}
+function roleDots(r) {
+  return (r.roles || 'attendee').split(',').map((k) => { const [t, c] = ROLE[k] || [k, '#999']; return `<span title="${t}" class="inline-flex items-center gap-1 rounded-md border border-line bg-white px-1.5 py-px text-[11px] font-medium text-ink-2"><span class="size-1.5 rounded-full" style="background:${c}"></span>${t}</span>`; }).join(' ');
+}
+function tnRows(list, { selected = new Set(), active = null } = {}) {
+  return list.map((r, i) => `
+    <tr class="group border-b border-line/70 ${selected.has(r.id) ? 'bg-brand-50' : active === r.id ? 'bg-brand-50/70 outline outline-2 -outline-offset-2 outline-brand' : 'hover:bg-[#FAF9F6]'}">
+      <td class="pl-4"><span class="flex size-4 items-center justify-center rounded border ${selected.has(r.id) ? 'border-brand bg-brand text-white' : 'border-[#BDBAB2] bg-white'}">${selected.has(r.id) ? ic('check', 'size-3') : ''}</span></td>
+      <td class="py-1.5 pr-3"><span class="block truncate text-sm font-semibold leading-tight">${esc(r.ln)}, ${esc(r.fn)}</span><span class="block truncate text-[11.5px] leading-tight text-ink-3">${esc(r.email)}</span></td>
+      <td class="truncate py-2 pr-3 text-sm text-ink-2">${esc(r.company) || '<span class="text-ink-3">–</span>'}</td>
+      <td class="overflow-hidden py-2 pr-3 whitespace-nowrap">${roleDots(r)}</td>
+      <td class="py-2 pr-3">${pill(ST[r.status][1], ST[r.status][0])}</td>
+      <td class="py-2 pr-3">${payCell(r)}</td>
+      <td class="num whitespace-nowrap py-2 pr-3 text-right text-sm">${eur(r.price)}${r.tt === 'member' ? '<span class="ml-1 text-[11px] text-ink-3">Mitgl.</span>' : r.tt === 'special' ? '<span class="ml-1 text-[11px] text-ink-3">Sonder</span>' : ''}</td>
+      <td class="num whitespace-nowrap py-2 pr-3 text-sm text-ink-3">${dts(r.created)}</td>
+      <td class="whitespace-nowrap py-2 pr-4 text-right"><span class="row-actions inline-flex gap-1">
+        ${r.status === 'waitlisted' || r.status === 'reserved' ? `<button class="rounded-md border border-line bg-white px-2 py-1 text-xs font-semibold text-brand hover:border-brand">Bestätigen</button>` : ''}
+        ${r.ps === 'open' && r.status !== 'cancelled' ? `<button class="rounded-md border border-line bg-white px-2 py-1 text-xs font-semibold text-ink-2 hover:border-ink-3">Bezahlt</button>` : ''}
+        <button class="rounded-md p-1 text-ink-3 hover:bg-line/60">${ic('more')}</button></span></td>
+    </tr>`).join('');
+}
+function tnHeader(view = 'all') {
+  const tabs = [
+    ['all', 'Alle', regs.length], ['confirmed', 'Bestätigt', count((r) => r.status === 'confirmed')], ['open', 'Zahlung offen', count((r) => r.ps === 'open' && (r.status === 'confirmed' || r.status === 'reserved'))],
+    ['waitlisted', 'Warteliste', count((r) => r.status === 'waitlisted')], ['reserved', 'Reserviert', count((r) => r.status === 'reserved')], ['cancelled', 'Storniert', count((r) => r.status === 'cancelled')],
+  ];
+  const active = regs.length - count((r) => r.status === 'cancelled');
+  return `
+  <div class="flex items-end justify-between gap-6 px-8 pt-6">
+    <div>
+      <h1 class="font-display text-[28px] font-extrabold tracking-tight">Teilnehmende</h1>
+      <p class="mt-1 text-sm text-ink-3"><span class="num font-semibold text-ink">${active}</span> aktiv von 150 Plätzen · <span class="num">${count((r) => r.status === 'cancelled')}</span> storniert</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium">${ic('download')}Export</button>
+      <button class="flex items-center gap-2 rounded-lg bg-brand px-3.5 py-2 text-sm font-semibold text-white shadow-sm">${ic('plus')}Anmeldung <span class="kbd !border-white/30 !bg-white/15 !text-white">N</span></button>
+    </div>
+  </div>
+  <div class="mt-4 flex items-center gap-1 border-b border-line px-8">
+    ${tabs.map(([k, t, n]) => `<a class="-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm ${k === view ? 'border-brand font-semibold text-ink' : 'border-transparent text-ink-3 hover:text-ink'}">${t}<span class="num rounded-full ${k === view ? 'bg-brand text-white' : 'bg-line/80 text-ink-2'} px-1.5 text-[11px] font-semibold">${n}</span></a>`).join('')}
+    <span class="mx-2 h-5 w-px bg-line"></span>
+    <a class="flex items-center gap-1.5 px-2 py-2.5 text-sm text-ink-3">${ic('bookmark', 'size-3.5')}Speaker ohne Folien</a>
+    <a class="flex items-center gap-1.5 px-2 py-2.5 text-sm text-ink-3">${ic('bookmark', 'size-3.5')}Firmen &gt; 3</a>
+  </div>`;
+}
+function tnToolbar(chips = []) {
+  const f = (t, v) => `<button class="flex items-center gap-1.5 rounded-lg border ${v ? 'border-brand bg-brand-50 text-brand' : 'border-line bg-white text-ink-2'} px-2.5 py-1.5 text-sm font-medium">${t}${v ? `: <span class="font-semibold">${v}</span>${ic('x', 'size-3.5')}` : ic('chevDown', 'size-3.5 text-ink-3')}</button>`;
+  const vals = Object.fromEntries(chips);
+  return `<div class="flex flex-wrap items-center gap-2 px-8 py-3">
+    <div class="flex w-72 items-center gap-2 rounded-lg border border-line bg-white px-3 py-1.5 text-sm text-ink-3">${ic('search')}<span class="flex-1">Name, E-Mail, Firma …</span><span class="kbd">/</span></div>
+    ${f('Rolle', vals.Rolle)}${f('Zahlung', vals.Zahlung)}${f('Ticket', vals.Ticket)}${f('Firma', vals.Firma)}${f('Quelle', vals.Quelle)}
+    ${chips.length ? '<button class="px-1 text-sm font-medium text-ink-3 underline underline-offset-4">Zurücksetzen</button>' : ''}
+    <div class="ml-auto flex items-center gap-2 text-sm text-ink-3">Gruppieren <button class="flex items-center gap-1 rounded-lg border border-line bg-white px-2.5 py-1.5 font-medium text-ink-2">keine ${ic('chevDown', 'size-3.5')}</button></div>
+  </div>`;
+}
+function tnTable(list, opts) {
+  return `<div class="mx-8 overflow-hidden rounded-xl border border-line bg-white shadow-sm">
+    <table class="w-full table-fixed text-left">
+      <colgroup><col style="width:44px"><col><col style="width:180px"><col style="width:168px"><col style="width:104px"><col style="width:110px"><col style="width:112px"><col style="width:100px"><col style="width:128px"></colgroup>
+      <thead class="sticky top-0 bg-[#FAF9F6] text-xs font-semibold text-ink-3"><tr class="border-b border-line">
+        <th class="py-2.5 pl-4"><span class="block size-4 rounded border border-[#BDBAB2] bg-white"></span></th>
+        <th class="py-2.5 pr-3">Name ↑</th><th class="pr-3">Firma</th><th class="pr-3">Rollen</th><th class="pr-3">Status</th><th class="pr-3">Zahlung</th><th class="pr-3 text-right">Preis</th><th class="pr-3">Angemeldet ↓</th><th></th></tr></thead>
+      <tbody>${tnRows(list, opts)}</tbody>
+    </table></div>`;
+}
+function screenTn() {
+  const list = regs.slice(0, 18);
+  return shell('tn', `<div class="h-full overflow-hidden">${tnHeader()}${tnToolbar()}${tnTable(list)}
+    <div class="mx-8 mt-2 flex items-center justify-between text-xs text-ink-3"><span><span class="kbd">J</span> <span class="kbd">K</span> blättern · <span class="kbd">Enter</span> öffnen · <span class="kbd">X</span> auswählen</span><span class="num">155 Anmeldungen</span></div>
+    ${ann(1, 'Eine Zeile pro Person: 18 statt 8 sichtbar', 'top:330px;left:520px')}
+    ${ann(2, 'Zähler und Status in einer Leiste, Badge in der Sidebar = aktive Anmeldungen', 'top:96px;left:560px')}
+    ${ann(3, 'Filter sofort sichtbar statt hinter „+ Filter“', 'top:190px;left:900px')}
+    ${ann(4, 'Häufige Aktionen direkt in der Zeile beim Überfahren', 'top:300px;right:24px')}
+  </div>`);
+}
+function screenTnFilter() {
+  const list = regs.filter((r) => r.ps === 'open' && r.status !== 'cancelled').slice(0, 14);
+  return shell('tn', `<div class="h-full overflow-hidden">${tnHeader('open')}${tnToolbar([['Rolle', 'Teilnahme'], ['Firma', 'Murtal Consulting OG']])}
+    <div class="absolute left-[548px] top-[210px] z-40 w-72 rounded-xl border border-line bg-white p-2 shadow-pop">
+      <div class="flex items-center gap-2 rounded-lg border border-line px-2.5 py-1.5 text-sm text-ink-3">${ic('search')}Firma suchen …</div>
+      ${[['Murtal Consulting OG', 14, 1], ['Grazer Stadtwerke Projekt GmbH', 19, 0], ['Steirische Software GmbH', 17, 0], ['Alpenblick Events KG', 16, 0], ['Schlossberg Analytics GmbH', 13, 0], ['Kürbis & Partner OG', 9, 0]].map(([n, c, on]) => `<div class="mt-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${on ? 'bg-brand-50' : ''}"><span class="flex size-4 items-center justify-center rounded border ${on ? 'border-brand bg-brand text-white' : 'border-[#BDBAB2]'}">${on ? ic('check', 'size-3') : ''}</span><span class="flex-1 truncate">${n}</span><span class="num text-xs text-ink-3">${c}</span></div>`).join('')}
+    </div>
+    ${tnTable(list)}
+    ${ann(5, 'Filter kombinierbar, mit Anzahl je Wert, als Ansicht speicherbar', 'top:178px;left:850px')}
+  </div>`);
+}
+function field(label, value, editing) {
+  return `<div class="group grid grid-cols-[112px_1fr] items-center gap-3 rounded-lg px-2 py-1.5 ${editing ? 'bg-brand-50' : 'hover:bg-[#FAF9F6]'}">
+    <span class="text-sm text-ink-3">${label}</span>
+    ${editing ? `<span class="flex items-center gap-2"><span class="flex-1 rounded-md border-2 border-brand bg-white px-2 py-1 text-sm">${value}<span class="ml-px inline-block h-4 w-px translate-y-0.5 bg-ink"></span></span><span class="kbd">Enter</span></span>` : `<span class="flex items-center justify-between text-sm">${value}<span class="text-ink-3 opacity-0 group-hover:opacity-100">${ic('pencil', 'size-3.5')}</span></span>`}
+  </div>`;
+}
+function screenTnDetail() {
+  const r = regs.find((x) => x.status === 'waitlisted' && x.company) || regs[0];
+  const list = regs.slice(0, 18);
+  return shell('tn', `<div class="h-full overflow-hidden">${tnHeader()}${tnToolbar()}${tnTable(list, { active: r.id })}
+    <div class="absolute inset-y-0 right-0 z-40 flex w-[460px] flex-col border-l border-line bg-white shadow-pop">
+      <div class="flex items-center justify-between border-b border-line px-5 py-2.5 text-xs text-ink-3"><span class="flex items-center gap-2"><span class="kbd">K</span> vorige · <span class="kbd">J</span> nächste</span><span class="num">4 von 155</span><button class="rounded p-1 hover:bg-line/60">${ic('x')}</button></div>
+      <div class="px-5 pt-5">
+        <div class="flex items-start gap-3"><span class="flex size-11 items-center justify-center rounded-full bg-brand-100 font-display font-bold text-brand">${initials(r.fn + ' ' + r.ln)}</span>
+          <div class="min-w-0"><h2 class="font-display text-xl font-bold">${esc(r.fn)} ${esc(r.ln)}</h2><p class="truncate text-sm text-ink-3">${esc(r.company)}</p></div></div>
+        <div class="mt-4 rounded-xl border border-wait/30 bg-wait-bg p-3.5">
+          <p class="text-sm font-semibold text-wait">Auf der Warteliste seit ${dt(r.created)}</p>
+          <p class="mt-0.5 text-sm text-ink-2">Es sind 77 Plätze frei. Bestätigen schickt die Bestätigung und, falls nötig, die Rechnung.</p>
+          <div class="mt-3 flex gap-2"><button class="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white">Jetzt bestätigen</button><button class="rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium">Platz anbieten (48 h)</button></div>
+        </div>
+      </div>
+      <div class="mt-4 flex gap-1 border-b border-line px-5 text-sm">${['Übersicht', 'Zahlung & Belege', 'Verlauf'].map((t, i) => `<a class="-mb-px border-b-2 px-2 py-2 ${i === 0 ? 'border-brand font-semibold' : 'border-transparent text-ink-3'}">${t}</a>`).join('')}</div>
+      <div class="scroll-thin flex-1 overflow-auto px-3 py-3">
+        ${field('E-Mail', esc(r.email))}
+        ${field('Firma', esc(r.company), true)}
+        ${field('Rollen', roleDots(r) + ' <span class="text-xs text-brand">+ Rolle</span>')}
+        ${field('Ticket', 'Normalpreis · ' + eur(r.price))}
+        ${field('Zahlungsart', r.pm === 'stripe' ? 'Online (Stripe)' : 'Rechnung')}
+        ${field('Sprache', 'Deutsch')}
+        ${field('Rechnung an', '<span class="text-ink-3">wie Person</span>')}
+        ${field('Zustimmungen', 'AGB v1 · Datenschutz v1')}
+        <div class="mx-2 mt-4 rounded-xl border border-line p-3"><p class="text-xs font-semibold text-ink-3">Letzte Aktivität</p>
+          <p class="mt-2 text-sm"><span class="text-ink-3 num">${dt(r.created)}</span> · Öffentliche Anmeldung, auf Warteliste</p></div>
+      </div>
+      <div class="flex items-center gap-2 border-t border-line px-5 py-3"><button class="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-medium">${ic('mail')}E-Mail</button><button class="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-medium">${ic('award')}Bestätigung</button><button class="ml-auto rounded-lg px-3 py-1.5 text-sm font-medium text-bad hover:bg-bad-bg">Stornieren</button></div>
+    </div>
+    ${ann(6, 'Detail als Seitenleiste: Liste bleibt stehen, mit J/K zur nächsten Person', 'top:300px;right:480px')}
+    ${ann(7, 'Die nächste sinnvolle Aktion steht oben, abhängig vom Status', 'top:178px;right:480px')}
+    ${ann(8, 'Felder direkt bearbeiten: anklicken, tippen, Enter. Kein Dialog', 'top:450px;right:480px')}
+  </div>`);
+}
+function screenTnBulk() {
+  const list = regs.slice(0, 18);
+  const sel = new Set(list.filter((r, i) => [1, 2, 4, 5, 6, 9, 10, 13].includes(i)).map((r) => r.id));
+  return shell('tn', `<div class="h-full overflow-hidden">${tnHeader()}${tnToolbar()}${tnTable(list, { selected: sel })}
+    <div class="absolute bottom-16 left-1/2 z-40 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-2xl bg-ink p-1.5 pl-4 text-sm text-white shadow-pop">
+      <span class="mr-2 font-semibold"><span class="num">8</span> ausgewählt</span>
+      ${[['check', 'Status'], ['euro', 'Zahlung'], ['tag', 'Rolle'], ['users', 'Ticket & Preis'], ['mail', 'E-Mail'], ['award', 'Bestätigung'], ['download', 'Export'], ['undo', 'Stornieren']].map(([i, t], k) => `<button class="flex items-center gap-1.5 rounded-xl px-2.5 py-2 ${k === 0 ? 'bg-white/15' : 'hover:bg-white/10'}">${ic(i)}${t}</button>`).join('')}
+      <button class="ml-1 rounded-xl p-2 text-white/70 hover:bg-white/10">${ic('x')}</button>
+    </div>
+    <div class="absolute bottom-[124px] left-[calc(50%-300px)] z-40 w-80 rounded-xl border border-line bg-white p-3 shadow-pop">
+      <p class="text-xs font-semibold text-ink-3">Status für 8 Anmeldungen setzen</p>
+      ${[['Bestätigt', '5 ändern sich · 3 sind schon bestätigt', 1], ['Reserviert', '8 ändern sich'], ['Warteliste', '8 ändern sich']].map(([t, h, on]) => `<div class="mt-1.5 flex items-start gap-2 rounded-lg px-2 py-1.5 ${on ? 'bg-brand-50' : ''}"><span class="mt-0.5 size-4 rounded-full border-2 ${on ? 'border-brand bg-[radial-gradient(circle,#3B2A8F_40%,transparent_45%)]' : 'border-[#BDBAB2]'}"></span><span><span class="block text-sm font-semibold">${t}</span><span class="block text-xs text-ink-3">${h}</span></span></div>`).join('')}
+      <label class="mt-2 flex items-center gap-2 px-2 text-sm"><span class="flex size-4 items-center justify-center rounded border border-brand bg-brand text-white">${ic('check', 'size-3')}</span>Bestätigungen per E-Mail senden</label>
+      <button class="mt-3 w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white">5 Anmeldungen bestätigen</button>
+    </div>
+    ${ann(9, 'Auswahl-Leiste schwebt unten, die Tabelle springt nicht', 'bottom:16px;right:40px')}
+    ${ann(10, 'Neu: Status, Zahlung, Ticket & Preis gesammelt ändern, mit Vorschau', 'bottom:250px;left:calc(50% - 560px)')}
+  </div>`);
+}
+function screenTnNew() {
+  const list = regs.slice(0, 18);
+  const hit = regs.find((r) => r.company && r.status === 'confirmed') || regs[3];
+  return shell('tn', `<div class="h-full overflow-hidden">${tnHeader()}${tnToolbar()}${tnTable(list)}
+    <div class="absolute inset-0 z-30 bg-ink/20"></div>
+    <div class="absolute inset-y-0 right-0 z-40 flex w-[500px] flex-col bg-white shadow-pop">
+      <div class="flex items-center justify-between border-b border-line px-6 py-4"><h2 class="font-display text-lg font-bold">Anmeldung hinzufügen</h2><button class="rounded p-1 hover:bg-line/60">${ic('x')}</button></div>
+      <div class="scroll-thin flex-1 overflow-auto px-6 py-5">
+        <label class="text-sm font-semibold">Person</label>
+        <div class="mt-1.5 flex items-center gap-2 rounded-lg border-2 border-brand bg-white px-3 py-2 text-sm">${ic('search', 'size-4 text-ink-3')}<span>${esc(hit.ln.slice(0, 4))}</span><span class="inline-block h-4 w-px bg-ink"></span></div>
+        <div class="mt-1 rounded-xl border border-line bg-white p-1 shadow-sm">
+          <div class="flex items-center gap-3 rounded-lg bg-brand-50 px-2.5 py-2"><span class="flex size-8 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand">${initials(hit.fn + ' ' + hit.ln)}</span><span class="flex-1"><span class="block text-sm font-semibold">${esc(hit.fn)} ${esc(hit.ln)}</span><span class="block text-xs text-ink-3">${esc(hit.company)} · war bei PM Summit 2025, Herbstforum 2025</span></span><span class="kbd">Enter</span></div>
+          <div class="flex items-center gap-3 px-2.5 py-2 text-sm text-brand">${ic('plus')}Neue Person „${esc(hit.ln.slice(0, 4))}“ anlegen</div>
+        </div>
+        <div class="mt-5 grid grid-cols-2 gap-3 opacity-95">
+          ${[['Vorname', hit.fn], ['Nachname', hit.ln], ['E-Mail', hit.email], ['Firma', hit.company]].map(([l, v]) => `<div class="${l === 'E-Mail' ? 'col-span-2' : ''}"><span class="text-xs font-medium text-ink-3">${l}</span><div class="mt-1 truncate rounded-lg border border-line bg-[#FAF9F6] px-3 py-1.5 text-sm">${esc(v)}</div></div>`).join('')}
+        </div>
+        <p class="mt-5 text-sm font-semibold">Rollen</p>
+        <div class="mt-1.5 flex flex-wrap gap-2">${[['Teilnahme', 1], ['Speaker'], ['Organisation'], ['Sponsor']].map(([t, on]) => `<span class="rounded-full border px-3 py-1 text-sm ${on ? 'border-brand bg-brand text-white' : 'border-line text-ink-2'}">${t}</span>`).join('')}</div>
+        <p class="mt-5 text-sm font-semibold">Ticket</p>
+        <div class="mt-1.5 grid grid-cols-3 gap-2">${[['Normal', '€ 49,00'], ['Mitglied', '€ 0,00', 1], ['Sonderpreis', 'frei']].map(([t, p, on]) => `<span class="rounded-xl border px-3 py-2 ${on ? 'border-brand bg-brand-50 ring-1 ring-brand' : 'border-line'}"><span class="block text-sm font-semibold">${t}</span><span class="num block text-xs text-ink-3">${p}</span></span>`).join('')}</div>
+        <p class="mt-1.5 text-xs text-ok">Mitgliedschaft M-1004 gefunden, gültig</p>
+        <p class="mt-5 text-sm font-semibold">Status</p>
+        <div class="mt-1.5 inline-flex rounded-lg border border-line p-0.5 text-sm">${['Bestätigt', 'Reserviert', 'Warteliste'].map((t, i) => `<span class="rounded-md px-3 py-1 ${i === 0 ? 'bg-ink font-semibold text-white' : 'text-ink-2'}">${t}</span>`).join('')}</div>
+        <label class="mt-4 flex items-center gap-2 text-sm"><span class="flex size-4 items-center justify-center rounded border border-brand bg-brand text-white">${ic('check', 'size-3')}</span>Bestätigung per E-Mail senden</label>
+        <button class="mt-4 flex items-center gap-1 text-sm font-medium text-ink-3">${ic('chevRight', 'size-3.5')}Rechnungsadresse, Sprache, Notiz</button>
+      </div>
+      <div class="flex items-center gap-2 border-t border-line px-6 py-3"><button class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">Anlegen</button><button class="rounded-lg border border-line px-4 py-2 text-sm font-medium">Anlegen &amp; nächste <span class="kbd ml-1">Strg Enter</span></button><button class="ml-auto text-sm text-ink-3">Abbrechen</button></div>
+    </div>
+    ${ann(11, 'Erst suchen: bekannte Personen aus früheren Events mit einem Enter übernehmen', 'top:140px;right:520px')}
+    ${ann(12, 'Ticket wählen statt Preis tippen; Mitgliedschaft wird gleich geprüft', 'top:430px;right:520px')}
+    ${ann(13, 'Mehrere nacheinander erfassen, ohne den Dialog neu zu öffnen', 'bottom:70px;right:520px')}
+  </div>`);
+}
+
+// ---------- Programm & Speaker ----------
+function screenProgramm() {
+  const S = FD.sessions; const SP = FD.speakers;
+  const streams = ['Festsaal', 'Raum 1.04', 'Raum 1.01'];
+  const t0 = new Date(S[0].st).getTime(); const PX = 1.15; // px pro Minute
+  const top = (s) => (new Date(s).getTime() - t0) / 60000 * PX;
+  const blocks = S.map((s) => {
+    const y = top(s.st), h = Math.max(22, top(s.en) - y - 3);
+    const all = s.stream === 1 && s.st2 >= 3; const t = loc(s.title);
+    const plen = all && s.tag === 'talk';
+    const cls = s.tag === 'break' ? 'bg-[repeating-linear-gradient(135deg,#F1EFEA_0_6px,#ECEAE4_6px_12px)] text-ink-3 border-line' : s.tag === 'general' ? 'bg-brand-50 border-brand/30 text-ink' : plen ? 'bg-brand text-white border-brand' : 'bg-white border-line text-ink';
+    const left = all ? 0 : (s.stream - 1) / 3 * 100, width = all ? 100 : ((s.st2 - s.stream + 1) / 3) * 100;
+    return `<div class="absolute overflow-hidden rounded-lg border px-2.5 py-1.5 text-xs shadow-sm ${cls}" style="top:${y}px;height:${h}px;left:calc(${left}% + 4px);width:calc(${width}% - 8px)">
+      <span class="num font-semibold ${plen ? 'text-white/80' : 'text-brand'}">${tm(s.st)}–${tm(s.en)}</span> <span class="font-semibold">${esc(t)}</span>
+      ${s.speaker && h > 40 ? `<span class="mt-0.5 block truncate ${plen ? 'text-white/80' : 'text-ink-3'}">${esc(s.speaker)}</span>` : ''}</div>`;
+  }).join('');
+  const hours = []; for (let m = 0; m <= 10.5 * 60; m += 30) hours.push(m);
+  const totalH = top(S[S.length - 1].en) + 10;
+  const sp = SP.slice(0, 16);
+  return shell('programm', `<div class="flex h-full">
+    <section class="flex w-[320px] shrink-0 flex-col border-r border-line bg-white">
+      <div class="flex items-center justify-between px-4 pt-4"><h2 class="font-display text-lg font-bold">Speaker</h2><button class="flex items-center gap-1 rounded-lg border border-line px-2 py-1 text-xs font-semibold">${ic('plus', 'size-3.5')}Speaker</button></div>
+      <div class="mt-3 grid grid-cols-3 gap-1 px-4 text-center text-xs">${[['Angefragt', SP.filter((s) => s.status !== 'confirmed').length, 'text-warn'], ['Zugesagt', SP.filter((s) => s.status === 'confirmed').length, 'text-ok'], ['Folien fehlen', SP.filter((s) => !s.slides).length, 'text-bad']].map(([t, n, c]) => `<span class="rounded-lg bg-canvas py-1.5"><span class="num block text-base font-bold ${c}">${n}</span>${t}</span>`).join('')}</div>
+      <div class="scroll-thin mt-3 flex-1 overflow-auto px-2">
+        ${sp.map((s, i) => `<div class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-canvas ${i === 3 ? 'bg-brand-50 ring-1 ring-brand' : ''}">
+          ${s.photo ? `<img src="${MEDIA + s.photo}" class="size-8 rounded-full object-cover" alt="">` : `<span class="flex size-8 items-center justify-center rounded-full bg-brand-100 text-[11px] font-bold text-brand">${initials(s.name)}</span>`}
+          <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">${esc(s.name)}</span><span class="block truncate text-xs text-ink-3">${esc(s.company || '')}</span></span>
+          <span class="flex items-center gap-1">${s.slides ? '' : '<span class="rounded bg-bad-bg px-1.5 text-[11px] font-semibold text-bad">Folien</span>'}</span>
+        </div>`).join('')}
+      </div>
+    </section>
+    <section class="flex min-w-0 flex-1 flex-col">
+      <div class="flex items-center gap-3 px-6 pt-5">
+        <h1 class="font-display text-[28px] font-extrabold tracking-tight">Programm</h1>
+        <span class="rounded-full bg-ok-bg px-2 py-0.5 text-xs font-semibold text-ok">veröffentlicht</span>
+        <div class="ml-auto flex gap-2"><button class="flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium">${ic('print')}Druck</button><button class="flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white">${ic('plus')}Programmpunkt</button></div>
+      </div>
+      <div class="mt-3 flex items-center gap-2 px-6 text-sm"><span class="rounded-lg bg-ink px-3 py-1 font-semibold text-white">Di, 3. Nov</span><span class="rounded-lg px-3 py-1 text-ink-3">Mo, 2. Nov · Masterclass</span>
+        <span class="ml-auto flex items-center gap-1.5 rounded-lg bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">${ic('alert', 'size-3.5')}Folien: 0 von 16 da · Erinnerung an alle senden</span></div>
+      <div class="mt-3 grid grid-cols-[56px_1fr] px-6 text-xs font-semibold text-ink-3"><span></span><div class="grid grid-cols-3">${streams.map((s) => `<span class="px-2">${s}</span>`).join('')}</div></div>
+      <div class="scroll-thin min-h-0 flex-1 overflow-auto px-6 pb-16">
+        <div class="relative grid grid-cols-[56px_1fr]" style="height:${totalH}px">
+          <div class="relative">${hours.map((m) => `<span class="num absolute right-2 -translate-y-1/2 text-xs text-ink-3" style="top:${m * PX}px">${tm(t0 + m * 60000)}</span>`).join('')}</div>
+          <div class="relative rounded-xl border border-line bg-white/60">
+            ${hours.map((m) => `<div class="absolute inset-x-0 border-t ${m % 60 ? 'border-dashed border-line/60' : 'border-line'}" style="top:${m * PX}px"></div>`).join('')}
+            <div class="absolute inset-y-0 left-1/3 border-l border-line"></div><div class="absolute inset-y-0 left-2/3 border-l border-line"></div>
+            ${blocks}
+          </div>
+        </div>
+      </div>
+    </section>
+    ${ann(14, 'Speaker und Programm in einer Ansicht: Status, Folien und Einsätze auf einen Blick', 'top:120px;left:470px')}
+    ${ann(15, 'Echte Zeitachse: Länge = Dauer, Lücken sichtbar; Programmpunkte per Ziehen verschieben', 'top:330px;right:40px')}
+    ${ann(16, 'Offene Punkte (Folien, Doppelbelegung eines Speakers oder Raums) stehen oben, mit Aktion', 'top:118px;right:40px')}
+  </div>`, ['Forum Day 2026', '03.11.2026 · Wien']);
+}
+
+// ---------- Rechnungen ----------
+function screenRechnungen() {
+  const inv = D.invoices.map((i) => ({ ...i, r: JSON.parse(i.recipient || '{}') }));
+  const main = inv.filter((i) => i.type !== 'credit_note');
+  const cn = inv.filter((i) => i.type === 'credit_note');
+  const od = (i) => i.ps === 'open' && i.rstatus !== 'cancelled' && i.due && new Date(i.due) < TODAY;
+  const st = (i) => i.rstatus === 'cancelled' ? ['Storniert', 'text-ink-3 bg-[#EEEDE9]'] : od(i) ? ['Überfällig', 'text-bad bg-bad-bg'] : i.ps === 'paid' ? ['Bezahlt', 'text-ok bg-ok-bg'] : i.ps === 'open' ? ['Offen', 'text-warn bg-warn-bg'] : ['Erstattet', 'text-ink-2 bg-[#EEEDE9]'];
+  const sum = (l) => l.reduce((a, i) => a + i.gross, 0);
+  const lOd = main.filter(od), lOpen = main.filter((i) => i.ps === 'open' && i.rstatus !== 'cancelled' && !od(i)), lPaid = main.filter((i) => i.ps === 'paid');
+  const rows = lOd.slice(0, 14).map((i) => {
+    const days = i.due ? Math.round((TODAY - new Date(i.due)) / 864e5) : 0;
+    const credits = cn.filter((c) => c.rel === i.id);
+    return `<tr class="border-b border-line/70 ${od(i) ? 'bg-bad-bg/30' : ''}">
+      <td class="pl-4"><span class="flex size-4 items-center justify-center rounded border border-brand bg-brand text-white">${ic('check', 'size-3')}</span></td>
+      <td class="num py-2 pr-3 font-semibold">${i.number}</td>
+      <td class="py-2 pr-3"><span class="font-medium">${esc(i.r.company || i.r.name)}</span>${i.r.company ? `<span class="ml-2 text-xs text-ink-3">${esc(i.r.name)}</span>` : ''}</td>
+      <td class="num py-2 pr-3 text-right">${eur(i.gross)}</td>
+      <td class="py-2 pr-3">${pill(st(i)[1], st(i)[0])}</td>
+      <td class="num py-2 pr-3 text-sm ${od(i) ? 'font-semibold text-bad' : 'text-ink-3'}">${od(i) ? `seit ${days} Tagen` : i.due ? new Date(i.due).toLocaleDateString('de-AT') : '–'}</td>
+      <td class="py-2 pr-3 text-sm text-ink-3">${credits.length ? `<span class="inline-flex items-center gap-1 rounded-md border border-line bg-white px-1.5 py-px text-xs">${ic('undo', 'size-3')}Gutschrift ${credits[0].number} · ${eur(credits[0].gross)}</span>` : od(i) ? 'noch keine Erinnerung' : ''}</td>
+      <td class="pr-4 text-right text-ink-3">${ic('more')}</td></tr>`;
+  }).join('');
+  const nOd = main.filter(od).length;
+  return shell('rechnungen', `<div class="h-full overflow-hidden">
+    <div class="flex items-end justify-between px-8 pt-6"><div><h1 class="font-display text-[28px] font-extrabold tracking-tight">Rechnungen</h1><p class="mt-1 text-sm text-ink-3">Rechnungen und Gutschriften zusammen, Gutschriften hängen an ihrer Rechnung</p></div>
+      <button class="flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium">${ic('download')}Export für Buchhaltung</button></div>
+    <div class="mt-5 grid grid-cols-4 gap-3 px-8">
+      ${[['Handlungsbedarf', `${nOd} überfällig`, eur(sum(lOd)), 'border-bad ring-1 ring-bad', 'text-bad'], ['Offen, noch nicht fällig', `${lOpen.length} Rechnung`, eur(sum(lOpen)), 'border-line', 'text-warn'], ['Bezahlt', `${lPaid.length} Rechnungen`, eur(sum(lPaid)), 'border-line', 'text-ok'], ['Gutschriften', `${cn.length} Stück`, '− ' + eur(sum(cn)), 'border-line', 'text-ink-2']].map(([t, s, v, b, c]) => `<button class="rounded-xl border bg-white p-4 text-left shadow-sm ${b}"><span class="block text-sm text-ink-3">${t}</span><span class="num mt-1 block font-display text-2xl font-bold ${c}">${v}</span><span class="block text-xs text-ink-3">${s}</span></button>`).join('')}
+    </div>
+    <div class="mx-8 mt-4 flex items-center gap-3 rounded-xl bg-ink px-4 py-2.5 text-sm text-white">
+      <span class="font-semibold"><span class="num">${nOd}</span> überfällige ausgewählt</span><span class="text-white/70">Erinnerungen laufen automatisch alle 7 Tage</span>
+      <button class="ml-auto flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 font-semibold text-ink">${ic('send')}Jetzt erinnern</button><button class="rounded-lg px-3 py-1.5 hover:bg-white/10">Als bezahlt markieren</button></div>
+    <div class="mx-8 mt-3 overflow-hidden rounded-xl border border-line bg-white shadow-sm"><table class="w-full text-left">
+      <thead class="bg-[#FAF9F6] text-xs font-semibold text-ink-3"><tr class="border-b border-line"><th class="w-10 py-2.5 pl-4"></th><th class="pr-3">Nummer</th><th class="pr-3">Empfänger</th><th class="pr-3 text-right">Betrag</th><th class="pr-3">Status</th><th class="pr-3">Fällig</th><th class="pr-3">Zuletzt</th><th></th></tr></thead>
+      <tbody class="text-sm">${rows}</tbody></table></div>
+    ${ann(17, 'Kacheln sind Filter. Start immer bei „Handlungsbedarf“ statt bei 100 Belegen', 'top:110px;left:520px')}
+    ${ann(18, 'Mahnen als Massenaktion statt einzeln über „…“', 'top:258px;right:200px')}
+    ${ann(19, 'Gutschriften hängen an ihrer Rechnung statt als eigene Zeile (Ansicht „Alle“)', 'top:420px;right:120px')}
+  </div>`);
+}
+
+// ---------- Check-in (mobil) ----------
+function screenCheckin() {
+  const conf = regs.filter((r) => r.status === 'confirmed').slice(0, 9);
+  return `<div class="flex h-screen w-full items-center justify-center gap-16 bg-[#E9E7E1]">
+    <div class="max-w-sm"><h1 class="font-display text-3xl font-extrabold tracking-tight">Check-in am Eventtag</h1>
+      <p class="mt-3 text-ink-2">Neu (TODO UI4). Läuft auf dem Handy oder Tablet am Einlass. Die Datenbank hat dafür schon <code class="rounded bg-white px-1">checked_in_at</code> und einen QR-Code je Anmeldung, es fehlt nur die Oberfläche.</p>
+      <ul class="mt-5 space-y-2 text-sm text-ink-2"><li>• Name tippen oder QR-Code vom Ticket scannen</li><li>• Ein Tipp checkt ein, Rückgängig 5 Sekunden lang</li><li>• Hinweise direkt sichtbar: Zahlung offen, Warteliste, Speaker</li><li>• Nachmeldung vor Ort mit der Schnell-Anmeldung</li><li>• Live-Zähler für die Organisation</li></ul></div>
+    <div class="relative h-[800px] w-[390px] overflow-hidden rounded-[44px] border-[10px] border-ink bg-canvas shadow-pop">
+      <div class="bg-side px-5 pb-4 pt-10 text-white">
+        <div class="flex items-center justify-between text-sm"><span class="font-semibold">Herbstforum 2026</span><span class="text-side-fg">Einlass</span></div>
+        <div class="mt-3 flex items-end gap-2"><span class="num font-display text-5xl font-extrabold">41</span><span class="mb-1.5 text-side-fg">von 73 da</span><span class="num mb-1.5 ml-auto text-sm text-side-fg">56 %</span></div>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"><div class="h-full w-[56%] rounded-full bg-[#7BE0A8]"></div></div>
+      </div>
+      <div class="flex gap-2 p-3"><div class="flex flex-1 items-center gap-2 rounded-xl border border-line bg-white px-3 py-3 text-ink-3">${ic('search', 'size-5')}Name oder Firma</div><button class="flex items-center justify-center rounded-xl bg-brand px-4 text-white">${ic('qr', 'size-6')}</button></div>
+      <div class="space-y-1.5 px-3">
+        ${conf.map((r, i) => `<div class="flex items-center gap-3 rounded-xl ${i < 3 ? 'bg-white/60' : 'bg-white'} px-3 py-3 shadow-sm">
+          <span class="min-w-0 flex-1"><span class="block truncate font-semibold ${i < 3 ? 'text-ink-3' : ''}">${esc(r.fn)} ${esc(r.ln)}</span><span class="block truncate text-xs text-ink-3">${esc(r.company || '–')}${r.ps === 'open' ? ' · <span class="font-semibold text-warn">Zahlung offen</span>' : ''}${(r.roles || '').includes('speaker') ? ' · <span class="font-semibold text-[#C2185B]">Speaker</span>' : ''}</span></span>
+          ${i < 3 ? `<span class="flex items-center gap-1 text-sm font-semibold text-ok">${ic('check')}09:${12 + i * 3}</span>` : '<button class="rounded-lg border-2 border-brand px-3 py-1.5 text-sm font-bold text-brand">Einchecken</button>'}
+        </div>`).join('')}
+      </div>
+      <div class="absolute inset-x-3 bottom-4 flex items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white shadow-pop">${ic('check', 'size-5 text-[#7BE0A8]')}<span class="flex-1">Martin Czerny eingecheckt</span><button class="font-semibold underline underline-offset-4">Rückgängig</button></div>
+    </div></div>`;
+}
+
+const SCREENS = [
+  ['tn', 'Teilnehmende', screenTn], ['tn-filter', 'Filter', screenTnFilter], ['tn-detail', 'Detail', screenTnDetail], ['tn-bulk', 'Massenbearbeitung', screenTnBulk], ['tn-neu', 'Anmeldung', screenTnNew],
+  ['programm', 'Programm & Speaker', screenProgramm], ['rechnungen', 'Rechnungen', screenRechnungen], ['checkin', 'Check-in', screenCheckin],
+];
+function render() {
+  const key = (location.hash || '#tn').slice(1).split('?')[0];
+  const s = SCREENS.find((x) => x[0] === key) || SCREENS[0];
+  document.getElementById('app').innerHTML = s[2]();
+  document.getElementById('switcher').innerHTML = SCREENS.map(([k, t]) => `<a href="#${k}" class="rounded-full px-3 py-1.5 ${k === s[0] ? 'bg-white text-ink' : 'hover:bg-white/10'}">${t}</a>`).join('') + '<button onclick="document.body.classList.toggle(\'no-ann\')" class="rounded-full px-3 py-1.5 text-[#FFE36E] hover:bg-white/10">Notizen</button>';
+  document.body.classList.toggle('no-ann', location.hash.includes('clean'));
+}
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>

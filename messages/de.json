@@ -98,7 +98,14 @@
     "gdpr": "Datenschutz",
     "pricing": "Preise & Rabatte",
     "website": "Eventseite",
-    "publicSite": "Zur öffentlichen Veranstaltungsseite"
+    "publicSite": "Zur öffentlichen Veranstaltungsseite",
+    "sectionRegistration": "Anmeldung",
+    "sectionProgram": "Programm & Auftritt",
+    "publicEventPage": "Öffentliche Eventseite",
+    "organizationToggle": "Organisation ein- oder ausklappen",
+    "uiToggle": "Neue Oberfläche",
+    "uiToggleHint": "Zwischen neuer und alter Oberfläche umschalten (gilt für diesen Browser)",
+    "checkin": "Check-in"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -292,7 +299,10 @@
     "priceEarlyNormal": "Early-Bird-Normalpreis",
     "priceEarlyMember": "Early-Bird-Mitgliedspreis",
     "earlyBirdPriceHint": "Leer: kein Early Bird für diesen Preis.",
-    "earlyBirdStartsHint": "Leer: ab Anmeldestart."
+    "earlyBirdStartsHint": "Leer: ab Anmeldestart.",
+    "unsaved": "Ungespeicherte Änderungen",
+    "discard": "Verwerfen",
+    "sectionsLabel": "Abschnitte"
   },
   "eventActions": {
     "pause": "Anmeldung pausieren",
@@ -650,7 +660,16 @@
       "tagPayment": "Zahlungsstatus",
       "tagTicket": "Tickettyp",
       "tagRole": "Rolle",
-      "tagClick": "Klick filtert die Liste"
+      "tagClick": "Klick filtert die Liste",
+      "inlineSaved": "Gespeichert",
+      "inlineEdit": "Anklicken zum Bearbeiten (Enter speichert, Esc bricht ab)",
+      "prev": "vorige",
+      "next": "nächste",
+      "position": "{position} von {total}",
+      "company": "Firma",
+      "billingCompany": "Rechnung an Firma",
+      "asPerson": "wie Person",
+      "billingAddress": "Rechnungsadresse"
     },
     "changePaymentStatus": "Zahlungsstatus ändern",
     "sureTitle": "Sind Sie sicher?",
@@ -747,7 +766,40 @@
     "groupCollapseAll": "Alle zuklappen",
     "bulkCertificate": "Teilnahmebestätigung ({count})",
     "bulkCertificateHint": "PDF mit einer Seite je angehakter Person, in ihrer Sprache",
-    "certificate": "Teilnahmebestätigung (PDF)"
+    "certificate": "Teilnahmebestätigung (PDF)",
+    "quickConfirm": "Bestätigen",
+    "quickPaid": "Bezahlt",
+    "keysHintNew": "J/K blättern · Enter öffnen · X auswählen · / suchen · N neue Anmeldung",
+    "bulkFailed": "{failed} nicht möglich (Details im Protokoll der Person)",
+    "bulkConfirm": "Bestätigen ({count})",
+    "bulkConfirmTitle": "{count, plural, one {# Anmeldung von der Warteliste bestätigen?} other {# Anmeldungen von der Warteliste bestätigen?}}",
+    "bulkConfirmHint": "Bestätigt nur Anmeldungen auf der Warteliste, solange Plätze frei sind (derzeit {free}). Jede Person bekommt die Bestätigung per E-Mail, bei Preis über 0 mit Rechnung.",
+    "bulkConfirmAction": "{count} bestätigen",
+    "bulkConfirmDone": "{ok, plural, one {# Anmeldung bestätigt} other {# Anmeldungen bestätigt}}",
+    "bulkPaid": "Als bezahlt ({count})",
+    "bulkPaidTitle": "{count, plural, one {# Anmeldung als bezahlt markieren} other {# Anmeldungen als bezahlt markieren}}",
+    "bulkPaidHint": "Für offene Zahlungen, die außerhalb von EventFlow eingegangen sind (z. B. Überweisung). Die Notiz kommt ins Protokoll jeder Anmeldung.",
+    "bulkPaidNote": "Notiz für das Protokoll",
+    "bulkPaidOn": "Zahlungseingang am",
+    "bulkPaidAction": "{count} als bezahlt markieren",
+    "bulkPaidDone": "{ok, plural, one {# Anmeldung als bezahlt markiert} other {# Anmeldungen als bezahlt markiert}}",
+    "quick": {
+      "title": "Anmeldung hinzufügen",
+      "hint": "Erst die Person suchen: Bekannte Personen werden mit Enter übernommen.",
+      "person": "Person",
+      "searchPlaceholder": "Name, E-Mail oder Firma …",
+      "alreadyRegistered": "schon angemeldet",
+      "wasAt": "war bei {events}",
+      "newPerson": "Neue Person „{query}“ anlegen",
+      "picked": "{name} übernommen",
+      "categories": "{count, plural, one {# Kategorie} other {# Kategorien}}",
+      "freeAmount": "Betrag frei",
+      "memberHint": "Die Mitgliedschaft wird beim Anlegen nicht geprüft; bei öffentlichen Anmeldungen prüft EventFlow die Mitgliedsnummer.",
+      "more": "Rechnungsadresse und Sprache",
+      "createNext": "Anlegen & nächste",
+      "createdNext": "{name} angelegt – nächste Person"
+    },
+    "bulkMore": "Mehr"
   },
   "registrationForm": {
     "createTitle": "Anmeldung hinzufügen",
@@ -939,7 +991,26 @@
     "streamSaved": "Stream gespeichert",
     "streamName": "Name",
     "coSpeakers": "Weitere Speaker (optional)",
-    "coSpeakersHint": "Z. B. für Fireside Talks oder Vorträge zu zweit."
+    "coSpeakersHint": "Z. B. für Fireside Talks oder Vorträge zu zweit.",
+    "planner": {
+      "dragHint": "Ziehen verschiebt (5-Minuten-Raster), Klicken bearbeitet",
+      "streams": "Streams ({count})",
+      "slidesMissing": "{count} von {total} Speakern haben noch keine Folien.",
+      "toSpeakers": "Zu den Speakern",
+      "speakersTitle": "Speaker",
+      "manage": "Verwalten",
+      "pending": "Angefragt",
+      "confirmed": "Zugesagt",
+      "noSlides": "Ohne Folien",
+      "noSpeakers": "Noch keine Speaker angelegt.",
+      "sessionsHint": "{count, plural, one {# Programmpunkt} other {# Programmpunkte}} (auch als Co-Speaker)",
+      "free": "frei",
+      "slidesMissingOne": "Folien fehlen",
+      "slidesShort": "Folien",
+      "conflictSpeaker": "Doppelt eingeplant: {name} bei „{a}“ und „{b}“",
+      "conflictStream": "Überschneidung in {stream}: „{a}“ und „{b}“",
+      "moved": "„{title}“ verschoben auf {time}"
+    }
   },
   "sponsors": {
     "title": "Sponsoren",
@@ -1082,7 +1153,39 @@
     },
     "noMatches": "Keine Belege passen zur Suche.",
     "changeStatus": "Zahlungsstatus ändern",
-    "refund": "Erstatten"
+    "refund": "Erstatten",
+    "tiles": {
+      "overdue": "Handlungsbedarf (überfällig)",
+      "due": "Offen, noch nicht fällig",
+      "paid": "Bezahlt",
+      "credit": "Gutschriften",
+      "count": "{count, plural, one {# Rechnung} other {# Rechnungen}}",
+      "countCredit": "{count, plural, one {# Gutschrift} other {# Gutschriften}}",
+      "all": "Alle Belege ({count})"
+    },
+    "overdueSince": "{days, plural, =0 {seit heute} one {seit # Tag} other {seit # Tagen}}",
+    "noReminder": "noch keine Erinnerung",
+    "sentOn": "versendet {date}",
+    "colLast": "Zuletzt",
+    "shown": "{count, plural, one {# Beleg} other {# Belege}}",
+    "nothingOverdue": "Nichts überfällig. Gut so!",
+    "bulk": {
+      "select": "{number} auswählen",
+      "selectAll": "Alle offenen auswählen",
+      "selected": "{count} ausgewählt",
+      "remind": "Jetzt erinnern ({count})",
+      "remindHint": "Nächste Zahlungserinnerung sofort senden, ohne den 14-Tage-Abstand abzuwarten (höchstens zwei je Rechnung)",
+      "remindDone": "{sent, plural, one {# Erinnerung gesendet} other {# Erinnerungen gesendet}}",
+      "remindProblems": "{count} nicht gesendet (z. B. keine E-Mail-Adresse) – siehe Protokoll",
+      "paid": "Zahlung erfassen ({count})",
+      "paidTitle": "{count, plural, one {Zahlung für # Rechnung erfassen} other {Zahlungen für # Rechnungen erfassen}}",
+      "paidHint": "Verbucht jeweils den vollen offenen Betrag (zusammen {sum}) als Zahlungseingang. Teilzahlungen bitte einzeln über „Zahlungseingang erfassen“.",
+      "paidAction": "{count} verbuchen",
+      "paidDone": "{ok} von {total} verbucht",
+      "resend": "Erneut senden",
+      "resendDone": "{ok} von {total} erneut gesendet",
+      "clear": "Auswahl aufheben"
+    }
   },
   "refunds": {
     "title": "Erstattungen",
@@ -1308,7 +1411,17 @@
     "sponsorsTitle": "Unsere Sponsoren und Partner",
     "speakersTitle": "Unsere Speaker",
     "pastTitle": "Vergangene Veranstaltungen",
-    "pastDetails": "Zur Eventseite →"
+    "pastDetails": "Zur Eventseite →",
+    "pastBadge": "Rückblick",
+    "pastNote": "Diese Veranstaltung hat am {date} stattgefunden. Danke an alle, die dabei waren!",
+    "factSpeakers": "{count, plural, one {# Speaker} other {# Speaker}}",
+    "factSessions": "{count, plural, one {# Programmpunkt} other {# Programmpunkte}}",
+    "factStreams": "{count} parallele Streams",
+    "sectionNav": "Abschnitte der Eventseite",
+    "toGallery": "Zu den Impressionen",
+    "keynotesTitle": "Keynotes",
+    "moreSpeakers": "Weitere Speaker",
+    "plenary": "Plenum"
   },
   "publicForm": {
     "waitlistTitle": "Die Veranstaltung ist ausgebucht",
@@ -2075,5 +2188,21 @@
     "highlightIcon": "Icon",
     "highlightIconRemove": "Icon entfernen",
     "highlightIconHint": "Quadratisches Bild, wird rund angezeigt. PNG, JPG oder WebP, höchstens 5 MB."
+  },
+  "checkin": {
+    "title": "Check-in",
+    "counterLabel": "Anwesend",
+    "of": "von {total} bestätigten",
+    "search": "Name oder Firma",
+    "onlyOpen": "Nur noch nicht Eingecheckte",
+    "walkIn": "Vor Ort anmelden",
+    "paymentOpen": "Zahlung offen",
+    "checkIn": "Einchecken",
+    "undoHint": "Antippen nimmt den Check-in zurück",
+    "noMatch": "Niemand gefunden. Vor Ort anmelden?",
+    "allIn": "Alle sind eingecheckt.",
+    "done": "{name} eingecheckt",
+    "undo": "Rückgängig",
+    "close": "Schließen"
   }
 }

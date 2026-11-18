@@ -200,9 +200,11 @@ type DialogProps = {
   defaultValues: SessionFormValues;
   save: (values: SessionFormValues) => Promise<ActionResult<unknown>>;
   onClose: () => void;
+  /** optional: „Löschen“ im Dialog anbieten (Programmplaner der neuen Oberfläche) */
+  onDelete?: () => void;
 };
 
-function SessionDialog({ title, speakers, streams, defaultValues, save, onClose }: DialogProps) {
+export function SessionDialog({ title, speakers, streams, defaultValues, save, onClose, onDelete }: DialogProps) {
   const t = useTranslations('schedule');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -322,6 +324,12 @@ function SessionDialog({ title, speakers, streams, defaultValues, save, onClose 
               </div>
             </fieldset>
             <DialogFooter>
+              {onDelete && (
+                <Button type="button" variant="ghost" className="mr-auto text-destructive hover:text-destructive" onClick={onDelete}>
+                  <Trash2 aria-hidden className="size-4" />
+                  {t('delete')}
+                </Button>
+              )}
               <Button type="button" variant="outline" onClick={onClose}>
                 {t('cancel')}
               </Button>
@@ -337,7 +345,7 @@ function SessionDialog({ title, speakers, streams, defaultValues, save, onClose 
 }
 
 /** Streams des Events: anlegen, umbenennen, Reihenfolge ändern, löschen. */
-function StreamsPanel({ eventId, streams, readOnly }: { eventId: number; streams: StreamInfo[]; readOnly: boolean }) {
+export function StreamsPanel({ eventId, streams, readOnly }: { eventId: number; streams: StreamInfo[]; readOnly: boolean }) {
   const t = useTranslations('schedule');
   const locale = useLocale() as Locale;
   const router = useRouter();

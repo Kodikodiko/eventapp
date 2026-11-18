@@ -98,7 +98,14 @@
     "gdpr": "Data protection",
     "pricing": "Prices & discounts",
     "website": "Event page",
-    "publicSite": "To the public events page"
+    "publicSite": "To the public events page",
+    "sectionRegistration": "Registration",
+    "sectionProgram": "Programme & presence",
+    "publicEventPage": "Public event page",
+    "organizationToggle": "Expand or collapse organisation",
+    "uiToggle": "New interface",
+    "uiToggleHint": "Switch between the new and the old interface (applies to this browser)",
+    "checkin": "Check-in"
   },
   "security": {
     "title": "Two-factor authentication",
@@ -292,7 +299,10 @@
     "priceEarlyNormal": "Early bird regular price",
     "priceEarlyMember": "Early bird member price",
     "earlyBirdPriceHint": "Empty: no early bird for this price.",
-    "earlyBirdStartsHint": "Empty: from registration start."
+    "earlyBirdStartsHint": "Empty: from registration start.",
+    "unsaved": "Unsaved changes",
+    "discard": "Discard",
+    "sectionsLabel": "Sections"
   },
   "eventActions": {
     "pause": "Pause registration",
@@ -650,7 +660,16 @@
       "tagPayment": "Payment status",
       "tagTicket": "Ticket type",
       "tagRole": "Role",
-      "tagClick": "click to filter the list"
+      "tagClick": "click to filter the list",
+      "inlineSaved": "Saved",
+      "inlineEdit": "Click to edit (Enter saves, Esc cancels)",
+      "prev": "previous",
+      "next": "next",
+      "position": "{position} of {total}",
+      "company": "Company",
+      "billingCompany": "Invoice to company",
+      "asPerson": "same as person",
+      "billingAddress": "Billing address"
     },
     "changePaymentStatus": "Change payment status",
     "sureTitle": "Are you sure?",
@@ -747,7 +766,40 @@
     "groupCollapseAll": "Collapse all",
     "bulkCertificate": "Certificate ({count})",
     "bulkCertificateHint": "PDF with one page per ticked person, in their language",
-    "certificate": "Certificate of attendance (PDF)"
+    "certificate": "Certificate of attendance (PDF)",
+    "quickConfirm": "Confirm",
+    "quickPaid": "Paid",
+    "keysHintNew": "J/K browse · Enter open · X select · / search · N new registration",
+    "bulkFailed": "{failed} not possible (see the person’s history)",
+    "bulkConfirm": "Confirm ({count})",
+    "bulkConfirmTitle": "{count, plural, one {Confirm # waitlisted registration?} other {Confirm # waitlisted registrations?}}",
+    "bulkConfirmHint": "Only confirms waitlisted registrations while seats are free (currently {free}). Each person receives the confirmation by email, with an invoice if the price is above 0.",
+    "bulkConfirmAction": "Confirm {count}",
+    "bulkConfirmDone": "{ok, plural, one {# registration confirmed} other {# registrations confirmed}}",
+    "bulkPaid": "Mark paid ({count})",
+    "bulkPaidTitle": "{count, plural, one {Mark # registration as paid} other {Mark # registrations as paid}}",
+    "bulkPaidHint": "For open payments received outside EventFlow (e.g. bank transfer). The note is added to each registration’s history.",
+    "bulkPaidNote": "Note for the history",
+    "bulkPaidOn": "Payment received on",
+    "bulkPaidAction": "Mark {count} as paid",
+    "bulkPaidDone": "{ok, plural, one {# registration marked as paid} other {# registrations marked as paid}}",
+    "quick": {
+      "title": "Add registration",
+      "hint": "Search for the person first: known people are taken over with Enter.",
+      "person": "Person",
+      "searchPlaceholder": "Name, email or company …",
+      "alreadyRegistered": "already registered",
+      "wasAt": "attended {events}",
+      "newPerson": "Create new person “{query}”",
+      "picked": "{name} taken over",
+      "categories": "{count, plural, one {# category} other {# categories}}",
+      "freeAmount": "any amount",
+      "memberHint": "Membership is not checked when adding manually; EventFlow checks the member number for public registrations.",
+      "more": "Billing address and language",
+      "createNext": "Create & next",
+      "createdNext": "{name} created – next person"
+    },
+    "bulkMore": "More"
   },
   "registrationForm": {
     "createTitle": "Add registration",
@@ -939,7 +991,26 @@
     "streamSaved": "Stream saved",
     "streamName": "Name",
     "coSpeakers": "Additional speakers (optional)",
-    "coSpeakersHint": "E.g. for fireside talks or talks given by two people."
+    "coSpeakersHint": "E.g. for fireside talks or talks given by two people.",
+    "planner": {
+      "dragHint": "Drag to move (5-minute grid), click to edit",
+      "streams": "Streams ({count})",
+      "slidesMissing": "{count} of {total} speakers have no slides yet.",
+      "toSpeakers": "Go to speakers",
+      "speakersTitle": "Speakers",
+      "manage": "Manage",
+      "pending": "Requested",
+      "confirmed": "Confirmed",
+      "noSlides": "No slides",
+      "noSpeakers": "No speakers yet.",
+      "sessionsHint": "{count, plural, one {# session} other {# sessions}} (incl. co-speaker)",
+      "free": "free",
+      "slidesMissingOne": "Slides missing",
+      "slidesShort": "Slides",
+      "conflictSpeaker": "Double-booked: {name} in “{a}” and “{b}”",
+      "conflictStream": "Overlap in {stream}: “{a}” and “{b}”",
+      "moved": "“{title}” moved to {time}"
+    }
   },
   "sponsors": {
     "title": "Sponsors",
@@ -1082,7 +1153,39 @@
     },
     "noMatches": "No documents match the search.",
     "changeStatus": "Change payment status",
-    "refund": "Refund"
+    "refund": "Refund",
+    "tiles": {
+      "overdue": "Action needed (overdue)",
+      "due": "Open, not yet due",
+      "paid": "Paid",
+      "credit": "Credit notes",
+      "count": "{count, plural, one {# invoice} other {# invoices}}",
+      "countCredit": "{count, plural, one {# credit note} other {# credit notes}}",
+      "all": "All documents ({count})"
+    },
+    "overdueSince": "{days, plural, =0 {since today} one {for # day} other {for # days}}",
+    "noReminder": "no reminder yet",
+    "sentOn": "sent {date}",
+    "colLast": "Last",
+    "shown": "{count, plural, one {# document} other {# documents}}",
+    "nothingOverdue": "Nothing overdue. Well done!",
+    "bulk": {
+      "select": "Select {number}",
+      "selectAll": "Select all open",
+      "selected": "{count} selected",
+      "remind": "Remind now ({count})",
+      "remindHint": "Send the next payment reminder now without waiting 14 days (at most two per invoice)",
+      "remindDone": "{sent, plural, one {# reminder sent} other {# reminders sent}}",
+      "remindProblems": "{count} not sent (e.g. no email address) – see the history",
+      "paid": "Record payment ({count})",
+      "paidTitle": "{count, plural, one {Record payment for # invoice} other {Record payments for # invoices}}",
+      "paidHint": "Records the full open amount of each invoice (together {sum}). Please record partial payments individually.",
+      "paidAction": "Record {count}",
+      "paidDone": "{ok} of {total} recorded",
+      "resend": "Resend",
+      "resendDone": "{ok} of {total} resent",
+      "clear": "Clear selection"
+    }
   },
   "refunds": {
     "title": "Refunds",
@@ -1308,7 +1411,17 @@
     "sponsorsTitle": "Our sponsors and partners",
     "speakersTitle": "Our speakers",
     "pastTitle": "Past events",
-    "pastDetails": "View event page →"
+    "pastDetails": "View event page →",
+    "pastBadge": "Recap",
+    "pastNote": "This event took place on {date}. Thank you to everyone who joined us!",
+    "factSpeakers": "{count, plural, one {# speaker} other {# speakers}}",
+    "factSessions": "{count, plural, one {# session} other {# sessions}}",
+    "factStreams": "{count} parallel streams",
+    "sectionNav": "Event page sections",
+    "toGallery": "See the photos",
+    "keynotesTitle": "Keynotes",
+    "moreSpeakers": "More speakers",
+    "plenary": "Plenary"
   },
   "publicForm": {
     "waitlistTitle": "This event is sold out",
@@ -2075,5 +2188,21 @@
     "highlightIcon": "Icon",
     "highlightIconRemove": "Remove icon",
     "highlightIconHint": "Square image, shown round. PNG, JPG or WebP, max. 5 MB."
+  },
+  "checkin": {
+    "title": "Check-in",
+    "counterLabel": "Present",
+    "of": "of {total} confirmed",
+    "search": "Name or company",
+    "onlyOpen": "Only those not yet checked in",
+    "walkIn": "Register on site",
+    "paymentOpen": "payment open",
+    "checkIn": "Check in",
+    "undoHint": "Tap to undo the check-in",
+    "noMatch": "Nobody found. Register on site?",
+    "allIn": "Everyone is checked in.",
+    "done": "{name} checked in",
+    "undo": "Undo",
+    "close": "Close"
   }
 }

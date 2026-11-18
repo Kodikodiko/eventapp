@@ -159,10 +159,16 @@ export async function notifyRegistrationSafely(db: Db, registrationId: number, o
 export type ReminderSummary = { sent: number; failed: number; skipped: number };
 
 /** Zeitplan: fällige Zahlungserinnerungen senden (Rechnung erneut im Anhang). */
-export async function sendDueReminders(db: Db, mailer: Mailer = getMailer(), now = new Date()): Promise<ReminderSummary> {
+export async function sendDueReminders(
+  db: Db,
+  mailer: Mailer = getMailer(),
+  now = new Date(),
+  /** Sammelaktion im Admin: nur diese Rechnungen, sofort (ohne 14-Tage-Abstand), protokolliert mit dem Admin */
+  manual?: { ids: number[]; actor: Actor }
+): Promise<ReminderSummary> {
   const summary: ReminderSummary = { sent: 0, failed: 0, skipped: 0 };
   const organizer = mailOrganizer(db);
-  for (const { invoice, level, openCents } of findDueReminders(db, now)) {
+  for (const { invoice, level, openCents } of findDueReminders(db, now, manual ? { ids: manual.ids, ignoreInterval: true } : {})) {
     const to = invoiceRecipient(db, invoice);
     if (!to || !invoice.dueAt) {
       summary.skipped++;
@@ -183,7 +189,7 @@ export async function sendDueReminders(db: Db, mailer: Mailer = getMailer(), now
         organizer,
       });
       if (await trySend(message, mailer)) {
-        recordReminderAudit(db, invoice, level);
+        recordReminderAudit(db, invoice, level, manual?.actor);
         summary.sent++;
         continue;
       }

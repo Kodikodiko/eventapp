@@ -2,14 +2,17 @@
 
 import { Download, Eye, FileText, Landmark, MoreHorizontal, Pencil, UserCheck, Wallet, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { formatDateOnly } from '@/lib/dates';
-import { formatEuro } from '@/lib/money';
+import { centsToInput, formatEuro } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { registrationDetailAction } from '@/server/actions/admin';
+import { updateRegistrationAction } from '@/server/actions/registrations';
+import { useActionFeedback } from '../use-action-feedback';
 import type { InvoiceListRow } from '@/server/services/invoices';
 import type { RegistrationDetail } from '@/server/services/registration-detail';
 import type { RegistrationListRow } from '@/server/services/registrations';
@@ -19,6 +22,8 @@ import { paymentTone, Pill, statusTone, type PillTone } from './status-pill';
 
 type Props = {
   row: RegistrationListRow;
+  /** Blättern zur vorigen/nächsten Person der Liste (J/K) */
+  nav?: { position: number; total: number; onPrev: () => void; onNext: () => void };
   /** Download der Teilnahmebestätigung (PDF) */
   certificateHref?: string;
   roleLabel: (key: string) => string;
@@ -52,8 +57,88 @@ function TagButton({ label, onClick, children }: { label: string; onClick?: () =
   );
 }
 
+type EditableKey = 'email' | 'company' | 'billingCompany' | 'billingAddress';
+
+/**
+ * Feld direkt bearbeiten: anklicken, tippen, Enter (Esc bricht ab). Speichert über dieselbe Aktion wie „Bearbeiten“,
+ * alle übrigen Werte der Anmeldung bleiben unverändert.
+ */
+function InlineField({ row, field, value, multiline, readOnly, children }: { row: RegistrationListRow; field: EditableKey; value: string; multiline?: boolean; readOnly: boolean; children: React.ReactNode }) {
+  const t = useTranslations('attendees');
+  const router = useRouter();
+  const handle = useActionFeedback();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [pending, startTransition] = useTransition();
+  if (readOnly || row.restricted) return <>{children}</>;
+
+  function save() {
+    if (draft.trim() === value.trim()) {
+      setEditing(false);
+      return;
+    }
+    startTransition(async () => {
+      const values = {
+        firstName: row.firstName,
+        lastName: row.lastName,
+        email: row.email ?? '',
+        company: row.company ?? '',
+        locale: row.locale,
+        roles: row.roles,
+        ticketType: row.ticketType,
+        priceCategoryId: row.priceCategoryId ? String(row.priceCategoryId) : '',
+        price: centsToInput(row.priceCents),
+        billingCompany: row.billingCompany ?? '',
+        billingAddress: row.billingAddress ?? '',
+        [field]: draft,
+      };
+      const result = await updateRegistrationAction(row.id, values);
+      if (handle(result, { success: t('detail.inlineSaved') })) {
+        setEditing(false);
+        router.refresh();
+      }
+    });
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(value);
+          setEditing(true);
+        }}
+        title={t('detail.inlineEdit')}
+        className="group -mx-1.5 -my-0.5 flex w-[calc(100%+0.75rem)] items-start justify-between gap-2 rounded-md px-1.5 py-0.5 text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <span className="min-w-0 break-words">{children}</span>
+        <Pencil aria-hidden className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100" />
+      </button>
+    );
+  }
+  const common = {
+    autoFocus: true,
+    value: draft,
+    disabled: pending,
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft(e.target.value),
+    onBlur: save,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditing(false);
+      } else if (e.key === 'Enter' && (!multiline || e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        save();
+      }
+    },
+    className: 'w-full rounded-md border-2 border-primary bg-background px-2 py-1 text-sm outline-none',
+  };
+  return multiline ? <textarea rows={3} {...common} /> : <input {...common} />;
+}
+
 /** Detailpanel einer Anmeldung: Stammdaten, Belege, Verlauf und die wichtigsten Aktionen. */
-export function RegistrationDetailPanel({ row, certificateHref, roleLabel, readOnly, onAction, onClose, onFilter, version, headingId }: Props) {
+export function RegistrationDetailPanel({ row, nav, certificateHref, roleLabel, readOnly, onAction, onClose, onFilter, version, headingId }: Props) {
   const t = useTranslations('attendees');
   const tInv = useTranslations('invoices');
   const locale = useLocale() as Locale;
@@ -92,6 +177,21 @@ export function RegistrationDetailPanel({ row, certificateHref, roleLabel, readO
 
   return (
     <div className="flex h-full flex-col">
+      {nav && (
+        <div className="flex items-center justify-between gap-2 border-b px-5 py-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <button type="button" onClick={nav.onPrev} className="flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted hover:text-foreground">
+              <kbd className="rounded border px-1 font-sans">K</kbd>
+              {t('detail.prev')}
+            </button>
+            <button type="button" onClick={nav.onNext} className="flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted hover:text-foreground">
+              <kbd className="rounded border px-1 font-sans">J</kbd>
+              {t('detail.next')}
+            </button>
+          </span>
+          <span className="tabular-nums">{t('detail.position', { position: nav.position, total: nav.total })}</span>
+        </div>
+      )}
       <div className="flex flex-col gap-3 border-b px-5 pt-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -154,7 +254,17 @@ export function RegistrationDetailPanel({ row, certificateHref, roleLabel, readO
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 py-4 text-sm">
         <dl className="grid grid-cols-[minmax(0,130px)_minmax(0,1fr)] gap-x-3 gap-y-2">
           <dt className="text-muted-foreground">{t('detail.email')}</dt>
-          <dd className="min-w-0 break-words">{row.email ? <a href={`mailto:${row.email}`} className="text-primary hover:underline">{row.email}</a> : '–'}</dd>
+          <dd className="min-w-0 break-words">
+            <InlineField row={row} field="email" value={row.email ?? ''} readOnly={readOnly}>
+              {row.email ?? '–'}
+            </InlineField>
+          </dd>
+          <dt className="text-muted-foreground">{t('detail.company')}</dt>
+          <dd className="min-w-0">
+            <InlineField row={row} field="company" value={row.company ?? ''} readOnly={readOnly}>
+              {row.company || <span className="text-muted-foreground">–</span>}
+            </InlineField>
+          </dd>
           <dt className="text-muted-foreground">{t('detail.roles')}</dt>
           <dd className="flex flex-wrap gap-1">
             {row.roles.length === 0
@@ -177,12 +287,18 @@ export function RegistrationDetailPanel({ row, certificateHref, roleLabel, readO
           )}
           <dt className="text-muted-foreground">{t('detail.paymentMethod')}</dt>
           <dd>{t(`method.${row.paymentMethod}`)}</dd>
-          {(row.billingCompany || row.billingAddress) && (
-            <>
-              <dt className="text-muted-foreground">{t('detail.billing')}</dt>
-              <dd className="whitespace-pre-line">{[row.billingCompany, row.billingAddress].filter(Boolean).join('\n')}</dd>
-            </>
-          )}
+          <dt className="text-muted-foreground">{t('detail.billingCompany')}</dt>
+          <dd className="min-w-0">
+            <InlineField row={row} field="billingCompany" value={row.billingCompany ?? ''} readOnly={readOnly}>
+              {row.billingCompany || <span className="text-muted-foreground">{t('detail.asPerson')}</span>}
+            </InlineField>
+          </dd>
+          <dt className="text-muted-foreground">{t('detail.billingAddress')}</dt>
+          <dd className="min-w-0">
+            <InlineField row={row} field="billingAddress" value={row.billingAddress ?? ''} multiline readOnly={readOnly}>
+              <span className="whitespace-pre-line">{row.billingAddress || <span className="text-muted-foreground">–</span>}</span>
+            </InlineField>
+          </dd>
           <dt className="text-muted-foreground">{t('detail.registered')}</dt>
           <dd>
             {dt(row.createdAt)} · {row.source === 'public' ? t('detail.sourcePublic') : t('detail.sourceAdmin')}

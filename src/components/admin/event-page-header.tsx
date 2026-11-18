@@ -15,7 +15,7 @@ type Props = {
   actions: React.ReactNode;
 };
 
-const SECTIONS = ['attendees', 'certificate', 'website', 'speakers', 'schedule', 'sponsors', 'expenses', 'pnl', 'pricing', 'invoices', 'refunds', 'settings'] as const;
+const SECTIONS = ['attendees', 'certificate', 'website', 'speakers', 'schedule', 'sponsors', 'expenses', 'pnl', 'pricing', 'invoices', 'refunds', 'settings', 'checkin'] as const;
 const SECTION_LABEL = {
   attendees: 'attendees',
   certificate: 'certificate',
@@ -29,6 +29,7 @@ const SECTION_LABEL = {
   invoices: 'invoices',
   refunds: 'refunds',
   settings: 'eventSettings',
+  checkin: 'checkin',
 } as const;
 
 /** Kopf der Event-Seiten: im Cockpit Eventname mit Status, sonst Eventname klein und Bereich als Überschrift. */

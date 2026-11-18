@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { fail, ServiceError, type ActionResult } from '@/lib/action-result';
 import { adminSearch, type SearchHit } from '@/server/services/admin-search';
 import { getRegistrationDetail, type RegistrationDetail } from '@/server/services/registration-detail';
+import { searchPeople, type PersonHit } from '@/server/services/people-search';
 import { addRoleToRegistrations } from '@/server/services/registrations';
 import { runAdminAction, runAdminQuery } from './run';
 
@@ -32,4 +33,13 @@ export async function bulkAddRoleAction(values: unknown): Promise<ActionResult<{
   const parsed = bulkRoleSchema.safeParse(values);
   if (!parsed.success) return fail('INVALID');
   return runAdminAction(({ actor, db }) => ({ changed: addRoleToRegistrations(db, actor, parsed.data.ids, parsed.data.role) }));
+}
+
+const peopleSearchSchema = z.object({ query: z.string().max(200), eventId: idSchema });
+
+/** Schnell-Anmeldung: bekannte Personen suchen (ohne eingeschränkte/anonymisierte). */
+export async function peopleSearchAction(values: unknown): Promise<ActionResult<PersonHit[]>> {
+  const parsed = peopleSearchSchema.safeParse(values);
+  if (!parsed.success) return fail('INVALID');
+  return runAdminQuery(({ db }) => searchPeople(db, parsed.data.query, parsed.data.eventId));
 }
