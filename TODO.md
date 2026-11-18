@@ -77,11 +77,11 @@ Quelle: https://insights.squer.io/pmi-austria-forum-day-2026?eventId=382 (bisher
 
 Umgesetzt als Entwurf auf dem lokalen Branch `ui-redesign` (Commits `73e45c4`, `34015ea`), main unverändert. Plan und Befund: Claude-Doc „UI-Redesign EventFlow – Audit und Umbauplan“. Werkzeug: Impeccable, projektlokal unter `.claude/`.
 
-- [ ] **U1 – Admin-Sidebar neu gruppieren:** Cockpit, Anmeldung (Teilnehmende, Preise & Rabatte, Teilnahmebestätigung), Programm & Auftritt (Programm, Speaker, Sponsoren, Eventseite), Finanzen (Rechnungen, Erstattungen, Ausgaben, Erfolgsrechnung), Event-Einstellungen; darunter getrennt und einklappbar „Organisation“ nur mit Globalem. Fußlink öffnet die öffentliche Seite des gewählten Events.
-- [ ] **U2 – Öffentliche Eventseite als Vorlage:** Hero mit Faktenzeile und Status-Button, mitlaufende Abschnittsnavigation, ruhiger Farbrhythmus, Plenum-Vorträge hervorgehoben, Pausen dezent, Keynote-Speaker groß, Rückblick-Modus nach Eventende, Galerie ohne Lücken, Partner auf hellem Grund; Kontrast der Speaker-Links (2,5:1) behoben.
-- [ ] **U3 – Admin-Seiten entlang der Hauptprozesse überarbeiten** (Analyse läuft, Schwerpunkt Teilnehmerliste).
-- [ ] **U4 – Check-in am Eventtag** (neu, 18.11.2026): Einlass vom Handy oder Tablet – Suche nach Name/Firma, QR-Code auf dem Ticket scannen, als anwesend markieren, Nachmeldung vor Ort, Live-Zähler; Anwesenheit als Grundlage für die Teilnahmebestätigung.
-- [ ] **U5 – Hilfe prozessorientiert** (später): klassisch Seiten und Felder erklären, zusätzlich entlang der Hauptprozesse führen (Anmeldungen betreuen, Rechnungen und Mahnungen, Speaker, Programm, Sponsoren, Event anlegen und veröffentlichen, Nachbereitung).
+- [ ] **UI1 – Admin-Sidebar neu gruppieren:** Cockpit, Anmeldung (Teilnehmende, Preise & Rabatte, Teilnahmebestätigung), Programm & Auftritt (Programm, Speaker, Sponsoren, Eventseite), Finanzen (Rechnungen, Erstattungen, Ausgaben, Erfolgsrechnung), Event-Einstellungen; darunter getrennt und einklappbar „Organisation“ nur mit Globalem. Fußlink öffnet die öffentliche Seite des gewählten Events.
+- [ ] **UI2 – Öffentliche Eventseite als Vorlage:** Hero mit Faktenzeile und Status-Button, mitlaufende Abschnittsnavigation, ruhiger Farbrhythmus, Plenum-Vorträge hervorgehoben, Pausen dezent, Keynote-Speaker groß, Rückblick-Modus nach Eventende, Galerie ohne Lücken, Partner auf hellem Grund; Kontrast der Speaker-Links (2,5:1) behoben.
+- [ ] **UI3 – Admin-Seiten entlang der Hauptprozesse überarbeiten** (Analyse läuft, Schwerpunkt Teilnehmerliste).
+- [ ] **UI4 – Check-in am Eventtag** (neu, 18.11.2026): Einlass vom Handy oder Tablet – Suche nach Name/Firma, QR-Code auf dem Ticket scannen, als anwesend markieren, Nachmeldung vor Ort, Live-Zähler; Anwesenheit als Grundlage für die Teilnahmebestätigung.
+- [ ] **UI5 – Hilfe prozessorientiert** (später): klassisch Seiten und Felder erklären, zusätzlich entlang der Hauptprozesse führen (Anmeldungen betreuen, Rechnungen und Mahnungen, Speaker, Programm, Sponsoren, Event anlegen und veröffentlichen, Nachbereitung).
 
 ## Hosting (Docker hinter nginx beim Sysadmin, Plan seit 12.11.2026 – zurückgestellt am 13.11.2026)
 
