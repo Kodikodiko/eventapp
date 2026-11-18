@@ -5,9 +5,10 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RegistrationAdminInput } from '@/lib/validation/registrations';
 import { openDatabase, type Db } from '@/server/db/core';
-import { invoices, registrations } from '@/server/db/schema';
+import { invoices, people, registrations } from '@/server/db/schema';
 import { defaultNavEventId, getCockpit, navEvents, weeklyBuckets } from '@/server/services/admin-overview';
 import { adminSearch } from '@/server/services/admin-search';
+import { searchPeople } from '@/server/services/people-search';
 import { createEvent, setEventArchived } from '@/server/services/events';
 import { issueRegistrationInvoice } from '@/server/services/invoices';
 import { saveOrganizerSettings } from '@/server/services/organizer';
@@ -177,5 +178,24 @@ describe('Sammelaktion Rolle', () => {
     // Rechnungen bleiben unberührt
     expect(db.select().from(invoices).where(eq(invoices.registrationId, a)).all()).toEqual([]);
     expect(db.select().from(registrations).all()).toHaveLength(3);
+  });
+});
+
+describe('Personensuche für die Schnell-Anmeldung', () => {
+  it('findet bekannte Personen aus früheren Events, aber keine eingeschränkten', () => {
+    const { db, mk } = setup();
+    const old = mk('alt', '2026-05-12T07:00:00.000Z');
+    const now = mk('neu', '2027-05-12T07:00:00.000Z');
+    createRegistrationByAdmin(db, actor, old.id, person('julia@example.org', { firstName: 'Julia', lastName: 'Berger', company: 'Murtal OG' }));
+    const hit = searchPeople(db, 'berger', now.id);
+    expect(hit).toHaveLength(1);
+    expect(hit[0]).toMatchObject({ firstName: 'Julia', email: 'julia@example.org', registeredHere: false });
+    expect(hit[0].events).toHaveLength(1);
+    expect(searchPeople(db, 'murtal', now.id)).toHaveLength(1);
+    expect(searchPeople(db, 'j', now.id)).toEqual([]);
+    createRegistrationByAdmin(db, actor, now.id, person('julia@example.org', { firstName: 'Julia', lastName: 'Berger' }));
+    expect(searchPeople(db, 'julia', now.id)[0].registeredHere).toBe(true);
+    db.update(people).set({ restrictedAt: NOW.toISOString() }).where(eq(people.email, 'julia@example.org')).run();
+    expect(searchPeople(db, 'julia', now.id)).toEqual([]);
   });
 });
