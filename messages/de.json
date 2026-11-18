@@ -987,7 +987,26 @@
     "streamSaved": "Stream gespeichert",
     "streamName": "Name",
     "coSpeakers": "Weitere Speaker (optional)",
-    "coSpeakersHint": "Z. B. für Fireside Talks oder Vorträge zu zweit."
+    "coSpeakersHint": "Z. B. für Fireside Talks oder Vorträge zu zweit.",
+    "planner": {
+      "dragHint": "Ziehen verschiebt (5-Minuten-Raster), Klicken bearbeitet",
+      "streams": "Streams ({count})",
+      "slidesMissing": "{count} von {total} Speakern haben noch keine Folien.",
+      "toSpeakers": "Zu den Speakern",
+      "speakersTitle": "Speaker",
+      "manage": "Verwalten",
+      "pending": "Angefragt",
+      "confirmed": "Zugesagt",
+      "noSlides": "Ohne Folien",
+      "noSpeakers": "Noch keine Speaker angelegt.",
+      "sessionsHint": "{count, plural, one {# Programmpunkt} other {# Programmpunkte}} (auch als Co-Speaker)",
+      "free": "frei",
+      "slidesMissingOne": "Folien fehlen",
+      "slidesShort": "Folien",
+      "conflictSpeaker": "Doppelt eingeplant: {name} bei „{a}“ und „{b}“",
+      "conflictStream": "Überschneidung in {stream}: „{a}“ und „{b}“",
+      "moved": "„{title}“ verschoben auf {time}"
+    }
   },
   "sponsors": {
     "title": "Sponsoren",

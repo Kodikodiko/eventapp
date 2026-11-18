@@ -987,7 +987,26 @@
     "streamSaved": "Stream saved",
     "streamName": "Name",
     "coSpeakers": "Additional speakers (optional)",
-    "coSpeakersHint": "E.g. for fireside talks or talks given by two people."
+    "coSpeakersHint": "E.g. for fireside talks or talks given by two people.",
+    "planner": {
+      "dragHint": "Drag to move (5-minute grid), click to edit",
+      "streams": "Streams ({count})",
+      "slidesMissing": "{count} of {total} speakers have no slides yet.",
+      "toSpeakers": "Go to speakers",
+      "speakersTitle": "Speakers",
+      "manage": "Manage",
+      "pending": "Requested",
+      "confirmed": "Confirmed",
+      "noSlides": "No slides",
+      "noSpeakers": "No speakers yet.",
+      "sessionsHint": "{count, plural, one {# session} other {# sessions}} (incl. co-speaker)",
+      "free": "free",
+      "slidesMissingOne": "Slides missing",
+      "slidesShort": "Slides",
+      "conflictSpeaker": "Double-booked: {name} in “{a}” and “{b}”",
+      "conflictStream": "Overlap in {stream}: “{a}” and “{b}”",
+      "moved": "“{title}” moved to {time}"
+    }
   },
   "sponsors": {
     "title": "Sponsors",
