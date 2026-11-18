@@ -1312,7 +1312,17 @@
     "sponsorsTitle": "Unsere Sponsoren und Partner",
     "speakersTitle": "Unsere Speaker",
     "pastTitle": "Vergangene Veranstaltungen",
-    "pastDetails": "Zur Eventseite →"
+    "pastDetails": "Zur Eventseite →",
+    "pastBadge": "Rückblick",
+    "pastNote": "Diese Veranstaltung hat am {date} stattgefunden. Danke an alle, die dabei waren!",
+    "factSpeakers": "{count, plural, one {# Speaker} other {# Speaker}}",
+    "factSessions": "{count, plural, one {# Programmpunkt} other {# Programmpunkte}}",
+    "factStreams": "{count} parallele Streams",
+    "sectionNav": "Abschnitte der Eventseite",
+    "toGallery": "Zu den Impressionen",
+    "keynotesTitle": "Keynotes",
+    "moreSpeakers": "Weitere Speaker",
+    "plenary": "Plenum"
   },
   "publicForm": {
     "waitlistTitle": "Die Veranstaltung ist ausgebucht",

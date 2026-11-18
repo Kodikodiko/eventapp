@@ -1312,7 +1312,17 @@
     "sponsorsTitle": "Our sponsors and partners",
     "speakersTitle": "Our speakers",
     "pastTitle": "Past events",
-    "pastDetails": "View event page →"
+    "pastDetails": "View event page →",
+    "pastBadge": "Recap",
+    "pastNote": "This event took place on {date}. Thank you to everyone who joined us!",
+    "factSpeakers": "{count, plural, one {# speaker} other {# speakers}}",
+    "factSessions": "{count, plural, one {# session} other {# sessions}}",
+    "factStreams": "{count} parallel streams",
+    "sectionNav": "Event page sections",
+    "toGallery": "See the photos",
+    "keynotesTitle": "Keynotes",
+    "moreSpeakers": "More speakers",
+    "plenary": "Plenary"
   },
   "publicForm": {
     "waitlistTitle": "This event is sold out",
