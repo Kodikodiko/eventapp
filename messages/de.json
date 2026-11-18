@@ -102,7 +102,9 @@
     "sectionRegistration": "Anmeldung",
     "sectionProgram": "Programm & Auftritt",
     "publicEventPage": "Öffentliche Eventseite",
-    "organizationToggle": "Organisation ein- oder ausklappen"
+    "organizationToggle": "Organisation ein- oder ausklappen",
+    "uiToggle": "Neue Oberfläche",
+    "uiToggleHint": "Zwischen neuer und alter Oberfläche umschalten (gilt für diesen Browser)"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",

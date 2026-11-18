@@ -102,7 +102,9 @@
     "sectionRegistration": "Registration",
     "sectionProgram": "Programme & presence",
     "publicEventPage": "Public event page",
-    "organizationToggle": "Expand or collapse organisation"
+    "organizationToggle": "Expand or collapse organisation",
+    "uiToggle": "New interface",
+    "uiToggleHint": "Switch between the new and the old interface (applies to this browser)"
   },
   "security": {
     "title": "Two-factor authentication",

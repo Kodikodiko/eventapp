@@ -4,6 +4,7 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ProgramGrid } from '@/components/program/program-grid';
+import { PublicEventPageAlt } from '@/components/public/event-page-alt';
 import { Link } from '@/i18n/navigation';
 import { initLocale } from '@/i18n/page';
 import { viennaDate } from '@/lib/dates';
@@ -16,6 +17,7 @@ import { requestDb } from '@/server/db';
 import { isOnlinePaymentEnabled } from '@/server/payments/config';
 import { listGallery } from '@/server/services/event-page';
 import { listStreams } from '@/server/services/program';
+import { getUiVersion } from '@/server/ui-version';
 import {
   getAvailability,
   getPublicEventBySlug,
@@ -41,6 +43,7 @@ const FEW_SEATS = 10;
  * Farben kommen ausschließlich aus dem Event-Theme (CSS-Variablen --ev-*), Inhalte aus den vorhandenen Feldern.
  */
 export default async function PublicEventPage({ params }: Props) {
+  if ((await getUiVersion()) === 'alt') return <PublicEventPageAlt params={params} />;
   const locale = await initLocale(params);
   const { slug } = await params;
   const db = await requestDb();
