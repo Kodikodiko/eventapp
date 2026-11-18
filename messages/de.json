@@ -299,7 +299,10 @@
     "priceEarlyNormal": "Early-Bird-Normalpreis",
     "priceEarlyMember": "Early-Bird-Mitgliedspreis",
     "earlyBirdPriceHint": "Leer: kein Early Bird für diesen Preis.",
-    "earlyBirdStartsHint": "Leer: ab Anmeldestart."
+    "earlyBirdStartsHint": "Leer: ab Anmeldestart.",
+    "unsaved": "Ungespeicherte Änderungen",
+    "discard": "Verwerfen",
+    "sectionsLabel": "Abschnitte"
   },
   "eventActions": {
     "pause": "Anmeldung pausieren",

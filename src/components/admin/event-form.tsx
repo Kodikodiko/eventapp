@@ -21,12 +21,14 @@ type Props = {
   readOnly?: boolean;
   /** USt-Modus aus den globalen Einstellungen (Vorgabe für „wie global“) */
   globalVatMode: 'small_business' | 'standard';
+  /** neue Oberfläche: Speichern-Leiste unten, sobald etwas geändert wurde */
+  stickySave?: boolean;
 };
 
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
 
-export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMode }: Props) {
+export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMode, stickySave = false }: Props) {
   const t = useTranslations('eventForm');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -61,7 +63,7 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
     <FormProvider {...form}>
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <fieldset disabled={readOnly || pending} className="space-y-6">
-          <Card>
+          <Card id="section-basics" className="scroll-mt-24">
             <CardHeader>
               <CardTitle>{t('basics')}</CardTitle>
             </CardHeader>
@@ -79,7 +81,7 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="section-dates" className="scroll-mt-24">
             <CardHeader>
               <CardTitle>{t('dates')}</CardTitle>
               <CardDescription>{t('datesHint')}</CardDescription>
@@ -100,7 +102,7 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="section-prices" className="scroll-mt-24">
             <CardHeader>
               <CardTitle>{t('capacityAndPrices')}</CardTitle>
               <CardDescription>{t('pricesHint')}</CardDescription>
@@ -150,7 +152,7 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="section-payment" className="scroll-mt-24">
             <CardHeader>
               <CardTitle>{t('payment')}</CardTitle>
             </CardHeader>
@@ -173,7 +175,7 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="section-cancellation" className="scroll-mt-24">
             <CardHeader>
               <CardTitle>{t('cancellation')}</CardTitle>
               <CardDescription>{t('cancellationHint')}</CardDescription>
@@ -231,7 +233,22 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
           </Card>
         </fieldset>
 
-        {!readOnly && (
+        {!readOnly && stickySave && mode === 'edit' && (isDirty || Object.keys(errors).length > 0) && (
+          <div
+            role="region"
+            aria-label={t('unsaved')}
+            className="fixed bottom-5 left-1/2 z-40 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-2xl bg-[#15172B] py-2 pr-2 pl-4 text-sm text-white shadow-[0_12px_32px_-8px_rgba(21,23,43,0.45)] lg:left-[calc(50%+124px)]"
+          >
+            <span className="font-semibold whitespace-nowrap">{Object.keys(errors).length > 0 ? t('fixErrors') : t('unsaved')}</span>
+            <Button type="button" variant="ghost" className="text-white hover:bg-white/10 hover:text-white" disabled={pending} onClick={() => form.reset(defaultValues)}>
+              {t('discard')}
+            </Button>
+            <Button type="submit" disabled={pending} className="bg-white text-[#15172B] hover:bg-white/90">
+              {pending ? t('saving') : t('save')}
+            </Button>
+          </div>
+        )}
+        {!readOnly && !(stickySave && mode === 'edit') && (
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={pending || (mode === 'edit' && !isDirty)}>
               {pending ? t('saving') : mode === 'create' ? t('create') : t('save')}

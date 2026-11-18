@@ -299,7 +299,10 @@
     "priceEarlyNormal": "Early bird regular price",
     "priceEarlyMember": "Early bird member price",
     "earlyBirdPriceHint": "Empty: no early bird for this price.",
-    "earlyBirdStartsHint": "Empty: from registration start."
+    "earlyBirdStartsHint": "Empty: from registration start.",
+    "unsaved": "Unsaved changes",
+    "discard": "Discard",
+    "sectionsLabel": "Sections"
   },
   "eventActions": {
     "pause": "Pause registration",

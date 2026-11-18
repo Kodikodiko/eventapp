@@ -8,6 +8,7 @@ import { publishTermsAction } from '@/server/actions/events';
 import { getCancellationRules } from '@/server/services/events';
 import { latestGlobalTerms, listLegalVersions } from '@/server/services/legal';
 import { getOrganizerSettings } from '@/server/services/organizer';
+import { getUiVersion } from '@/server/ui-version';
 
 export default async function EventSettingsPage({ params }: EventParams) {
   await initAdminPage(params);
@@ -22,10 +23,31 @@ export default async function EventSettingsPage({ params }: EventParams) {
   const global = latestGlobalTerms(db);
   const pair = (c: { de: string; en?: string } | undefined) => ({ content: { de: c?.de ?? '', en: c?.en ?? '' } });
   const archived = Boolean(event.archivedAt);
+  const neu = (await getUiVersion()) === 'neu';
+  const tf = await getTranslations('eventForm');
+  // neue Oberfläche: Sprungleiste zu den Abschnitten der langen Seite
+  const sections = [
+    ['section-basics', tf('basics')],
+    ['section-dates', tf('dates')],
+    ['section-prices', tf('capacityAndPrices')],
+    ['section-payment', tf('payment')],
+    ['section-cancellation', tf('cancellation')],
+    ['terms', t('title')],
+  ] as const;
 
   return (
     <div className="space-y-6">
+      {neu && (
+        <nav aria-label={tf('sectionsLabel')} className="sticky top-[60px] z-20 -mx-1 flex gap-1 overflow-x-auto bg-canvas/95 px-1 py-2 backdrop-blur print:hidden">
+          {sections.map(([id, label]) => (
+            <a key={id} href={`#${id}`} className="shrink-0 rounded-full border bg-card px-3 py-1.5 text-sm font-medium whitespace-nowrap text-foreground/80 hover:border-primary/50 hover:text-primary">
+              {label}
+            </a>
+          ))}
+        </nav>
+      )}
       <EventForm
+        stickySave={neu}
         key={`${event.id}-${event.slug}`}
         mode="edit"
         eventId={event.id}
