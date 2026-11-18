@@ -98,7 +98,11 @@
     "gdpr": "Data protection",
     "pricing": "Prices & discounts",
     "website": "Event page",
-    "publicSite": "To the public events page"
+    "publicSite": "To the public events page",
+    "sectionRegistration": "Registration",
+    "sectionProgram": "Programme & presence",
+    "publicEventPage": "Public event page",
+    "organizationToggle": "Expand or collapse organisation"
   },
   "security": {
     "title": "Two-factor authentication",

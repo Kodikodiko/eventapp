@@ -8,6 +8,7 @@ import {
   CalendarRange,
   ChartNoAxesCombined,
   Check,
+  ChevronDown,
   ChevronsUpDown,
   ExternalLink,
   FileText,
@@ -31,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import {
   DropdownMenu,
@@ -59,6 +61,31 @@ type Props = {
 
 type Item = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: { value: number; tone: 'muted' | 'danger' | 'warn'; label: string } };
 
+/** Auf-/Zuklapp-Zustand von „Organisation“ pro Browser (localStorage, beim Server-Rendern zu). */
+const ORG_KEY = 'eventflow.sidebar.orgOpen';
+const orgListeners = new Set<() => void>();
+const orgStore = {
+  subscribe(listener: () => void) {
+    orgListeners.add(listener);
+    return () => orgListeners.delete(listener);
+  },
+  get(): boolean {
+    try {
+      return window.localStorage.getItem(ORG_KEY) === '1';
+    } catch {
+      return false;
+    }
+  },
+  set(value: boolean) {
+    try {
+      window.localStorage.setItem(ORG_KEY, value ? '1' : '0');
+    } catch {
+      /* Speicher nicht verfügbar */
+    }
+    orgListeners.forEach((l) => l());
+  },
+};
+
 /** Aktuelles Event: aus der URL, sonst das vom Server vorgeschlagene. */
 export function useCurrentEvent(events: ShellEvent[], defaultEventId: number | null): ShellEvent | null {
   const params = useParams<{ eventId?: string }>();
@@ -73,52 +100,77 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
   const current = useCurrentEvent(events, defaultEventId);
   const base = current ? `/admin/events/${current.id}` : null;
 
-  const eventItems: Item[] = base
+  // Event-Block: alles, was zum gewählten Event gehört, nach Aufgaben gruppiert (UI-Redesign 18.11.2026)
+  const eventGroups: { label: string | null; items: Item[] }[] = base
     ? [
-        { href: base, label: t('cockpit'), icon: LayoutDashboard, exact: true },
+        { label: null, items: [{ href: base, label: t('cockpit'), icon: LayoutDashboard, exact: true }] },
         {
-          href: `${base}/attendees`,
-          label: t('attendees'),
-          icon: Users,
-          badge: { value: current!.counts.attendees, tone: 'muted', label: t('attendeesBadge', { count: current!.counts.attendees }) },
-        },
-        { href: `${base}/certificate`, label: t('certificate'), icon: Award },
-        { href: `${base}/website`, label: t('website'), icon: Globe },
-        { href: `${base}/speakers`, label: t('speakers'), icon: Mic },
-        { href: `${base}/schedule`, label: t('schedule'), icon: CalendarDays },
-        { href: `${base}/sponsors`, label: t('sponsors'), icon: Handshake },
-        { href: `${base}/expenses`, label: t('expenses'), icon: Receipt },
-        {
-          href: `${base}/invoices`,
-          label: t('invoices'),
-          icon: FileText,
-          badge: { value: current!.counts.overdueInvoices, tone: 'danger', label: t('overdueBadge', { count: current!.counts.overdueInvoices }) },
+          label: t('sectionRegistration'),
+          items: [
+            {
+              href: `${base}/attendees`,
+              label: t('attendees'),
+              icon: Users,
+              badge: { value: current!.counts.attendees, tone: 'muted', label: t('attendeesBadge', { count: current!.counts.attendees }) },
+            },
+            { href: `${base}/pricing`, label: t('pricing'), icon: BadgePercent },
+            { href: `${base}/certificate`, label: t('certificate'), icon: Award },
+          ],
         },
         {
-          href: `${base}/refunds`,
-          label: t('refunds'),
-          icon: Undo2,
-          badge: { value: current!.counts.openRefunds, tone: 'warn', label: t('refundsBadge', { count: current!.counts.openRefunds }) },
+          label: t('sectionProgram'),
+          items: [
+            { href: `${base}/schedule`, label: t('schedule'), icon: CalendarDays },
+            { href: `${base}/speakers`, label: t('speakers'), icon: Mic },
+            { href: `${base}/sponsors`, label: t('sponsors'), icon: Handshake },
+            { href: `${base}/website`, label: t('website'), icon: Globe },
+          ],
         },
+        {
+          label: t('sectionFinance'),
+          items: [
+            {
+              href: `${base}/invoices`,
+              label: t('invoices'),
+              icon: FileText,
+              badge: { value: current!.counts.overdueInvoices, tone: 'danger', label: t('overdueBadge', { count: current!.counts.overdueInvoices }) },
+            },
+            {
+              href: `${base}/refunds`,
+              label: t('refunds'),
+              icon: Undo2,
+              badge: { value: current!.counts.openRefunds, tone: 'warn', label: t('refundsBadge', { count: current!.counts.openRefunds }) },
+            },
+            { href: `${base}/expenses`, label: t('expenses'), icon: Receipt },
+            { href: `${base}/pnl`, label: t('pnl'), icon: ChartNoAxesCombined },
+          ],
+        },
+        { label: null, items: [{ href: `${base}/settings`, label: t('eventSettings'), icon: Settings }] },
       ]
     : [];
-  // Einstellungen des gewählten Events stehen unter „Organisation“ (Wunsch 13.11.2026)
+
+  // Organisation: nur Globales, gilt für alle Events
   const orgItems: Item[] = [
     { href: '/admin/events', label: t('allEvents'), icon: CalendarRange, exact: true },
-    ...(base ? [{ href: `${base}/settings`, label: t('eventSettings'), icon: Settings }] : []),
     { href: '/admin/members', label: t('members'), icon: IdCard },
-    { href: '/admin/audit', label: t('audit'), icon: History },
-    { href: '/admin/gdpr', label: t('gdpr'), icon: Lock },
-    { href: '/admin/settings', label: t('organizer'), icon: Building2 },
-    { href: '/admin/security', label: t('security'), icon: ShieldCheck },
-  ];
-
-  // Erfolgsrechnung des gewählten Events steht unter „Finanzen“ (Wunsch 13.11.2026), Kostengruppen sind global
-  const financeItems: Item[] = [
-    ...(base ? [{ href: `${base}/pnl`, label: t('pnl'), icon: ChartNoAxesCombined }] : []),
-    ...(base ? [{ href: `${base}/pricing`, label: t('pricing'), icon: BadgePercent }] : []),
     { href: '/admin/cost-groups', label: t('costGroups'), icon: Tags },
+    { href: '/admin/settings', label: t('organizer'), icon: Building2 },
+    { href: '/admin/gdpr', label: t('gdpr'), icon: Lock },
+    { href: '/admin/security', label: t('security'), icon: ShieldCheck },
+    { href: '/admin/audit', label: t('audit'), icon: History },
   ];
+  const orgActive = orgItems.some((i) => (i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(`${i.href}/`)));
+  // standardmäßig eingeklappt (selten gebraucht), auf Organisationsseiten immer offen
+  const orgOpen = useSyncExternalStore(orgStore.subscribe, orgStore.get, () => false);
+  const toggleOrg = () => orgStore.set(!orgOpen);
+  const showOrg = collapsed || orgOpen || orgActive;
+  // aktiven Menüpunkt sichtbar halten, wenn die Navigation scrollt
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' });
+  }, [pathname]);
+  const publicHref = current ? `/events/${current.slug}` : '/';
+  const publicLabel = current ? t('publicEventPage') : t('publicSite');
 
   const isActive = (item: Item) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`));
   const activeEvents = events.filter((e) => !e.archived);
@@ -136,7 +188,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
         aria-label={collapsed ? item.label : undefined}
         className={cn(
           'relative flex items-center gap-2.5 rounded-md text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring',
-          collapsed ? 'size-11 justify-center' : 'min-h-9 px-2.5 py-2',
+          collapsed ? 'size-10 justify-center' : 'min-h-8 px-2.5 py-1.5',
           active ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-white/5 hover:text-white'
         )}
       >
@@ -247,17 +299,32 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <nav aria-label={t('label')} className={cn('flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto', collapsed && 'items-center')}>
-        {eventItems.length > 0 && (
-          <>
-            {sectionLabel(t('sectionEvent'))}
-            <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{eventItems.map(renderItem)}</ul>
-          </>
-        )}
-        {sectionLabel(t('sectionFinance'))}
-        <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{financeItems.map(renderItem)}</ul>
-        {sectionLabel(t('sectionOrg'))}
-        <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{orgItems.map(renderItem)}</ul>
+      <nav ref={navRef} aria-label={t('label')} className={cn('flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto', collapsed && 'items-center')}>
+        {eventGroups.map((g, i) => (
+          <div key={g.label ?? `g${i}`} className={cn('flex flex-col', collapsed && 'items-center')}>
+            {g.label ? sectionLabel(g.label) : i > 0 && <div className={cn('my-2 border-t border-sidebar-border/60', collapsed ? 'mx-3 w-8' : 'mx-2.5')} aria-hidden />}
+            <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{g.items.map(renderItem)}</ul>
+          </div>
+        ))}
+
+        <div className={cn('mt-3 flex flex-col border-t-2 border-sidebar-border pt-2', collapsed && 'items-center')}>
+          {collapsed ? (
+            <div className="my-1" aria-hidden />
+          ) : (
+            <button
+              type="button"
+              onClick={toggleOrg}
+              aria-expanded={showOrg}
+              aria-label={t('organizationToggle')}
+              disabled={orgActive}
+              className="flex items-center justify-between rounded-md px-2.5 pt-2 pb-1 text-[11px] font-medium tracking-[0.08em] text-sidebar-foreground/65 uppercase hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring disabled:cursor-default disabled:hover:text-sidebar-foreground/65"
+            >
+              {t('sectionOrg')}
+              {!orgActive && <ChevronDown aria-hidden className={cn('size-3.5 transition-transform', !showOrg && '-rotate-90')} />}
+            </button>
+          )}
+          {showOrg && <ul className={cn('flex flex-col gap-0.5', collapsed && 'items-center')}>{orgItems.map(renderItem)}</ul>}
+        </div>
       </nav>
 
       <div className={cn('flex border-t border-sidebar-border pt-3', collapsed ? 'flex-col items-center gap-2' : 'flex-col gap-2 px-1')}>
@@ -265,35 +332,36 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
-                href="/"
+                href={publicHref}
                 onClick={onNavigate}
-                aria-label={t('publicSite')}
+                aria-label={publicLabel}
                 className="flex size-10 items-center justify-center rounded-lg text-sidebar-foreground hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring"
               >
                 <ExternalLink aria-hidden className="size-[18px]" />
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">{t('publicSite')}</TooltipContent>
+            <TooltipContent side="right">{publicLabel}</TooltipContent>
           </Tooltip>
         ) : (
           <Link
-            href="/"
+            href={publicHref}
             onClick={onNavigate}
-            className="-mx-1 flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring"
+            className="-mx-1 flex items-center gap-3 rounded-lg px-2.5 py-1.5 text-sm font-medium text-sidebar-foreground hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring"
           >
             <ExternalLink aria-hidden className="size-[18px] shrink-0" />
-            {t('publicSite')}
+            {publicLabel}
           </Link>
         )}
-        {!collapsed && (
-          <div className="flex min-w-0 flex-col" title={user.email}>
-            <span className="truncate text-sm font-semibold text-white">{user.name}</span>
-            <span className="text-xs text-sidebar-foreground/75">{t('role')}</span>
-          </div>
-        )}
-        <div className={cn('flex items-center', collapsed ? 'flex-col gap-2' : 'justify-between gap-2')}>
+        {/* Benutzer, Sprache und Abmelden in einer Zeile, damit die Navigation Platz hat */}
+        <div className={cn('flex items-center', collapsed ? 'flex-col gap-2' : 'gap-2')}>
+          {!collapsed && (
+            <div className="flex min-w-0 flex-1 flex-col" title={user.email}>
+              <span className="truncate text-sm font-semibold text-white">{user.name}</span>
+              <span className="text-xs text-sidebar-foreground/75">{t('role')}</span>
+            </div>
+          )}
           <LocaleSwitcher variant="sidebar" className={collapsed ? 'flex-col' : undefined} />
-          <LogoutButton variant="sidebar" iconOnly={collapsed} />
+          <LogoutButton variant="sidebar" iconOnly />
         </div>
       </div>
     </div>

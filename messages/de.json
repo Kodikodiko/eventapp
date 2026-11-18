@@ -98,7 +98,11 @@
     "gdpr": "Datenschutz",
     "pricing": "Preise & Rabatte",
     "website": "Eventseite",
-    "publicSite": "Zur öffentlichen Veranstaltungsseite"
+    "publicSite": "Zur öffentlichen Veranstaltungsseite",
+    "sectionRegistration": "Anmeldung",
+    "sectionProgram": "Programm & Auftritt",
+    "publicEventPage": "Öffentliche Eventseite",
+    "organizationToggle": "Organisation ein- oder ausklappen"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
