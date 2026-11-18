@@ -23,6 +23,7 @@ import {
   PanelLeftOpen,
   Plus,
   Receipt,
+  ScanLine,
   Settings,
   ShieldCheck,
   Tags,
@@ -115,6 +116,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
             },
             { href: `${base}/pricing`, label: t('pricing'), icon: BadgePercent },
             { href: `${base}/certificate`, label: t('certificate'), icon: Award },
+            { href: `${base}/checkin`, label: t('checkin'), icon: ScanLine },
           ],
         },
         {

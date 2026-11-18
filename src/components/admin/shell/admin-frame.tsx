@@ -90,6 +90,7 @@ export function AdminFrame({ events, defaultEventId, user, uiVersion, children }
         { href: `${base}/attendees`, label: t('attendees'), group: g },
         { href: `${base}/attendees?new=1`, label: `+ ${t('addRegistration')}`, group: g },
         { href: `${base}/certificate`, label: t('certificate'), group: g },
+        { href: `${base}/checkin`, label: t('checkin'), group: g },
         { href: `${base}/invoices`, label: t('invoices'), group: g },
         { href: `${base}/refunds`, label: t('refunds'), group: g },
         { href: `${base}/website`, label: t('website'), group: g },

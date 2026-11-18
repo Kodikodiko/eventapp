@@ -18,6 +18,7 @@ import { fillFreeSeats } from '@/server/services/automation';
 import { cancelAndProcess } from '@/server/services/cancellation';
 import { notifyRegistration } from '@/server/services/notifications';
 import { paymentStatusOptions, setPaymentStatusManually, type PaymentStatusOptions } from '@/server/services/payment-status';
+import { setCheckedIn } from '@/server/services/checkin';
 import { runAdminAction, runAdminQuery } from './run';
 
 const idSchema = z.number().int().positive();
@@ -96,4 +97,11 @@ export async function setPaymentStatusAction(registrationId: number, values: unk
   return runAdminAction(({ actor, db }) => {
     setPaymentStatusManually(db, actor, id.data, parsed.data);
   });
+}
+
+/** Check-in am Eventtag: als anwesend markieren bzw. zurücknehmen. Liefert den gespeicherten Zeitpunkt. */
+export async function setCheckedInAction(registrationId: number, present: boolean): Promise<ActionResult<{ checkedInAt: string | null }>> {
+  const id = idSchema.safeParse(registrationId);
+  if (!id.success || typeof present !== 'boolean') return fail('INVALID');
+  return runAdminAction(({ actor, db }) => ({ checkedInAt: setCheckedIn(db, actor, id.data, present) }));
 }

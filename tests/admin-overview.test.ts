@@ -5,10 +5,11 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RegistrationAdminInput } from '@/lib/validation/registrations';
 import { openDatabase, type Db } from '@/server/db/core';
-import { invoices, people, registrations } from '@/server/db/schema';
+import { auditLog, invoices, people, registrations } from '@/server/db/schema';
 import { defaultNavEventId, getCockpit, navEvents, weeklyBuckets } from '@/server/services/admin-overview';
 import { adminSearch } from '@/server/services/admin-search';
 import { searchPeople } from '@/server/services/people-search';
+import { listCheckIn, setCheckedIn } from '@/server/services/checkin';
 import { createEvent, setEventArchived } from '@/server/services/events';
 import { issueRegistrationInvoice } from '@/server/services/invoices';
 import { saveOrganizerSettings } from '@/server/services/organizer';
@@ -197,5 +198,26 @@ describe('Personensuche für die Schnell-Anmeldung', () => {
     expect(searchPeople(db, 'julia', now.id)[0].registeredHere).toBe(true);
     db.update(people).set({ restrictedAt: NOW.toISOString() }).where(eq(people.email, 'julia@example.org')).run();
     expect(searchPeople(db, 'julia', now.id)).toEqual([]);
+  });
+});
+
+describe('Check-in am Eventtag', () => {
+  it('markiert nur bestätigte Anmeldungen, Rückgängig möglich, alles im Protokoll', () => {
+    const { db, mk } = setup();
+    const event = mk('checkin', '2027-05-12T07:00:00.000Z', 1);
+    const a = createRegistrationByAdmin(db, actor, event.id, person('a@example.org', { lastName: 'Zeller' }));
+    const w = createRegistrationByAdmin(db, actor, event.id, person('w@example.org', { lastName: 'Adler', status: 'waitlisted' }));
+    expect(listCheckIn(db, event.id).map((r) => r.id)).toEqual([a]);
+    const at = setCheckedIn(db, actor, a, true, NOW);
+    expect(at).toBe(NOW.toISOString());
+    expect(setCheckedIn(db, actor, a, true, new Date(NOW.getTime() + 60_000))).toBe(at); // zweimal: Zeitpunkt bleibt
+    expect(listCheckIn(db, event.id)[0].checkedInAt).toBe(at);
+    expect(setCheckedIn(db, actor, a, false)).toBeNull();
+    expect(listCheckIn(db, event.id)[0].checkedInAt).toBeNull();
+    expect(() => setCheckedIn(db, actor, w, true)).toThrow();
+    const actions = db.select().from(auditLog).all().map((x) => x.action).filter((x) => x.includes('check'));
+    expect(actions).toEqual(['registration.checked_in', 'registration.check_in_undone']);
+    setEventArchived(db, actor, event.id, true);
+    expect(() => setCheckedIn(db, actor, a, true)).toThrow();
   });
 });

@@ -104,7 +104,8 @@
     "publicEventPage": "Public event page",
     "organizationToggle": "Expand or collapse organisation",
     "uiToggle": "New interface",
-    "uiToggleHint": "Switch between the new and the old interface (applies to this browser)"
+    "uiToggleHint": "Switch between the new and the old interface (applies to this browser)",
+    "checkin": "Check-in"
   },
   "security": {
     "title": "Two-factor authentication",
@@ -2184,5 +2185,21 @@
     "highlightIcon": "Icon",
     "highlightIconRemove": "Remove icon",
     "highlightIconHint": "Square image, shown round. PNG, JPG or WebP, max. 5 MB."
+  },
+  "checkin": {
+    "title": "Check-in",
+    "counterLabel": "Present",
+    "of": "of {total} confirmed",
+    "search": "Name or company",
+    "onlyOpen": "Only those not yet checked in",
+    "walkIn": "Register on site",
+    "paymentOpen": "payment open",
+    "checkIn": "Check in",
+    "undoHint": "Tap to undo the check-in",
+    "noMatch": "Nobody found. Register on site?",
+    "allIn": "Everyone is checked in.",
+    "done": "{name} checked in",
+    "undo": "Undo",
+    "close": "Close"
   }
 }

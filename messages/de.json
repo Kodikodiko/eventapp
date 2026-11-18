@@ -104,7 +104,8 @@
     "publicEventPage": "Öffentliche Eventseite",
     "organizationToggle": "Organisation ein- oder ausklappen",
     "uiToggle": "Neue Oberfläche",
-    "uiToggleHint": "Zwischen neuer und alter Oberfläche umschalten (gilt für diesen Browser)"
+    "uiToggleHint": "Zwischen neuer und alter Oberfläche umschalten (gilt für diesen Browser)",
+    "checkin": "Check-in"
   },
   "security": {
     "title": "Zwei-Faktor-Anmeldung",
@@ -2184,5 +2185,21 @@
     "highlightIcon": "Icon",
     "highlightIconRemove": "Icon entfernen",
     "highlightIconHint": "Quadratisches Bild, wird rund angezeigt. PNG, JPG oder WebP, höchstens 5 MB."
+  },
+  "checkin": {
+    "title": "Check-in",
+    "counterLabel": "Anwesend",
+    "of": "von {total} bestätigten",
+    "search": "Name oder Firma",
+    "onlyOpen": "Nur noch nicht Eingecheckte",
+    "walkIn": "Vor Ort anmelden",
+    "paymentOpen": "Zahlung offen",
+    "checkIn": "Einchecken",
+    "undoHint": "Antippen nimmt den Check-in zurück",
+    "noMatch": "Niemand gefunden. Vor Ort anmelden?",
+    "allIn": "Alle sind eingecheckt.",
+    "done": "{name} eingecheckt",
+    "undo": "Rückgängig",
+    "close": "Schließen"
   }
 }
