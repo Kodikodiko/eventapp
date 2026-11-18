@@ -11,7 +11,7 @@ import { cancelInvoiceSchema, recordPaymentSchema } from '@/lib/validation/invoi
 import type { Db } from '@/server/db';
 import type { Actor } from '@/server/services/audit';
 import { cancelInvoice, issueRegistrationInvoice, issueSponsorInvoice, recordBankTransfer } from '@/server/services/invoices';
-import { sendInvoiceDocument } from '@/server/services/notifications';
+import { sendDueReminders, sendInvoiceDocument, type ReminderSummary } from '@/server/services/notifications';
 import { runAdminAction } from './run';
 
 const idSchema = z.number().int().positive();
@@ -72,4 +72,16 @@ export async function cancelInvoiceAction(invoiceId: number, values: unknown): P
     const credit = cancelInvoice(db, actor, id.data, parsed.data.reason);
     return { invoiceId: credit.id, number: credit.number, ...(await sendQuietly(db, actor, credit.id)) };
   });
+}
+
+const reminderIdsSchema = z.array(idSchema).min(1).max(500);
+
+/**
+ * Sammelaktion „Jetzt erinnern“: nächste Zahlungserinnerung für die gewählten überfälligen Rechnungen sofort senden
+ * (ohne 14-Tage-Abstand; höchstens zwei Erinnerungen je Rechnung wie beim automatischen Versand).
+ */
+export async function sendRemindersNowAction(invoiceIds: unknown): Promise<ActionResult<ReminderSummary>> {
+  const ids = reminderIdsSchema.safeParse(invoiceIds);
+  if (!ids.success) return fail('INVALID');
+  return runAdminAction(({ actor, db }) => sendDueReminders(db, undefined, new Date(), { ids: ids.data, actor }));
 }

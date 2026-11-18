@@ -1130,7 +1130,39 @@
     },
     "noMatches": "Keine Belege passen zur Suche.",
     "changeStatus": "Zahlungsstatus ändern",
-    "refund": "Erstatten"
+    "refund": "Erstatten",
+    "tiles": {
+      "overdue": "Handlungsbedarf (überfällig)",
+      "due": "Offen, noch nicht fällig",
+      "paid": "Bezahlt",
+      "credit": "Gutschriften",
+      "count": "{count, plural, one {# Rechnung} other {# Rechnungen}}",
+      "countCredit": "{count, plural, one {# Gutschrift} other {# Gutschriften}}",
+      "all": "Alle Belege ({count})"
+    },
+    "overdueSince": "{days, plural, =0 {seit heute} one {seit # Tag} other {seit # Tagen}}",
+    "noReminder": "noch keine Erinnerung",
+    "sentOn": "versendet {date}",
+    "colLast": "Zuletzt",
+    "shown": "{count, plural, one {# Beleg} other {# Belege}}",
+    "nothingOverdue": "Nichts überfällig. Gut so!",
+    "bulk": {
+      "select": "{number} auswählen",
+      "selectAll": "Alle offenen auswählen",
+      "selected": "{count} ausgewählt",
+      "remind": "Jetzt erinnern ({count})",
+      "remindHint": "Nächste Zahlungserinnerung sofort senden, ohne den 14-Tage-Abstand abzuwarten (höchstens zwei je Rechnung)",
+      "remindDone": "{sent, plural, one {# Erinnerung gesendet} other {# Erinnerungen gesendet}}",
+      "remindProblems": "{count} nicht gesendet (z. B. keine E-Mail-Adresse) – siehe Protokoll",
+      "paid": "Zahlung erfassen ({count})",
+      "paidTitle": "{count, plural, one {Zahlung für # Rechnung erfassen} other {Zahlungen für # Rechnungen erfassen}}",
+      "paidHint": "Verbucht jeweils den vollen offenen Betrag (zusammen {sum}) als Zahlungseingang. Teilzahlungen bitte einzeln über „Zahlungseingang erfassen“.",
+      "paidAction": "{count} verbuchen",
+      "paidDone": "{ok} von {total} verbucht",
+      "resend": "Erneut senden",
+      "resendDone": "{ok} von {total} erneut gesendet",
+      "clear": "Auswahl aufheben"
+    }
   },
   "refunds": {
     "title": "Erstattungen",

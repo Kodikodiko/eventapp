@@ -1130,7 +1130,39 @@
     },
     "noMatches": "No documents match the search.",
     "changeStatus": "Change payment status",
-    "refund": "Refund"
+    "refund": "Refund",
+    "tiles": {
+      "overdue": "Action needed (overdue)",
+      "due": "Open, not yet due",
+      "paid": "Paid",
+      "credit": "Credit notes",
+      "count": "{count, plural, one {# invoice} other {# invoices}}",
+      "countCredit": "{count, plural, one {# credit note} other {# credit notes}}",
+      "all": "All documents ({count})"
+    },
+    "overdueSince": "{days, plural, =0 {since today} one {for # day} other {for # days}}",
+    "noReminder": "no reminder yet",
+    "sentOn": "sent {date}",
+    "colLast": "Last",
+    "shown": "{count, plural, one {# document} other {# documents}}",
+    "nothingOverdue": "Nothing overdue. Well done!",
+    "bulk": {
+      "select": "Select {number}",
+      "selectAll": "Select all open",
+      "selected": "{count} selected",
+      "remind": "Remind now ({count})",
+      "remindHint": "Send the next payment reminder now without waiting 14 days (at most two per invoice)",
+      "remindDone": "{sent, plural, one {# reminder sent} other {# reminders sent}}",
+      "remindProblems": "{count} not sent (e.g. no email address) – see the history",
+      "paid": "Record payment ({count})",
+      "paidTitle": "{count, plural, one {Record payment for # invoice} other {Record payments for # invoices}}",
+      "paidHint": "Records the full open amount of each invoice (together {sum}). Please record partial payments individually.",
+      "paidAction": "Record {count}",
+      "paidDone": "{ok} of {total} recorded",
+      "resend": "Resend",
+      "resendDone": "{ok} of {total} resent",
+      "clear": "Clear selection"
+    }
   },
   "refunds": {
     "title": "Refunds",

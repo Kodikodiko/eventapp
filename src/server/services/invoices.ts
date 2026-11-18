@@ -632,8 +632,12 @@ export function markInvoiceSent(db: Db, invoiceId: number, now = new Date()): vo
 
 export type DueReminder = { invoice: InvoiceRow; level: number; openCents: number };
 
-/** Rechnungen, für die jetzt eine Zahlungserinnerung fällig ist. */
-export function findDueReminders(db: Db, now = new Date()): DueReminder[] {
+/**
+ * Rechnungen, für die jetzt eine Zahlungserinnerung fällig ist.
+ * `ids` beschränkt auf bestimmte Rechnungen; `ignoreInterval` erlaubt die nächste Stufe vor Ablauf der 14 Tage
+ * (Sammelaktion „jetzt erinnern“ im Admin). Die Höchstzahl an Erinnerungen gilt immer.
+ */
+export function findDueReminders(db: Db, now = new Date(), options: { ids?: number[]; ignoreInterval?: boolean } = {}): DueReminder[] {
   const today = viennaDate(now.toISOString());
   const candidates = db
     .select({ inv: invoices, reg: registrations, sp: sponsors })
@@ -644,6 +648,7 @@ export function findDueReminders(db: Db, now = new Date()): DueReminder[] {
     .all();
   const result: DueReminder[] = [];
   for (const { inv, reg, sp } of candidates) {
+    if (options.ids && !options.ids.includes(inv.id)) continue;
     // auch stornierte Anmeldungen: eine offene Stornogebühr wird weiter eingemahnt
     if (reg && reg.paymentStatus !== 'open') continue;
     if (sp && sp.paymentStatus === 'paid') continue;
@@ -658,7 +663,7 @@ export function findDueReminders(db: Db, now = new Date()): DueReminder[] {
       .get();
     const level = (last?.level ?? 0) + 1;
     if (level > MAX_REMINDER_LEVEL) continue;
-    if (last && addDays(viennaDate(last.sentAt), REMINDER_INTERVAL_DAYS) > today) continue;
+    if (last && !options.ignoreInterval && addDays(viennaDate(last.sentAt), REMINDER_INTERVAL_DAYS) > today) continue;
     result.push({ invoice: inv, level, openCents });
   }
   return result;
@@ -675,8 +680,8 @@ export function releaseReminder(db: Db, invoiceId: number, level: number): void 
   db.delete(paymentReminders).where(and(eq(paymentReminders.invoiceId, invoiceId), eq(paymentReminders.level, level))).run();
 }
 
-export function recordReminderAudit(db: Db, invoice: InvoiceRow, level: number): void {
-  writeAudit(db, { userId: null }, {
+export function recordReminderAudit(db: Db, invoice: InvoiceRow, level: number, actor: Actor = { userId: null }): void {
+  writeAudit(db, actor, {
     action: 'invoice.reminder_sent',
     entity: 'invoice',
     entityId: invoice.id,
