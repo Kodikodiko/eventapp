@@ -14,6 +14,7 @@ export const publicRegistrationSchema = z
     email: z.string().trim().max(200, 'tooLong').pipe(z.email('email')),
     company: text(200),
     memberNumber: text(50),
+    discountCode: text(40).optional(),
     /** leer, wenn das Ticket kostenlos ist */
     paymentMethod: z.enum([...PUBLIC_PAYMENT_METHODS, ''], 'required'),
     billingCompany: text(200),
@@ -21,7 +22,6 @@ export const publicRegistrationSchema = z
     acceptTerms: z.boolean().refine((v) => v, 'termsRequired'),
     acceptPrivacy: z.boolean().refine((v) => v, 'privacyRequired'),
     photoConsent: z.boolean(),
-    newsletter: z.boolean(),
     /** Honeypot – für Menschen unsichtbar, muss leer bleiben */
     website: z.string().max(500),
   })
@@ -49,11 +49,11 @@ export type PublicRegistrationInput = {
   company: string | null;
   locale: 'de' | 'en';
   memberNumber: string | null;
+  discountCode?: string | null;
   paymentMethod: PublicPaymentMethod | null;
   billingCompany: string | null;
   billingAddress: string | null;
   photoConsent: boolean;
-  newsletter: boolean;
   termsDocumentId: number;
   privacyDocumentId: number;
   expectedPriceCents: number;
@@ -68,11 +68,11 @@ export function toPublicRegistrationInput(v: PublicRegistrationValues, meta: Pub
     company: v.company || null,
     locale: meta.locale,
     memberNumber: v.memberNumber || null,
+    discountCode: v.discountCode || null,
     paymentMethod: v.paymentMethod || null,
     billingCompany: invoice ? v.billingCompany : null,
     billingAddress: invoice ? v.billingAddress : null,
     photoConsent: v.photoConsent,
-    newsletter: v.newsletter,
     termsDocumentId: meta.termsDocumentId,
     privacyDocumentId: meta.privacyDocumentId,
     expectedPriceCents: meta.expectedPriceCents,

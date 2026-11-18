@@ -14,16 +14,16 @@ export default async function PublicLayout({ children, params }: Props) {
   const brand = organizer.name || 'EventFlow';
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:m-2 focus:rounded focus:bg-background focus:p-2">
         {t('skipToContent')}
       </a>
       <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <Link href="/" className="text-lg font-semibold">
             {brand}
           </Link>
-          <nav aria-label={t('navLabel')} className="flex items-center gap-4 text-sm">
+          <nav aria-label={t('navLabel')} className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <Link href="/" className="hover:underline">
               {t('events')}
             </Link>

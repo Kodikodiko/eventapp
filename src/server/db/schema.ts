@@ -22,7 +22,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import type { LocalizedList, LocalizedText } from '@/lib/localized';
+import type { EventHighlight, EventTheme, LocalizedList, LocalizedText } from '@/lib/localized';
 
 // ---------------------------------------------------------------------------
 // Hilfen
@@ -42,8 +42,11 @@ export const REGISTRATION_STATUSES = ['reserved', 'confirmed', 'waitlisted', 'ca
 export const PAYMENT_STATUSES = ['open', 'paid', 'partially_refunded', 'refunded', 'not_required'] as const;
 export const PAYMENT_METHODS = ['stripe', 'invoice', 'free'] as const;
 export const TICKET_TYPES = ['normal', 'member', 'special'] as const;
+/** Preisstufe einer Anmeldung zum Normal- bzw. Mitgliederpreis */
+export const PRICE_TIERS = ['regular', 'early_bird'] as const;
+export const DISCOUNT_KINDS = ['fixed', 'percent'] as const;
 export const SOURCES = ['public', 'portal', 'admin'] as const;
-export const CONSENT_KINDS = ['terms', 'privacy', 'photo', 'newsletter'] as const;
+export const CONSENT_KINDS = ['terms', 'privacy', 'photo'] as const;
 export const PAYMENT_RECORD_METHODS = ['stripe', 'bank_transfer'] as const;
 export const PAYMENT_RECORD_STATUSES = ['pending', 'succeeded', 'failed', 'expired'] as const;
 export const REFUND_STATUSES = ['proposed', 'approved', 'executed', 'rejected', 'failed'] as const;
@@ -52,7 +55,7 @@ export const PROPOSAL_STATUSES = ['pending', 'confirmed', 'rejected'] as const;
 export const SLIDES_STATUSES = ['missing', 'uploaded', 'review'] as const;
 export const SESSION_TAGS = ['general', 'talk', 'workshop', 'break'] as const;
 export const SPONSOR_PAYMENT_STATUSES = ['open', 'invoiced', 'paid', 'overdue'] as const;
-export const DSR_TYPES = ['access', 'rectification', 'erasure', 'restriction'] as const;
+export const DSR_TYPES = ['access', 'rectification', 'erasure', 'restriction', 'portability', 'objection'] as const;
 export const EXPENSE_STATUSES = ['new', 'planned', 'paid'] as const;
 
 // ---------------------------------------------------------------------------
@@ -108,6 +111,11 @@ export const events = sqliteTable(
     registrationClosesAt: text('registration_closes_at'),
     priceNormalCents: integer('price_normal_cents').notNull(),
     priceMemberCents: integer('price_member_cents').notNull(),
+    /** Early Bird: gilt von–bis (UTC); ohne Beginn ab Anmeldestart. Ohne Ende oder ohne Preise kein Early Bird. */
+    earlyBirdStartsAt: text('early_bird_starts_at'),
+    earlyBirdEndsAt: text('early_bird_ends_at'),
+    priceEarlyNormalCents: integer('price_early_normal_cents'),
+    priceEarlyMemberCents: integer('price_early_member_cents'),
     ticketVatRateBp: integer('ticket_vat_rate_bp').notNull().default(2000),
     allowStripe: integer('allow_stripe', { mode: 'boolean' }).notNull().default(true),
     allowInvoice: integer('allow_invoice', { mode: 'boolean' }).notNull().default(true),
@@ -121,6 +129,14 @@ export const events = sqliteTable(
     registrationPaused: integer('registration_paused', { mode: 'boolean' }).notNull().default(false),
     /** Folien-Links der Speaker im öffentlichen Programm und im Teilnehmerportal zeigen */
     slidesPublic: integer('slides_public', { mode: 'boolean' }).notNull().default(false),
+    /** Eventseite (W3): Motto im Kopfbereich, Nutzen-Blöcke, Titelbild (Ablage unter MEDIA_DIR) */
+    tagline: text('tagline', { mode: 'json' }).$type<LocalizedText>(),
+    highlights: text('highlights', { mode: 'json' }).$type<EventHighlight[]>().notNull().default(sql`'[]'`),
+    heroImagePath: text('hero_image_path'),
+    heroImageName: text('hero_image_name'),
+    theme: text('theme', { mode: 'json' }).$type<EventTheme>(),
+    logoPath: text('logo_path'),
+    logoName: text('logo_name'),
     createdAt: createdAt(),
     archivedAt: text('archived_at'),
   },
@@ -224,6 +240,13 @@ export const registrations = sqliteTable(
     memberId: integer('member_id').references(() => members.id, { onDelete: 'set null' }),
     memberNumberEntered: text('member_number_entered'),
     priceCents: integer('price_cents').notNull(),
+    /** Normal-/Mitgliedsticket: regulär oder Early Bird */
+    priceTier: text('price_tier', { enum: PRICE_TIERS }).notNull().default('regular'),
+    /** Sonderpreis: gewählte Kategorie (null = anderer Betrag) */
+    priceCategoryId: integer('price_category_id').references((): AnySQLiteColumn => priceCategories.id, { onDelete: 'set null' }),
+    /** eingelöster Rabattcode; price_cents ist der Preis nach Abzug von discount_cents */
+    discountCodeId: integer('discount_code_id').references((): AnySQLiteColumn => discountCodes.id, { onDelete: 'set null' }),
+    discountCents: integer('discount_cents').notNull().default(0),
     billingCompany: text('billing_company'),
     billingAddress: text('billing_address'),
     source: text('source', { enum: SOURCES }).notNull(),
@@ -243,6 +266,54 @@ export const registrations = sqliteTable(
       .on(t.eventId, t.personId)
       .where(sql`status <> 'cancelled'`),
     check('registrations_price_nonnegative', sql`${t.priceCents} >= 0`),
+  ]
+);
+
+/** Sonderpreis-Kategorien je Event (z. B. „Studierende“), nur im Admin wählbar. Nur deaktivieren, nicht löschen, sobald verwendet. */
+export const priceCategories = sqliteTable(
+  'price_categories',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    priceCents: integer('price_cents').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('price_categories_event_idx').on(t.eventId),
+    check('price_categories_price_nonnegative', sql`${t.priceCents} >= 0`),
+  ]
+);
+
+/**
+ * Rabattcodes je Event (z. B. für Flash Sales per Aussendung). Gelten nur auf Normal- und Mitgliederpreis,
+ * nicht auf Early Bird. Code wird in Großbuchstaben gespeichert und ohne Rücksicht auf Groß-/Kleinschreibung geprüft.
+ */
+export const discountCodes = sqliteTable(
+  'discount_codes',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    code: text('code').notNull(),
+    kind: text('kind', { enum: DISCOUNT_KINDS }).notNull(),
+    /** fixed: Cent; percent: Basispunkte (1000 = 10 %) */
+    value: integer('value').notNull(),
+    validFrom: text('valid_from'),
+    validUntil: text('valid_until'),
+    maxUses: integer('max_uses'),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    note: text('note'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('discount_codes_event_code_uq').on(t.eventId, t.code),
+    check('discount_codes_value_positive', sql`${t.value} > 0`),
   ]
 );
 
@@ -331,6 +402,9 @@ export const sponsors = sqliteTable(
     dueOn: text('due_on'),
     paymentStatus: text('payment_status', { enum: SPONSOR_PAYMENT_STATUSES }).notNull().default('open'),
     notes: text('notes'),
+    /** Eventseite: Logo (Ablage unter MEDIA_DIR) und Website */
+    logoPath: text('logo_path'),
+    website: text('website'),
     createdAt: createdAt(),
   },
   (t) => [index('sponsors_event_idx').on(t.eventId)]
@@ -522,6 +596,10 @@ export const speakers = sqliteTable(
     slidesStatus: text('slides_status', { enum: SLIDES_STATUSES }).notNull().default('missing'),
     /** Freigabelink zu den Folien (SharePoint, Nextcloud o. Ä.) */
     slidesUrl: text('slides_url'),
+    /** Eventseite: Rolle (z. B. „Chief of Staff to the CEO“), Kurzbio, Foto (Ablage unter MEDIA_DIR) */
+    role: text('role'),
+    bio: text('bio', { mode: 'json' }).$type<LocalizedText>(),
+    photoPath: text('photo_path'),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('speakers_event_person_uq').on(t.eventId, t.personId)]
@@ -587,6 +665,37 @@ export const sessions = sqliteTable(
     check('sessions_stream_to_range', sql`${t.streamTo} IS NULL OR (${t.streamTo} BETWEEN ${t.stream} AND 10)`),
     check('sessions_time_order', sql`${t.endsAt} > ${t.startsAt}`),
   ]
+);
+
+/** Weitere Speaker eines Programmpunkts (Co-Speaker, z. B. Fireside Talk); der erste steht in sessions.speaker_id. */
+export const sessionSpeakers = sqliteTable(
+  'session_speakers',
+  {
+    sessionId: integer('session_id')
+      .notNull()
+      .references(() => sessions.id, { onDelete: 'cascade' }),
+    speakerId: integer('speaker_id')
+      .notNull()
+      .references(() => speakers.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.speakerId] }), index('session_speakers_speaker_idx').on(t.speakerId)]
+);
+
+/** Bildergalerie der Eventseite (z. B. „Impressionen vom Vorjahr“), Ablage unter MEDIA_DIR. */
+export const eventGalleryImages = sqliteTable(
+  'event_gallery_images',
+  {
+    id: id(),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    imagePath: text('image_path').notNull(),
+    imageName: text('image_name').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (t) => [index('event_gallery_images_event_idx').on(t.eventId, t.sortOrder)]
 );
 
 // ---------------------------------------------------------------------------

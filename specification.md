@@ -218,8 +218,8 @@ The application processes personal data of attendees, speakers and sponsor conta
 ### 7.3 Consent & Acceptance Records (Art. 7)
 - For each registration the system stores: accepted Terms of Service version, privacy notice version, timestamp and channel (public form / admin entry).
 - Consent that is not required for the contract is obtained separately and is never bundled into the Terms of Service, in particular:
-  - consent to photography/video recording being used for promotional purposes,
-  - consent to receive newsletters or marketing e-mails.
+  - consent to photography/video recording being used for promotional purposes.
+- There is no newsletter; the application does not collect consent for marketing e-mails.
 - Each consent is opt-in (unchecked by default), individually revocable, and its grant and revocation are logged with timestamp.
 
 ### 7.4 Data Subject Rights (Art. 15–21)
@@ -231,7 +231,8 @@ The application processes personal data of attendees, speakers and sponsor conta
 
 ### 7.5 Retention & Deletion
 - **Invoice and payment records** (name, billing address, invoice number, amounts, payment status) are retained for 7 years from the end of the calendar year, as required by § 132 BAO, and are then deleted.
-- **All other attendee data** (e-mail, company, PMI number, roles, consent records) is deleted or anonymised no later than 6 months after the event, unless the person has consented to longer storage.
+- **All other attendee data** (e-mail, company, PMI number, roles, consent records) is deleted or anonymised no later than 6 months after the event.
+- **Speakers and sponsor contact persons** (business contacts, legitimate interest) are kept until 3 years after the last event in which they took part in that role, then anonymised.
 - **Cancelled and waitlisted registrations** without payment are deleted 30 days after the event.
 - **Audit log entries** are kept for 2 years.
 - **Member list:** each upload replaces the previous list completely; the previous version is not kept. The list contains only the fields needed for verification.

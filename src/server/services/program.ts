@@ -11,7 +11,8 @@ import type { LocalizedText } from '@/lib/localized';
 import { defaultStreamName, MAX_STREAMS, streamEnd, type StreamInfo } from '@/lib/streams';
 import type { SessionInput, SpeakerInput } from '@/lib/validation/program';
 import type { Db } from '@/server/db/core';
-import { events, eventStreams, people, sessions, speakers } from '@/server/db/schema';
+import { events, eventStreams, people, sessions, sessionSpeakers, speakers } from '@/server/db/schema';
+import { removeMediaImage } from '@/server/media/storage';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { updatePerson, upsertPerson } from './people';
 
@@ -26,10 +27,13 @@ export type SpeakerRow = {
   proposalStatus: SpeakerInput['proposalStatus'];
   slidesStatus: SpeakerInput['slidesStatus'];
   slidesUrl: string | null;
+  role: string | null;
+  bio: LocalizedText | null;
+  photoPath: string | null;
   sessionCount: number;
 };
 
-export type SessionRow = typeof sessions.$inferSelect & { speakerName: string | null };
+export type SessionRow = typeof sessions.$inferSelect & { speakerName: string | null; coSpeakerIds: number[]; coSpeakerNames: string[] };
 
 function loadWritableEvent(tx: Tx | Db, eventId: number) {
   const event = tx.select().from(events).where(eq(events.id, eventId)).get();
@@ -53,6 +57,14 @@ export function listSpeakers(db: Db, eventId: number): SpeakerRow[] {
   for (const s of db.select({ speakerId: sessions.speakerId }).from(sessions).where(eq(sessions.eventId, eventId)).all()) {
     if (s.speakerId) counts.set(s.speakerId, (counts.get(s.speakerId) ?? 0) + 1);
   }
+  for (const s of db
+    .select({ speakerId: sessionSpeakers.speakerId })
+    .from(sessionSpeakers)
+    .innerJoin(sessions, eq(sessions.id, sessionSpeakers.sessionId))
+    .where(eq(sessions.eventId, eventId))
+    .all()) {
+    counts.set(s.speakerId, (counts.get(s.speakerId) ?? 0) + 1);
+  }
   return rows
     .map(({ s, p }) => ({
       id: s.id,
@@ -65,6 +77,9 @@ export function listSpeakers(db: Db, eventId: number): SpeakerRow[] {
       proposalStatus: s.proposalStatus,
       slidesStatus: s.slidesStatus,
       slidesUrl: s.slidesUrl,
+      role: s.role,
+      bio: s.bio,
+      photoPath: s.photoPath,
       sessionCount: counts.get(s.id) ?? 0,
     }))
     .sort((a, b) => a.lastName.localeCompare(b.lastName, 'de') || a.firstName.localeCompare(b.firstName, 'de'));
@@ -82,7 +97,15 @@ export function createSpeaker(db: Db, actor: Actor, eventId: number, input: Spea
     if (existing) throw new ServiceError('CONFLICT', { email: 'alreadySpeaker' });
     const [row] = tx
       .insert(speakers)
-      .values({ eventId, personId, proposalStatus: input.proposalStatus, slidesStatus: input.slidesStatus, slidesUrl: input.slidesUrl ?? null })
+      .values({
+        eventId,
+        personId,
+        proposalStatus: input.proposalStatus,
+        slidesStatus: input.slidesStatus,
+        slidesUrl: input.slidesUrl ?? null,
+        role: input.role ?? null,
+        bio: input.bio ?? null,
+      })
       .returning()
       .all();
     writeAudit(tx, actor, { action: 'speaker.created', entity: 'speaker', entityId: row.id, eventId, summary: 'Speaker hinzugefügt' });
@@ -97,7 +120,13 @@ export function updateSpeaker(db: Db, actor: Actor, id: number, input: SpeakerIn
     loadWritableEvent(tx, sp.eventId);
     updatePerson(tx, sp.personId, input);
     tx.update(speakers)
-      .set({ proposalStatus: input.proposalStatus, slidesStatus: input.slidesStatus, slidesUrl: input.slidesUrl ?? null })
+      .set({
+        proposalStatus: input.proposalStatus,
+        slidesStatus: input.slidesStatus,
+        slidesUrl: input.slidesUrl ?? null,
+        ...(input.role !== undefined ? { role: input.role } : {}),
+        ...(input.bio !== undefined ? { bio: input.bio } : {}),
+      })
       .where(eq(speakers.id, id))
       .run();
     writeAudit(tx, actor, {
@@ -112,14 +141,16 @@ export function updateSpeaker(db: Db, actor: Actor, id: number, input: SpeakerIn
 
 /** Entfernt den Speaker aus dem Event (die Person bleibt erhalten); Programmpunkte verlieren die Zuordnung. */
 export function removeSpeaker(db: Db, actor: Actor, id: number): void {
-  db.transaction((tx) => {
+  const photo = db.transaction((tx) => {
     const sp = tx.select().from(speakers).where(eq(speakers.id, id)).get();
     if (!sp) throw new ServiceError('NOT_FOUND');
     loadWritableEvent(tx, sp.eventId);
     tx.update(sessions).set({ speakerId: null }).where(eq(sessions.speakerId, id)).run();
     tx.delete(speakers).where(eq(speakers.id, id)).run();
     writeAudit(tx, actor, { action: 'speaker.removed', entity: 'speaker', entityId: id, eventId: sp.eventId, summary: 'Speaker aus dem Event entfernt' });
+    return sp.photoPath;
   });
+  removeMediaImage(photo);
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +166,46 @@ export function listSessions(db: Db, eventId: number): SessionRow[] {
     .where(eq(sessions.eventId, eventId))
     .orderBy(asc(sessions.startsAt), asc(sessions.stream))
     .all();
-  return rows.map(({ s, firstName, lastName }) => ({ ...s, speakerName: firstName ? `${firstName} ${lastName}` : null }));
+  const co = coSpeakersOf(db, eventId);
+  return rows.map(({ s, firstName, lastName }) => ({
+    ...s,
+    speakerName: firstName ? `${firstName} ${lastName}` : null,
+    coSpeakerIds: co.get(s.id)?.map((c) => c.speakerId) ?? [],
+    coSpeakerNames: co.get(s.id)?.map((c) => c.name) ?? [],
+  }));
+}
+
+/** Co-Speaker aller Programmpunkte eines Events je Programmpunkt (in Reihenfolge), mit Name und Status. */
+export function coSpeakersOf(db: Db | Tx, eventId: number) {
+  const rows = db
+    .select({
+      sessionId: sessionSpeakers.sessionId,
+      speakerId: sessionSpeakers.speakerId,
+      firstName: people.firstName,
+      lastName: people.lastName,
+      proposalStatus: speakers.proposalStatus,
+      anonymizedAt: people.anonymizedAt,
+    })
+    .from(sessionSpeakers)
+    .innerJoin(sessions, eq(sessions.id, sessionSpeakers.sessionId))
+    .innerJoin(speakers, eq(speakers.id, sessionSpeakers.speakerId))
+    .innerJoin(people, eq(people.id, speakers.personId))
+    .where(eq(sessions.eventId, eventId))
+    .orderBy(asc(sessionSpeakers.position))
+    .all();
+  const map = new Map<number, { speakerId: number; name: string; visible: boolean }[]>();
+  for (const r of rows) {
+    const list = map.get(r.sessionId) ?? [];
+    list.push({ speakerId: r.speakerId, name: `${r.firstName} ${r.lastName}`.trim(), visible: r.proposalStatus === 'confirmed' && !r.anonymizedAt });
+    map.set(r.sessionId, list);
+  }
+  return map;
+}
+
+function replaceCoSpeakers(tx: Tx, sessionId: number, ids: number[] | undefined) {
+  if (ids === undefined) return;
+  tx.delete(sessionSpeakers).where(eq(sessionSpeakers.sessionId, sessionId)).run();
+  if (ids.length) tx.insert(sessionSpeakers).values(ids.map((speakerId, position) => ({ sessionId, speakerId, position }))).run();
 }
 
 function validateSession(tx: Tx, event: typeof events.$inferSelect, input: SessionInput, exceptId?: number) {
@@ -148,6 +218,10 @@ function validateSession(tx: Tx, event: typeof events.$inferSelect, input: Sessi
   if (input.speakerId != null) {
     const sp = tx.select().from(speakers).where(eq(speakers.id, input.speakerId)).get();
     if (!sp || sp.eventId !== event.id) throw new ServiceError('INVALID', { speakerId: 'invalid' });
+  }
+  for (const id of input.coSpeakerIds ?? []) {
+    const sp = tx.select().from(speakers).where(eq(speakers.id, id)).get();
+    if (!sp || sp.eventId !== event.id || id === input.speakerId) throw new ServiceError('INVALID', { coSpeakerIds: 'invalid' });
   }
   const overlap = tx
     .select({ id: sessions.id })
@@ -170,11 +244,13 @@ export function createSession(db: Db, actor: Actor, eventId: number, input: Sess
   return db.transaction((tx) => {
     const event = loadWritableEvent(tx, eventId);
     validateSession(tx, event, input);
+    const { coSpeakerIds, ...values } = input;
     const [row] = tx
       .insert(sessions)
-      .values({ ...input, streamTo: streamEnd(input), eventId })
+      .values({ ...values, streamTo: streamEnd(input), eventId })
       .returning()
       .all();
+    replaceCoSpeakers(tx, row.id, coSpeakerIds);
     writeAudit(tx, actor, { action: 'session.created', entity: 'session', entityId: row.id, eventId, summary: `Programmpunkt Stream ${input.stream}` });
     return row.id;
   });
@@ -186,10 +262,12 @@ export function updateSession(db: Db, actor: Actor, id: number, input: SessionIn
     if (!current) throw new ServiceError('NOT_FOUND');
     const event = loadWritableEvent(tx, current.eventId);
     validateSession(tx, event, input, id);
+    const { coSpeakerIds, ...values } = input;
     tx.update(sessions)
-      .set({ ...input, streamTo: streamEnd(input) })
+      .set({ ...values, streamTo: streamEnd(input) })
       .where(eq(sessions.id, id))
       .run();
+    replaceCoSpeakers(tx, id, coSpeakerIds);
     writeAudit(tx, actor, { action: 'session.updated', entity: 'session', entityId: id, eventId: current.eventId, summary: 'Programmpunkt geändert' });
   });
 }

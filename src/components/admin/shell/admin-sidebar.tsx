@@ -2,17 +2,21 @@
 
 import {
   Award,
+  BadgePercent,
   Building2,
   CalendarDays,
   CalendarRange,
   ChartNoAxesCombined,
   Check,
   ChevronsUpDown,
+  ExternalLink,
   FileText,
+  Globe,
   Handshake,
   History,
   IdCard,
   LayoutDashboard,
+  Lock,
   Mic,
   PanelLeftClose,
   PanelLeftOpen,
@@ -79,6 +83,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
           badge: { value: current!.counts.attendees, tone: 'muted', label: t('attendeesBadge', { count: current!.counts.attendees }) },
         },
         { href: `${base}/certificate`, label: t('certificate'), icon: Award },
+        { href: `${base}/website`, label: t('website'), icon: Globe },
         { href: `${base}/speakers`, label: t('speakers'), icon: Mic },
         { href: `${base}/schedule`, label: t('schedule'), icon: CalendarDays },
         { href: `${base}/sponsors`, label: t('sponsors'), icon: Handshake },
@@ -103,6 +108,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
     ...(base ? [{ href: `${base}/settings`, label: t('eventSettings'), icon: Settings }] : []),
     { href: '/admin/members', label: t('members'), icon: IdCard },
     { href: '/admin/audit', label: t('audit'), icon: History },
+    { href: '/admin/gdpr', label: t('gdpr'), icon: Lock },
     { href: '/admin/settings', label: t('organizer'), icon: Building2 },
     { href: '/admin/security', label: t('security'), icon: ShieldCheck },
   ];
@@ -110,6 +116,7 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
   // Erfolgsrechnung des gewählten Events steht unter „Finanzen“ (Wunsch 13.11.2026), Kostengruppen sind global
   const financeItems: Item[] = [
     ...(base ? [{ href: `${base}/pnl`, label: t('pnl'), icon: ChartNoAxesCombined }] : []),
+    ...(base ? [{ href: `${base}/pricing`, label: t('pricing'), icon: BadgePercent }] : []),
     { href: '/admin/cost-groups', label: t('costGroups'), icon: Tags },
   ];
 
@@ -254,6 +261,30 @@ export function AdminSidebar({ events, defaultEventId, user, collapsed, onToggle
       </nav>
 
       <div className={cn('flex border-t border-sidebar-border pt-3', collapsed ? 'flex-col items-center gap-2' : 'flex-col gap-2 px-1')}>
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/"
+                onClick={onNavigate}
+                aria-label={t('publicSite')}
+                className="flex size-10 items-center justify-center rounded-lg text-sidebar-foreground hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring"
+              >
+                <ExternalLink aria-hidden className="size-[18px]" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t('publicSite')}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Link
+            href="/"
+            onClick={onNavigate}
+            className="-mx-1 flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-sidebar-foreground hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-sidebar-ring"
+          >
+            <ExternalLink aria-hidden className="size-[18px] shrink-0" />
+            {t('publicSite')}
+          </Link>
+        )}
         {!collapsed && (
           <div className="flex min-w-0 flex-col" title={user.email}>
             <span className="truncate text-sm font-semibold text-white">{user.name}</span>

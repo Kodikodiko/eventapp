@@ -1,0 +1,39 @@
+flowchart LR
+  subgraph CL["«device» Client"]
+    BR["«browser»<br/>Besucher:in"]
+    AD["«browser»<br/>Admin<br/>+ Client-Zertifikat"]
+  end
+  SW["«external system»<br/>Stripe<br/>(Webhook-Absender)"]
+  FW{{"«firewall»<br/>Firewall / Geo-Block<br/>eingehend nur 443, 80"}}
+  subgraph HOST["«device» Server PMI Austria (Linux, EU)"]
+    VPN["«service»<br/>VPN (bestehend)"]
+    MAIL["«service»<br/>Mailserver (bestehend)<br/>SMTP 587, SPF/DKIM"]
+    subgraph DOCKER["«execution environment» Docker Engine"]
+      subgraph NET["Docker-Netz «proxy» (intern, keine veröffentlichten Ports)"]
+        NG["«container»<br/>nginx Reverse Proxy<br/>TLS *.pmi-austria.org<br/>mTLS für event-admin"]
+        APP["«container»<br/>eventflow<br/>Next.js, :3000 intern<br/>1 Instanz, User 1000"]
+      end
+      JOBS["«container»<br/>eventflow-jobs<br/>alle 5 min"]
+    end
+    VOL[("«volume»<br/>/srv/eventflow/data → /data<br/>SQLite, Rechnungen, Belege")]
+    ENV["«file»<br/>eventflow.env<br/>chmod 600"]
+  end
+  SA["«external system»<br/>Stripe API<br/>api.stripe.com"]
+  BK[("«external system»<br/>Backup-Ziel EU<br/>verschlüsselt")]
+  DNS["«external system»<br/>DNS pmi-austria.org<br/>*.pmi-austria.org → Server"]
+
+  BR -->|"HTTPS 443<br/>herbstforum.pmi-austria.org<br/>event.pmi-austria.org"| FW
+  SW -->|"HTTPS 443<br/>/api/stripe/webhook"| FW
+  AD -->|"VPN-Tunnel"| VPN
+  VPN -->|"HTTPS 443<br/>event-admin.pmi-austria.org"| NG
+  FW -->|"443"| NG
+  NG -->|"HTTP :3000<br/>Host, X-Real-IP"| APP
+  APP --- VOL
+  JOBS --- VOL
+  ENV -.->|env_file| APP
+  ENV -.->|env_file| JOBS
+  APP -->|"HTTPS 443"| SA
+  APP -->|"SMTP 587"| MAIL
+  JOBS -->|"SMTP 587"| MAIL
+  VOL -.->|"restic/borg<br/>täglich"| BK
+  BR -.->|Namensauflösung| DNS

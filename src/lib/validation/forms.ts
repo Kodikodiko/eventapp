@@ -17,6 +17,8 @@ export const localizedTextSchema = (max = 200) => z.object({ de: requiredText(ma
 export const optionalLocalizedTextSchema = (max = 5000) => z.object({ de: optionalText(max), en: optionalText(max) });
 
 const euroAmount = z.string().refine((v) => parseEuroToCents(v) !== null, 'amount');
+const optionalEuroAmount = z.string().refine((v) => v.trim() === '' || parseEuroToCents(v) !== null, 'amount');
+const optionalCents = (v: string) => (v.trim() === '' ? null : parseEuroToCents(v));
 const localDateTime = z.string().refine((v) => viennaInputToUtc(v) !== null, 'dateTime');
 const optionalLocalDateTime = z.string().refine((v) => v.trim() === '' || viennaInputToUtc(v) !== null, 'dateTime');
 const intInRange = (min: number, max: number) =>
@@ -37,6 +39,11 @@ export const eventFormSchema = z
     capacity: intInRange(0, 100000),
     priceNormal: euroAmount,
     priceMember: euroAmount,
+    /** Early Bird: Zeitraum und Preise, alles optional */
+    earlyBirdStartsAt: optionalLocalDateTime,
+    earlyBirdEndsAt: optionalLocalDateTime,
+    priceEarlyNormal: optionalEuroAmount,
+    priceEarlyMember: optionalEuroAmount,
     ticketVatRateBp: z.enum(VAT_RATE_OPTIONS, 'required'),
     /** '' = wie in den globalen Einstellungen */
     vatMode: z.enum(['', 'small_business', 'standard'], 'required'),
@@ -59,6 +66,12 @@ export const eventFormSchema = z
     if (closes && ends && closes > ends) {
       ctx.addIssue({ code: 'custom', path: ['registrationClosesAt'], message: 'closeAfterEvent' });
     }
+    const ebStart = viennaInputToUtc(v.earlyBirdStartsAt);
+    const ebEnd = viennaInputToUtc(v.earlyBirdEndsAt);
+    const ebPrices = v.priceEarlyNormal.trim() !== '' || v.priceEarlyMember.trim() !== '';
+    if (ebStart && ebEnd && ebEnd <= ebStart) ctx.addIssue({ code: 'custom', path: ['earlyBirdEndsAt'], message: 'closeBeforeOpen' });
+    if (ebPrices && !ebEnd) ctx.addIssue({ code: 'custom', path: ['earlyBirdEndsAt'], message: 'earlyBirdEndRequired' });
+    if ((ebEnd || ebStart) && !ebPrices) ctx.addIssue({ code: 'custom', path: ['priceEarlyNormal'], message: 'earlyBirdPriceRequired' });
     const normal = parseEuroToCents(v.priceNormal) ?? 0;
     const member = parseEuroToCents(v.priceMember) ?? 0;
     if ((normal > 0 || member > 0) && !v.allowStripe && !v.allowInvoice) {
@@ -90,6 +103,10 @@ export type EventInput = {
   capacity: number;
   priceNormalCents: number;
   priceMemberCents: number;
+  earlyBirdStartsAt?: string | null;
+  earlyBirdEndsAt?: string | null;
+  priceEarlyNormalCents?: number | null;
+  priceEarlyMemberCents?: number | null;
   ticketVatRateBp: number;
   vatMode?: 'small_business' | 'standard' | null;
   allowStripe: boolean;
@@ -116,6 +133,10 @@ export function toEventInput(v: EventFormValues): EventInput {
     capacity: Number(v.capacity),
     priceNormalCents: parseEuroToCents(v.priceNormal)!,
     priceMemberCents: parseEuroToCents(v.priceMember)!,
+    earlyBirdStartsAt: viennaInputToUtc(v.earlyBirdStartsAt),
+    earlyBirdEndsAt: viennaInputToUtc(v.earlyBirdEndsAt),
+    priceEarlyNormalCents: optionalCents(v.priceEarlyNormal),
+    priceEarlyMemberCents: optionalCents(v.priceEarlyMember),
     ticketVatRateBp: Number(v.ticketVatRateBp),
     vatMode: v.vatMode || null,
     allowStripe: v.allowStripe,

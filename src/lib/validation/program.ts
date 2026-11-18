@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { viennaInputToUtc } from '@/lib/dates';
 import type { LocalizedText } from '@/lib/localized';
-import { localizedTextSchema } from './forms';
+import { localizedTextSchema, optionalLocalizedTextSchema } from './forms';
 
 const nameText = z.string().trim().min(1, 'required').max(100, 'tooLong');
 
@@ -20,6 +20,9 @@ export const speakerFormSchema = z.object({
     .trim()
     .max(1000, 'tooLong')
     .refine((v) => v === '' || /^https:\/\/[^\s]+$/i.test(v), 'httpsUrl'),
+  /** Eventseite: Rolle und Kurzbio */
+  role: z.string().trim().max(150, 'tooLong'),
+  bio: optionalLocalizedTextSchema(2000),
 });
 export type SpeakerFormValues = z.infer<typeof speakerFormSchema>;
 
@@ -32,10 +35,21 @@ export type SpeakerInput = {
   proposalStatus: 'pending' | 'confirmed' | 'rejected';
   slidesStatus: 'missing' | 'uploaded' | 'review';
   slidesUrl?: string | null;
+  role?: string | null;
+  bio?: LocalizedText | null;
 };
 
 export function toSpeakerInput(v: SpeakerFormValues): SpeakerInput {
-  return { ...v, email: v.email.trim().toLowerCase(), company: v.company.trim() || null, slidesUrl: v.slidesUrl.trim() || null };
+  const de = v.bio.de.trim();
+  const en = v.bio.en.trim();
+  return {
+    ...v,
+    email: v.email.trim().toLowerCase(),
+    company: v.company.trim() || null,
+    slidesUrl: v.slidesUrl.trim() || null,
+    role: v.role.trim() || null,
+    bio: de || en ? (en ? { de: de || en, en } : { de }) : null,
+  };
 }
 
 const localDateTime = z.string().refine((v) => viennaInputToUtc(v) !== null, 'dateTime');
@@ -54,6 +68,8 @@ export const sessionFormSchema = z
     stream: z.string().regex(STREAM_PATTERN, 'required'),
     streamTo: z.string().regex(STREAM_PATTERN, 'required'),
     speakerId: z.string(),
+    /** weitere Speaker (Co-Speaker) als IDs */
+    coSpeakerIds: z.array(z.string().regex(/^\d+$/)).max(10),
   })
   .superRefine((v, ctx) => {
     const s = viennaInputToUtc(v.startsAt);
@@ -73,6 +89,8 @@ export type SessionInput = {
   /** letzter Stream; fehlt = nur `stream` */
   streamTo?: number;
   speakerId: number | null;
+  /** weitere Speaker in dieser Reihenfolge; fehlt = keine */
+  coSpeakerIds?: number[];
 };
 
 export function toSessionInput(v: SessionFormValues): SessionInput {
@@ -85,6 +103,7 @@ export function toSessionInput(v: SessionFormValues): SessionInput {
     stream: Number(v.stream),
     streamTo: Number(v.streamTo),
     speakerId: v.speakerId ? Number(v.speakerId) : null,
+    coSpeakerIds: [...new Set(v.coSpeakerIds.map(Number))].filter((id) => id !== Number(v.speakerId)),
   };
 }
 

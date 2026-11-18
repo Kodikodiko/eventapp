@@ -56,7 +56,7 @@ export async function beginCheckout(
       ref,
       registrationId,
       amountCents: row.reg.priceCents,
-      productName: `${localized(row.event.name, options.locale)} – ${ticket}`,
+      productName: `${localized(row.event.name, options.locale)} – ${ticket}${row.reg.priceTier === 'early_bird' ? ' (Early Bird)' : ''}`,
       customerEmail: row.email,
       locale: options.locale,
       expiresAt,

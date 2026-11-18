@@ -1,0 +1,20 @@
+sequenceDiagram
+  autonumber
+  actor AD as Admin
+  participant V as VPN
+  participant N as nginx (event-admin)
+  participant A as eventflow
+  AD->>V: VPN-Verbindung aufbauen
+  AD->>N: TLS-Handshake event-admin.pmi-austria.org (über VPN)
+  N-->>AD: Client-Zertifikat anfordern (ssl_verify_client on)
+  AD->>N: Client-Zertifikat
+  alt Zertifikat fehlt/ungültig oder Quelle nicht im VPN-Netz
+    N-->>AD: 400 / 403, keine Weiterleitung an die App
+  else gültig
+    N->>A: GET /de/admin
+    A-->>AD: Login-Seite
+    AD->>A: E-Mail + Passwort (min. 12 Zeichen)
+    A-->>AD: Zwei-Faktor-Code anfordern
+    AD->>A: TOTP-Code
+    A-->>AD: Sitzung (8 h), Admin-Bereich
+  end

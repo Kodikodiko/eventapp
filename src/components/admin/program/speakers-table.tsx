@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLink, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Camera, ExternalLink, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -13,12 +13,15 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useRouter } from '@/i18n/navigation';
 import type { ActionResult } from '@/lib/action-result';
+import { mediaUrl } from '@/lib/validation/media';
 import { speakerFormSchema, type SpeakerFormValues } from '@/lib/validation/program';
+import { setSpeakerPhotoAction } from '@/server/actions/event-page';
 import { setSlidesPublicAction } from '@/server/actions/events';
 import { createSpeakerAction, removeSpeakerAction, updateSpeakerAction } from '@/server/actions/program';
 import type { SpeakerRow } from '@/server/services/program';
 import { ConfirmDialog } from '../confirm-dialog';
-import { Field, fieldError } from '../form-fields';
+import { Field, fieldError, LocalizedFields } from '../form-fields';
+import { ImageUploadDialog } from '../image-upload-dialog';
 import { useActionFeedback } from '../use-action-feedback';
 
 const selectClass =
@@ -40,7 +43,7 @@ export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { event
   const router = useRouter();
   const handle = useActionFeedback();
   const [, startTransition] = useTransition();
-  const [dialog, setDialog] = useState<{ mode: 'create' } | { mode: 'edit' | 'remove'; row: SpeakerRow } | null>(null);
+  const [dialog, setDialog] = useState<{ mode: 'create' } | { mode: 'edit' | 'remove' | 'photo'; row: SpeakerRow } | null>(null);
 
   function remove(row: SpeakerRow) {
     startTransition(async () => {
@@ -89,10 +92,18 @@ export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { event
             {rows.map((r) => (
               <tr key={r.id} className="border-t">
                 <td className="p-2">
-                  <div className="font-medium">
-                    {r.lastName}, {r.firstName}
+                  <div className="flex items-center gap-2">
+                    {r.photoPath && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={mediaUrl(r.photoPath)!} alt="" className="size-8 shrink-0 rounded-full object-cover" />
+                    )}
+                    <div>
+                      <div className="font-medium">
+                        {r.lastName}, {r.firstName}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{[r.role, r.email].filter(Boolean).join(' · ')}</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{r.email}</div>
                 </td>
                 <td className="p-2">{r.company}</td>
                 <td className="p-2">
@@ -122,6 +133,10 @@ export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { event
                           <Pencil aria-hidden className="size-4" />
                           {t('edit')}
                         </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setDialog({ mode: 'photo', row: r })}>
+                          <Camera aria-hidden className="size-4" />
+                          {r.photoPath ? t('photoChange') : t('photoAdd')}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => setDialog({ mode: 'remove', row: r })} className="text-destructive">
                           <Trash2 aria-hidden className="size-4" />
                           {t('remove')}
@@ -143,7 +158,17 @@ export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { event
         </table>
       </div>
 
-      {dialog && dialog.mode !== 'remove' && (
+      {dialog?.mode === 'photo' && (
+        <ImageUploadDialog
+          title={t('photoTitle', { name: `${dialog.row.firstName} ${dialog.row.lastName}` })}
+          description={t('photoHint')}
+          currentUrl={mediaUrl(dialog.row.photoPath)}
+          shape="round"
+          save={(data) => setSpeakerPhotoAction(dialog.row.id, data)}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog && (dialog.mode === 'create' || dialog.mode === 'edit') && (
         <SpeakerDialog
           key={dialog.mode === 'edit' ? `edit-${dialog.row.id}` : 'create'}
           title={dialog.mode === 'edit' ? t('editTitle') : t('addTitle')}
@@ -158,8 +183,21 @@ export function SpeakersTable({ eventId, rows, readOnly, slidesPublic }: { event
                   proposalStatus: dialog.row.proposalStatus,
                   slidesStatus: dialog.row.slidesStatus,
                   slidesUrl: dialog.row.slidesUrl ?? '',
+                  role: dialog.row.role ?? '',
+                  bio: { de: dialog.row.bio?.de ?? '', en: dialog.row.bio?.en ?? '' },
                 }
-              : { firstName: '', lastName: '', email: '', company: '', locale: 'de', proposalStatus: 'pending', slidesStatus: 'missing', slidesUrl: '' }
+              : {
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  company: '',
+                  locale: 'de',
+                  proposalStatus: 'pending',
+                  slidesStatus: 'missing',
+                  slidesUrl: '',
+                  role: '',
+                  bio: { de: '', en: '' },
+                }
           }
           save={(values) => (dialog.mode === 'edit' ? updateSpeakerAction(dialog.row.id, values) : createSpeakerAction(eventId, values))}
           onClose={() => setDialog(null)}
@@ -209,7 +247,7 @@ function SpeakerDialog({ title, defaultValues, save, onClose }: DialogProps) {
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <FormProvider {...form}>
           <form onSubmit={onSubmit} className="space-y-4" noValidate>
             <DialogHeader>
@@ -256,6 +294,12 @@ function SpeakerDialog({ title, defaultValues, save, onClose }: DialogProps) {
               <Field id="sp-slides-url" label={t('slidesUrl')} hint={t('slidesUrlHint')} error={fieldError(errors, 'slidesUrl')}>
                 <Input id="sp-slides-url" type="url" placeholder="https://" {...register('slidesUrl')} />
               </Field>
+              <Field id="sp-role" label={t('role')} hint={t('roleHint')} error={fieldError(errors, 'role')} className="sm:col-span-2">
+                <Input id="sp-role" {...register('role')} />
+              </Field>
+              <div className="sm:col-span-2">
+                <LocalizedFields name="bio" label={t('bio')} multiline rows={4} deRequired={false} />
+              </div>
             </fieldset>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

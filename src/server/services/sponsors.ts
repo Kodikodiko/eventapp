@@ -11,6 +11,7 @@ import { sponsorBase } from '@/lib/sponsor-price';
 import type { PackageInput, SponsorInput } from '@/lib/validation/sponsors';
 import type { Db } from '@/server/db/core';
 import { events, invoices, payments, people, sponsorContacts, sponsorPackages, sponsors } from '@/server/db/schema';
+import { removeMediaImage } from '@/server/media/storage';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { activeInvoiceNumbersBySponsor } from './invoices';
 import { upsertPerson } from './people';
@@ -183,7 +184,7 @@ export function updateSponsor(db: Db, actor: Actor, id: number, input: SponsorIn
 }
 
 export function deleteSponsor(db: Db, actor: Actor, id: number): void {
-  db.transaction((tx) => {
+  const logo = db.transaction((tx) => {
     const current = tx.select().from(sponsors).where(eq(sponsors.id, id)).get();
     if (!current) throw new ServiceError('NOT_FOUND');
     loadWritableEvent(tx, current.eventId);
@@ -193,7 +194,9 @@ export function deleteSponsor(db: Db, actor: Actor, id: number): void {
     tx.delete(sponsorContacts).where(eq(sponsorContacts.sponsorId, id)).run();
     tx.delete(sponsors).where(eq(sponsors.id, id)).run();
     writeAudit(tx, actor, { action: 'sponsor.deleted', entity: 'sponsor', entityId: id, eventId: current.eventId, summary: `Sponsor ${current.companyName}` });
+    return current.logoPath;
   });
+  removeMediaImage(logo);
 }
 
 export type SponsorTotals = { count: number; totalCents: number; paidCents: number; openCents: number };

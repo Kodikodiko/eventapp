@@ -8,8 +8,8 @@ import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { formatDateOnly } from '@/lib/dates';
 import { localized } from '@/lib/localized';
-import { formatAmount, formatSignedAmount } from '@/lib/money';
-import { buildPnlRows, forecastOf, type PnlRow } from '@/lib/pnl-rows';
+import { formatAmount, formatEuro, formatSignedAmount } from '@/lib/money';
+import { buildPnlRows, forecastOf, variantLabel, type PnlRow } from '@/lib/pnl-rows';
 import { cn } from '@/lib/utils';
 import { MAX_COMPARE_EVENTS, PLAN_VARIANT_KEYS, type PlanVariant } from '@/lib/validation/pnl';
 import { setComparisonsAction } from '@/server/actions/pnl';
@@ -82,7 +82,8 @@ export function PnlTable({ eventId, pnl, readOnly }: Props) {
   const [planOpen, setPlanOpen] = useState(false);
 
   const hashGroup = /^group-(\d+)$/.exec(hash)?.[1];
-  const isOpen = (groupId: number) => toggled[groupId] ?? String(groupId) === hashGroup;
+  // Ticketzeilen (negative IDs) sind aufgeklappt: die Aufschlüsselung nach Preis soll sofort sichtbar sein
+  const isOpen = (groupId: number) => toggled[groupId] ?? (groupId < 0 || String(groupId) === hashGroup);
 
   useEffect(() => {
     if (hash) document.getElementById(hash)?.scrollIntoView({ block: 'center' });
@@ -109,6 +110,7 @@ export function PnlTable({ eventId, pnl, readOnly }: Props) {
   function label(row: PnlRow): string {
     if ('text' in row.label) return row.label.text;
     if ('ticket' in row.label) return t(`ticket.${row.label.ticket}`);
+    if ('variant' in row.label) return variantLabel(row.label.variant, (kind, name) => t(`priceVariant.${kind}`, { name }), (c) => formatEuro(c, locale));
     return t(`row.${row.label.key}`);
   }
   function badge(row: PnlRow): string | null {

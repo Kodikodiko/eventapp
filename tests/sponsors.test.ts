@@ -84,7 +84,7 @@ describe('Sponsor-Formulare', () => {
   });
 
   it('Sponsor: mindestens ein Kontakt, keine doppelten E-Mails', () => {
-    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '2000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
+    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '2000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '', website: '' };
     const c = { firstName: 'A', lastName: 'B', email: 'a@x.example', phone: '', function: '', locale: 'de' };
     const none = sponsorFormSchema.safeParse({ ...base, contacts: [] });
     expect(none.success).toBe(false);
@@ -98,7 +98,7 @@ describe('Sponsor-Formulare', () => {
   });
 
   it('Sponsor ohne Paket braucht einen Betrag', () => {
-    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '1000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '' };
+    const base = { companyName: 'Acme', packageId: '', customPrice: '', customVatRateBp: '1000', discount: '0', dueOn: '', paymentStatus: 'open', billingAddress: '', vatId: '', notes: '', website: '' };
     const c = { firstName: 'A', lastName: 'B', email: 'a@x.example', phone: '', function: '', locale: 'de' };
     expect(sponsorFormSchema.safeParse({ ...base, contacts: [c] }).error?.issues[0]).toMatchObject({ path: ['customPrice'], message: 'required' });
     expect(sponsorFormSchema.safeParse({ ...base, customPrice: 'abc', contacts: [c] }).error?.issues[0].message).toBe('amount');

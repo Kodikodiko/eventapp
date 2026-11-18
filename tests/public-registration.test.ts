@@ -8,7 +8,7 @@ import { createEvent, getEvent, getEventStats, setEventArchived, updateEvent, ty
 import { publishLegalVersion } from '@/server/services/legal';
 import { replaceMembers } from '@/server/services/members';
 import { upsertPerson } from '@/server/services/people';
-import { getAvailability, listPublicEvents, listPublicSessions, listPublicSpeakers } from '@/server/services/public-events';
+import { getAvailability, listPastPublicEvents, listPublicEvents, listPublicSessions, listPublicSpeakers } from '@/server/services/public-events';
 import { quotePrice, registerPublic } from '@/server/services/public-registration';
 import { createSession, createSpeaker } from '@/server/services/program';
 import { clientIp, resetRateLimits, takeToken } from '@/server/rate-limit';
@@ -57,7 +57,6 @@ function setup(o: EventOverrides = {}) {
     billingCompany: 'Gruber KG',
     billingAddress: 'Ring 1, 1010 Wien',
     photoConsent: false,
-    newsletter: false,
     termsDocumentId: terms.id,
     privacyDocumentId: privacy.id,
     expectedPriceCents: 20000,
@@ -84,7 +83,7 @@ describe('Formular', () => {
   it('verlangt AGB, Datenschutz und bei Rechnung Firma + Adresse', () => {
     const base = {
       firstName: 'Eva', lastName: 'Gruber', email: ' Eva@Example.org ', company: '', memberNumber: '', paymentMethod: 'invoice',
-      billingCompany: '', billingAddress: '', acceptTerms: false, acceptPrivacy: false, photoConsent: false, newsletter: false, website: '',
+      billingCompany: '', billingAddress: '', acceptTerms: false, acceptPrivacy: false, photoConsent: false, website: '',
     };
     const r = publicRegistrationSchema.safeParse(base);
     const msgs = Object.fromEntries(r.error!.issues.map((i) => [i.path.join('.'), i.message]));
@@ -197,15 +196,17 @@ describe('Öffentliche Sicht', () => {
 
   it('listet kommende Events; Speaker nur mit bestätigtem Beitrag', () => {
     const { db, event } = setup();
-    createEvent(db, actor, eventInput({ slug: 'vorbei', startsAt: '2026-01-01T08:00:00.000Z', endsAt: '2026-01-01T10:00:00.000Z' }));
+    createEvent(db, actor, eventInput({ slug: 'vorbei', startsAt: '2026-06-01T08:00:00.000Z', endsAt: '2026-06-01T10:00:00.000Z' }));
     expect(listPublicEvents(db, NOW).map((e) => e.slug)).toEqual(['summit']);
+    createEvent(db, actor, eventInput({ slug: 'uralt', startsAt: '2020-01-01T08:00:00.000Z', endsAt: '2020-01-01T10:00:00.000Z' }));
+    expect(listPastPublicEvents(db, NOW).map((e) => e.slug)).toEqual(['vorbei']);
     const s1 = createSpeaker(db, actor, event.id, { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.org', company: null, locale: 'en', proposalStatus: 'confirmed', slidesStatus: 'missing' });
     const s2 = createSpeaker(db, actor, event.id, { firstName: 'Bob', lastName: 'Offen', email: 'bob@example.org', company: null, locale: 'de', proposalStatus: 'pending', slidesStatus: 'missing' });
     const base = { startsAt: '2027-05-12T07:00:00.000Z', endsAt: '2027-05-12T07:30:00.000Z', location: '', tag: 'talk' as const };
     createSession(db, actor, event.id, { ...base, title: { de: 'A' }, stream: 1, speakerId: s1 });
     createSession(db, actor, event.id, { ...base, title: { de: 'B' }, stream: 2, speakerId: s2 });
     expect(listPublicSessions(db, event.id).map((s) => s.speakerName)).toEqual(['Ada Lovelace', null]);
-    expect(listPublicSpeakers(db, event.id)).toEqual([{ name: 'Ada Lovelace', company: null }]);
+    expect(listPublicSpeakers(db, event.id)).toEqual([expect.objectContaining({ name: 'Ada Lovelace', company: null, role: null, bio: null, photoPath: null })]);
   });
 });
 

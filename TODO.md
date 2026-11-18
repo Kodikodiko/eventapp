@@ -21,11 +21,11 @@ Hinweis: Die Architektur wurde von Firebase auf Next.js + SQLite umgestellt (abg
 
 - [ ] **D1 – Datenschutzerklärung** erstellen, versionieren und auf Registrierungsseite, im Portal und in allen E-Mails verlinken (7.1). *Stand Phase 5: Entwurf als Vorlage, versionierte Seite /privacy, auf Event- und Anmeldeseite verlinkt; in allen E-Mails (Phase 7) und im Teilnehmerportal (Phase 9) verlinkt; Text vor Go-live prüfen lassen.*
 - [x] **D2 – Zustimmungen protokollieren.** AGB- und Datenschutz-Version samt Zeitpunkt je Registrierung speichern (7.3).
-- [x] **D3 – Foto-/Video-Einwilligung aus den AGB herauslösen** (derzeit AGB-Punkt 7) und als eigene, freiwillige Opt-in-Checkbox umsetzen; ebenso Newsletter (7.3).
-- [ ] **D4 – Auskunft/Export vervollständigen.** Sponsor-Kontakte werden nie gefunden (Abfrage vergleicht ganzes Kontaktobjekt), Speaker fehlen, Suche ist case-sensitiv, Datum wird als Objekt exportiert (7.4).
-- [ ] **D5 – Löschung vs. Aufbewahrungspflicht.** Anonymisierung überschreibt derzeit auch Rechnungsdaten. Rechnungs-/Zahlungsdaten 7 Jahre aufbewahren (§ 132 BAO), stattdessen Verarbeitung einschränken (7.4, 7.5).
-- [ ] **D6 – Automatisches Löschkonzept** mit den Fristen aus 7.5 umsetzen (geplanter Job mit Protokoll); Backup-Rotation festlegen.
-- [ ] **D7 – Anfragen von Betroffenen protokollieren** (Art, Eingang, Erledigung, Admin; Frist 1 Monat) (7.4).
+- [x] **D3 – Foto-/Video-Einwilligung aus den AGB herauslösen** (derzeit AGB-Punkt 7) und als eigene, freiwillige Opt-in-Checkbox umsetzen; ebenso Newsletter (7.3). *Newsletter am 14.11.2026 komplett entfernt (Migration 0014 löscht gespeicherte Einwilligungen).*
+- [x] **D4 – Auskunft/Export vervollständigen.** Sponsor-Kontakte werden nie gefunden (Abfrage vergleicht ganzes Kontaktobjekt), Speaker fehlen, Suche ist case-sensitiv, Datum wird als Objekt exportiert (7.4). *Erledigt 14.11.2026: Admin → Datenschutz, Suche nach E-Mail (ohne Groß-/Kleinschreibung), Name oder Firma; Auskunft als JSON und Excel mit Anmeldungen, Speaker, Sponsor-Kontakten, Einwilligungen, Zahlungen, Belegen, Anfragen und Protokoll; Datumsangaben als ISO-Text; jeder Export im Audit-Log.*
+- [x] **D5 – Löschung vs. Aufbewahrungspflicht.** Anonymisierung überschreibt derzeit auch Rechnungsdaten. Rechnungs-/Zahlungsdaten 7 Jahre aufbewahren (§ 132 BAO), stattdessen Verarbeitung einschränken (7.4, 7.5). *Erledigt 14.11.2026: Löschen = Anonymisieren; Rechnungen/Gutschriften bleiben mit Empfänger-Snapshot bis `retain_until`, Anmeldungen und Zahlungen ohne Personenbezug; Person bleibt zusätzlich eingeschränkt (keine Mails, kein Portal, nicht in Exporten). Löschen gesperrt bei laufender Anmeldung oder offener Erstattung.*
+- [x] **D6 – Automatisches Löschkonzept** mit den Fristen aus 7.5 umsetzen (geplanter Job mit Protokoll); Backup-Rotation festlegen. *Erledigt 14.11.2026: `npm run retention [-- --dry-run]`, läuft außerdem einmal am Tag mit `npm run jobs`; Fristen siehe Seite Datenschutz (30 Tage unbezahlte Stornos, 6 Monate nach letztem Event, 7 Jahre Belege, 2 Jahre Protokoll, 90 Tage Sicherungen, auch in `db:backup`). Speaker und Sponsor-Kontakte als Geschäftskontakte 3 Jahre nach ihrem letzten Event (Entscheidung offen, Konstante `RETENTION.businessContactYears`).*
+- [x] **D7 – Anfragen von Betroffenen protokollieren** (Art, Eingang, Erledigung, Admin; Frist 1 Monat) (7.4). *Erledigt 14.11.2026: Anfragen mit Art, Eingang, Frist (1 Monat), Notiz, Erledigt-am und Admin; überfällige rot markiert.*
 - [x] **D8 – Audit-Log** für Änderungen und für jeden Export personenbezogener Daten (6.2, 7.6).
 - [ ] **D9 – Hosting in der EU**, Auftragsverarbeitungsverträge (Hosting, E-Mail, ggf. Zahlungsanbieter), Verzeichnis von Verarbeitungstätigkeiten, Ablauf für Datenpannen (72 h) dokumentieren (7.7).
 
@@ -53,6 +53,25 @@ Umsetzungsplan: `docs/umsetzungsplan-feedback-2026-11.md`. Umsetzung erst nach F
 - [x] **U10 – Speaker-Folien als Link.** Feld „Link zu den Folien“ (SharePoint oder Nextcloud, beliebige https-Adresse), Status weiter von Hand. Schalter je Event „Folien veröffentlichen“ zeigt die Links im öffentlichen Programm und im Teilnehmerportal.
 - [x] **U11 – Teilnehmende: Gruppenzeile klarer.** Statt „38 Personen · 16 bezahlt · 0 offen“ z. B. „16 Personen · 22 storniert · Summe …“; die Zahlen „bezahlt/offen“ entfallen beim Gruppieren nach Zahlungsstatus.
 - [x] **U12 – Kostengruppe:** Beschriftung „Speaker-Zuordnung“ → „Ausgaben einem Speaker zuordnen“.
+
+## Preisaktionen (14.11.2026)
+
+Umgesetzt am 14.11.2026, Details: `CHANGELOG.md`. Neue Seite „Preise & Rabatte“ je Event unter Finanzen.
+
+- [x] **P1 – Sonderpreise.** Das Event-Team legt je Event Kategorien mit Namen und Preis an (z. B. „Studierende 49 €“). Auswahl nur bei Anmeldungen im Admin, nicht öffentlich; „Anderer Betrag“ bleibt möglich. Rechnung zeigt den Namen der Kategorie.
+- [x] **P2 – Early Bird.** Zeitraum (von–bis) und eigene Preise für Normal- und Mitgliedsticket in den Event-Einstellungen. Eventseite und Anmeldung zeigen den Early-Bird-Preis mit Stichtag; die Prüfung „Preis hat sich geändert“ greift beim Übergang.
+- [x] **P3 – Flash Sales als Rabattcode.** Codes je Event manuell anlegen (fixer €-Betrag oder % vom Preis, optional gültig von–bis und maximale Einlösungen, deaktivierbar), z. B. für Aussendungen. Eingabe bei der Anmeldung; gilt nur auf den Basispreis (Normal/Mitglied), nicht auf Early Bird – ist Early Bird günstiger, gilt dieser. Rabatt als eigene Rechnungszeile.
+- [x] **P4 – Auswertung.** Erfolgsrechnung (Tabelle und Excel) schlüsselt Normal-, Mitglieds- und Sondertickets nach tatsächlichem Preis auf: regulär, Early Bird, je Code, je Sonderpreis-Kategorie – mit Anzahl, Ist und Offen.
+- [ ] **P5 – Offen/Ideen:** Early-Bird-Kontingent („nur die ersten 50“), mehrere Stufen (Super Early Bird), Planwerte der Erfolgsrechnung je Early Bird/Code, Rabattcodes in Mail-Aussendungen automatisch einfügen.
+
+## Eventseite Forum Day 2026 nachbauen (15.11.2026)
+
+Quelle: https://insights.squer.io/pmi-austria-forum-day-2026?eventId=382 (bisherige Eventseite von PMI Austria auf der SQUER-Plattform). Inhalte, Texte und Logos von PMI Austria übernehmen, Design im EventFlow-Stil (nicht 1:1 kopieren). Agenda: die Fassung 2026 (Keynotes Walch, Pincot, Nieto-Rodriguez); die zweite Tabelle auf der Seite ist ein Rest vom Vorjahr und entfällt.
+
+- [ ] **W1 – Inhalte erfassen (scrapen).** Zwei Events: Masterclass 02.11.2026 13:00–17:00 (Stuart Easton, „Beyond Delivery: How PMOs Drive Benefits and Strategic Value“, 4 PDUs; 50 € Mitglieder/Studierende, 150 € sonst) und Forum Day 03.11.2026 09:00–19:30 inkl. Evening Reception (6 PDUs; 75 € Mitglieder/Studierende, 250 € sonst). Ort: Hochschule für Wirtschaft & Gesellschaft des BFI Wien, Wohlmutstraße 22, 1020 Wien. Programm in 3 Streams (Festsaal, 1.04, 1.01), 14 Speaker mit Kurzbio, 9 Sponsoren.
+- [ ] **W2 – Als Seed/Event in EventFlow anlegen** (wie `seed-herbstforum.ts`), damit die Seite mit echten Daten befüllt ist.
+- [x] **W3 – Fehlende Bausteine der Eventseite** (15.11.2026 erledigt, neue Admin-Seite „Eventseite“, Migration 0015): Kopfbereich mit Motto („Power Skills: Lead People, Win Projects“), Einleitungstext, drei Nutzen-Blöcke, Bildergalerie „Impressionen vom Vorjahr“, Speaker-Karten mit Bio, Sponsor-Logos, Abschluss-Aufruf zur Anmeldung, Hinweis auf PDUs.
+- [ ] **W4 – Gruppentickets** (10 Personen 2.200 €, 15 Personen 3.200 €) – mit Sonderpreisen (P1) abbildbar oder eigener Tickettyp? Klären.
 
 ## Hosting (Docker hinter nginx beim Sysadmin, Plan seit 12.11.2026 – zurückgestellt am 13.11.2026)
 

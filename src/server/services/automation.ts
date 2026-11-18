@@ -7,6 +7,7 @@ import { waitlistOfferMail } from '@/server/mail/templates';
 import { expireStaleReservations } from './checkout';
 import { markOverdueSponsors } from './invoices';
 import { issueMissingInvoices, mailOrganizer, sendDueReminders } from './notifications';
+import { retentionDue, runRetention, type RetentionOptions, type RetentionSummary } from './retention';
 import { eventsWithWaitlist, expireOffers, offerFreeSeats } from './waitlist';
 
 /** Für die genannten Events freie Plätze an die Warteliste vergeben und die Angebote verschicken. */
@@ -31,16 +32,27 @@ export type JobsSummary = {
   remindersSent: number;
   overdueSponsors: number;
   mailFailures: number;
+  /** Löschlauf, falls er in diesem Durchlauf fällig war (einmal am Tag) */
+  retention: RetentionSummary | null;
 };
 
-/** Ein Durchlauf des Zeitplans (alle 5 Minuten per systemd-Timer, lokal von Hand). */
-export async function runJobs(db: Db, mailer: Mailer = getMailer(), now = new Date()): Promise<JobsSummary> {
+/**
+ * Ein Durchlauf des Zeitplans (alle 5 Minuten per Timer, lokal von Hand).
+ * Mit `retention` läuft außerdem einmal am Tag der Löschlauf (Spezifikation 7.5).
+ */
+export async function runJobs(
+  db: Db,
+  mailer: Mailer = getMailer(),
+  now = new Date(),
+  options: { retention?: Omit<RetentionOptions, 'now' | 'dryRun'> } = {}
+): Promise<JobsSummary> {
   const fromReservations = expireStaleReservations(db, now);
   const fromOffers = expireOffers(db, now);
   const r = await fillFreeSeats(db, [...fromReservations, ...fromOffers, ...eventsWithWaitlist(db)], mailer, now);
   const invoicesIssued = await issueMissingInvoices(db, mailer, now);
   const reminders = await sendDueReminders(db, mailer, now);
   const overdueSponsors = markOverdueSponsors(db, now);
+  const retention = options.retention && retentionDue(db, now) ? runRetention(db, { ...options.retention, now }) : null;
   return {
     expiredReservations: fromReservations.length,
     expiredOffers: fromOffers.length,
@@ -49,5 +61,6 @@ export async function runJobs(db: Db, mailer: Mailer = getMailer(), now = new Da
     remindersSent: reminders.sent,
     overdueSponsors,
     mailFailures: r.failed + reminders.failed,
+    retention,
   };
 }

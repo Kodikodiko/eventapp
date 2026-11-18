@@ -131,6 +131,22 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
               <Field id="priceMember" label={t('priceMember')} error={fieldError(errors, 'priceMember')}>
                 <Input id="priceMember" inputMode="decimal" {...register('priceMember')} />
               </Field>
+              <div className="space-y-1 border-t pt-4 md:col-span-2">
+                <h3 className="text-sm font-semibold">Early Bird</h3>
+                <p className="text-sm text-muted-foreground">{t('earlyBirdHint')}</p>
+              </div>
+              <Field id="earlyBirdStartsAt" label={t('earlyBirdStartsAt')} hint={t('earlyBirdStartsHint')} error={fieldError(errors, 'earlyBirdStartsAt')}>
+                <Input id="earlyBirdStartsAt" type="datetime-local" {...register('earlyBirdStartsAt')} />
+              </Field>
+              <Field id="earlyBirdEndsAt" label={t('earlyBirdEndsAt')} error={fieldError(errors, 'earlyBirdEndsAt')}>
+                <Input id="earlyBirdEndsAt" type="datetime-local" {...register('earlyBirdEndsAt')} />
+              </Field>
+              <Field id="priceEarlyNormal" label={t('priceEarlyNormal')} hint={t('earlyBirdPriceHint')} error={fieldError(errors, 'priceEarlyNormal')}>
+                <Input id="priceEarlyNormal" inputMode="decimal" {...register('priceEarlyNormal')} />
+              </Field>
+              <Field id="priceEarlyMember" label={t('priceEarlyMember')} hint={t('earlyBirdPriceHint')} error={fieldError(errors, 'priceEarlyMember')}>
+                <Input id="priceEarlyMember" inputMode="decimal" {...register('priceEarlyMember')} />
+              </Field>
             </CardContent>
           </Card>
 

@@ -73,6 +73,7 @@ export function AdminFrame({ events, defaultEventId, user, children }: Props) {
       { href: '/admin/members', label: t('members'), group: org },
       { href: '/admin/cost-groups', label: t('costGroups'), group: t('sectionFinance') },
       { href: '/admin/audit', label: t('audit'), group: org },
+      { href: '/admin/gdpr', label: t('gdpr'), group: org },
       { href: '/admin/settings', label: t('organizer'), group: org },
       { href: '/admin/security', label: t('security'), group: org },
     ];
@@ -86,11 +87,13 @@ export function AdminFrame({ events, defaultEventId, user, children }: Props) {
         { href: `${base}/certificate`, label: t('certificate'), group: g },
         { href: `${base}/invoices`, label: t('invoices'), group: g },
         { href: `${base}/refunds`, label: t('refunds'), group: g },
+        { href: `${base}/website`, label: t('website'), group: g },
         { href: `${base}/speakers`, label: t('speakers'), group: g },
         { href: `${base}/schedule`, label: t('schedule'), group: g },
         { href: `${base}/sponsors`, label: t('sponsors'), group: g },
         { href: `${base}/expenses`, label: t('expenses'), group: g },
         { href: `${base}/pnl`, label: t('pnl'), group: g },
+        { href: `${base}/pricing`, label: t('pricing'), group: g },
         { href: `${base}/settings`, label: t('eventSettings'), group: g },
         { href: `${base}/settings#terms`, label: t('terms'), group: g }
       );

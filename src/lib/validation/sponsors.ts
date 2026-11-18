@@ -61,6 +61,12 @@ export const sponsorFormSchema = z.object({
   billingAddress: optionalText(500),
   vatId: optionalText(30),
   notes: optionalText(2000),
+  /** Website für die Eventseite (Logo verlinkt), leer = keine */
+  website: z
+    .string()
+    .trim()
+    .max(500, 'tooLong')
+    .refine((v) => v === '' || /^https?:\/\/[^\s]+$/i.test(v), 'url'),
   contacts: z
     .array(contactSchema)
     .min(1, 'contactRequired')
@@ -100,6 +106,7 @@ export type SponsorInput = {
   billingAddress: string;
   vatId: string | null;
   notes: string | null;
+  website?: string | null;
   contacts: SponsorContactInput[];
 };
 
@@ -115,6 +122,7 @@ export function toSponsorInput(v: SponsorFormValues): SponsorInput {
     billingAddress: v.billingAddress.trim(),
     vatId: v.vatId.trim() || null,
     notes: v.notes.trim() || null,
+    website: v.website.trim() || null,
     contacts: v.contacts.map((c) => ({
       firstName: c.firstName.trim(),
       lastName: c.lastName.trim(),

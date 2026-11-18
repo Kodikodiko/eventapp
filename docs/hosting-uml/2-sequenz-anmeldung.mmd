@@ -1,0 +1,41 @@
+sequenceDiagram
+  autonumber
+  actor U as Besucher:in (Browser)
+  participant FW as Firewall / Geo-Block
+  participant N as nginx
+  participant A as eventflow
+  participant DB as SQLite (/data)
+  participant S as Stripe
+  participant M as Mailserver
+
+  U->>FW: GET https://herbstforum.pmi-austria.org/de
+  FW->>N: 443 (Region erlaubt)
+  N->>A: HTTP :3000 (Host, X-Real-IP)
+  A->>DB: Event zur Subdomain "herbstforum" suchen
+  A-->>U: Eventseite
+
+  U->>FW: POST /de/anmeldung (Daten, ggf. Mitgliedsnr.)
+  FW->>N: 443
+  N->>A: weiterleiten
+  A->>DB: Mitgliederliste prüfen (Nr., Nachname, gültig bis)
+  A->>DB: Preis berechnen, Anmeldung "reserviert"
+  A->>S: Checkout-Session anlegen (HTTPS 443, ausgehend)
+  S-->>A: Session-URL
+  A-->>U: 303 Redirect auf checkout.stripe.com
+
+  U->>S: Zahlung (Karte, EPS …)
+  S-->>U: Redirect auf Danke-Seite (herbstforum.pmi-austria.org)
+
+  S->>FW: POST https://event.pmi-austria.org/api/stripe/webhook
+  Note over FW: Ausnahme vom Geo-Block<br/>(nur Stripe-Webhook-IPs)
+  FW->>N: 443
+  N->>A: weiterleiten (kein mTLS)
+  A->>A: Signatur mit Webhook-Secret prüfen
+  A->>DB: Status "bestätigt", Rechnung erzeugen
+  A-->>S: 200 OK
+  A->>M: SMTP 587: Bestätigung + Rechnung (PDF)
+  M-->>U: E-Mail
+
+  opt keine Zahlung bis zur Frist
+    Note over A,DB: eventflow-jobs (alle 5 min) gibt die Reservierung frei
+  end

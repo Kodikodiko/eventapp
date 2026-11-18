@@ -162,7 +162,7 @@ describe('Programmpunkte', () => {
   });
 
   it('Formular: Zeiten in Wiener Ortszeit, Ende nach Beginn', () => {
-    const values = { title: { de: 'Keynote', en: '' }, startsAt: '2027-05-12T09:00', endsAt: '2027-05-12T09:45', location: ' Saal A ', tag: 'general' as const, stream: '2', streamTo: '4', speakerId: '' };
+    const values = { title: { de: 'Keynote', en: '' }, startsAt: '2027-05-12T09:00', endsAt: '2027-05-12T09:45', location: ' Saal A ', tag: 'general' as const, stream: '2', streamTo: '4', speakerId: '', coSpeakerIds: [] as string[] };
     expect(toSessionInput(sessionFormSchema.parse(values))).toEqual({
       title: { de: 'Keynote' },
       startsAt: '2027-05-12T07:00:00.000Z',
@@ -172,6 +172,7 @@ describe('Programmpunkte', () => {
       stream: 2,
       streamTo: 4,
       speakerId: null,
+      coSpeakerIds: [],
     });
     const bad = sessionFormSchema.safeParse({ ...values, endsAt: '2027-05-12T08:00' });
     expect(bad.success).toBe(false);

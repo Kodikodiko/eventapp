@@ -188,7 +188,6 @@ function publicRegistration(c: Ctx, memberNumber: string | null = null, expected
       billingCompany: null,
       billingAddress: null,
       photoConsent: c.i % 3 === 0,
-      newsletter: c.i % 4 === 0,
       termsDocumentId: legal.termsDocumentId!,
       privacyDocumentId: legal.privacyDocumentId!,
       expectedPriceCents,

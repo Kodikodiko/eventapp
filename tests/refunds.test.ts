@@ -109,7 +109,6 @@ function setup(options: { refundMode?: 'automatic' | 'approval'; rules?: { daysB
       billingCompany: method === 'invoice' ? 'Firma' : null,
       billingAddress: method === 'invoice' ? 'Adresse 1' : null,
       photoConsent: false,
-      newsletter: false,
       termsDocumentId: terms.id,
       privacyDocumentId: privacy.id,
       expectedPriceCents: 20000,

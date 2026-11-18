@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import { formatDateOnly, viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
+import { formatEuro } from '@/lib/money';
+import { variantLabel } from '@/lib/pnl-rows';
 import { PLAN_VARIANT_KEYS, type PlanVariant } from '@/lib/validation/pnl';
 import { assertAdmin, ForbiddenError } from '@/server/auth/session';
 import { getDb } from '@/server/db';
@@ -55,7 +57,14 @@ export async function GET(request: Request) {
       deviation: t('col.deviation'),
     },
     compare: pnl.compare.map((c) => localized(c.name, locale)),
-    rowLabel: (row) => ('text' in row.label ? row.label.text : 'ticket' in row.label ? t(`ticket.${row.label.ticket}`) : t(`row.${row.label.key}`)),
+    rowLabel: (row) =>
+      'text' in row.label
+        ? row.label.text
+        : 'ticket' in row.label
+          ? t(`ticket.${row.label.ticket}`)
+          : 'variant' in row.label
+            ? variantLabel(row.label.variant, (kind, name) => t(`priceVariant.${kind}`, { name }), (c) => formatEuro(c, locale))
+            : t(`row.${row.label.key}`),
     badge: (row) =>
       !row.badge ? '' : 'sponsor' in row.badge ? tSponsor(`payment.${row.badge.sponsor}`) : 'expense' in row.badge ? tExpense(`status.${row.badge.expense}`) : t('compareOnly'),
   });

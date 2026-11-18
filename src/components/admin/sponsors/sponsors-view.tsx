@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FileText, MoreHorizontal, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { FileText, ImageIcon, MoreHorizontal, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form';
@@ -19,6 +19,8 @@ import { formatDateOnly } from '@/lib/dates';
 import { localized, localizedList } from '@/lib/localized';
 import { centsToInput, formatEuro } from '@/lib/money';
 import { VAT_RATE_OPTIONS } from '@/lib/validation/forms';
+import { mediaUrl } from '@/lib/validation/media';
+import { setSponsorLogoAction } from '@/server/actions/event-page';
 import {
   packageFormSchema,
   SPONSOR_PAYMENT_STATUS_KEYS,
@@ -37,6 +39,7 @@ import {
 import { issueSponsorInvoiceAction } from '@/server/actions/invoices';
 import type { PackageRow, SponsorRow, SponsorTotals } from '@/server/services/sponsors';
 import { ConfirmDialog } from '../confirm-dialog';
+import { ImageUploadDialog } from '../image-upload-dialog';
 import { Field, fieldError, LocalizedFields, useValidationMessage } from '../form-fields';
 import { useIssueFeedback } from '../invoices/use-issue-feedback';
 import { useActionFeedback } from '../use-action-feedback';
@@ -59,6 +62,7 @@ type DialogState =
   | { kind: 'sponsor'; row?: SponsorRow }
   | { kind: 'deleteSponsor'; row: SponsorRow }
   | { kind: 'invoice'; row: SponsorRow }
+  | { kind: 'logo'; row: SponsorRow }
   | null;
 
 export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: Props) {
@@ -167,7 +171,15 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
             <tbody>
               {sponsors.map((s) => (
                 <tr key={s.id} className="border-t align-top">
-                  <td className="p-2 font-medium">{s.companyName}</td>
+                  <td className="p-2 font-medium">
+                    <span className="flex items-center gap-2">
+                      {s.logoPath && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={mediaUrl(s.logoPath)!} alt="" className="h-6 w-12 shrink-0 object-contain" />
+                      )}
+                      {s.companyName}
+                    </span>
+                  </td>
                   <td className="p-2">{s.packageName ? localized(s.packageName, locale) : '–'}</td>
                   <td className="p-2 text-right tabular-nums whitespace-nowrap">
                     {fmt(s.amountCents)}
@@ -199,6 +211,10 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                           <DropdownMenuItem onSelect={() => setDialog({ kind: 'sponsor', row: s })}>
                             <Pencil aria-hidden className="size-4" />
                             {t('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setDialog({ kind: 'logo', row: s })}>
+                            <ImageIcon aria-hidden className="size-4" />
+                            {s.logoPath ? t('logoChange') : t('logoAdd')}
                           </DropdownMenuItem>
                           {!s.invoiceNumber && s.paymentStatus !== 'paid' && s.amountCents > 0 && (
                             <DropdownMenuItem onSelect={() => setDialog({ kind: 'invoice', row: s })}>
@@ -278,6 +294,7 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                   billingAddress: dialog.row.billingAddress,
                   vatId: dialog.row.vatId ?? '',
                   notes: dialog.row.notes ?? '',
+                  website: dialog.row.website ?? '',
                   contacts: dialog.row.contacts.map((c) => ({
                     firstName: c.firstName,
                     lastName: c.lastName,
@@ -298,10 +315,21 @@ export function SponsorsView({ eventId, packages, sponsors, totals, readOnly }: 
                   billingAddress: '',
                   vatId: '',
                   notes: '',
+                  website: '',
                   contacts: [{ firstName: '', lastName: '', email: '', phone: '', function: '', locale: 'de' }],
                 }
           }
           save={(v) => (dialog.row ? updateSponsorAction(dialog.row.id, v) : createSponsorAction(eventId, v))}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'logo' && (
+        <ImageUploadDialog
+          title={t('logoTitle', { name: dialog.row.companyName })}
+          description={t('logoHint')}
+          currentUrl={mediaUrl(dialog.row.logoPath)}
+          shape="logo"
+          save={(data) => setSponsorLogoAction(dialog.row.id, data)}
           onClose={() => setDialog(null)}
         />
       )}
@@ -496,6 +524,9 @@ function SponsorDialog({
                   <Input id="sp-vat" {...reg('vatId')} />
                 </Field>
               </div>
+              <Field id="sp-website" label={t('website')} hint={t('websiteHint')} error={fieldError(errors, 'website')}>
+                <Input id="sp-website" type="url" placeholder="https://" {...reg('website')} />
+              </Field>
               <Field id="sp-notes" label={t('notes')} error={fieldError(errors, 'notes')}>
                 <Textarea id="sp-notes" rows={2} {...reg('notes')} />
               </Field>

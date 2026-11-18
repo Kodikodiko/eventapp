@@ -92,6 +92,34 @@
       "when": 1794600145573,
       "tag": "0012_certificates",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794645219921,
+      "tag": "0013_price_promotions",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794648000000,
+      "tag": "0014_remove_newsletter",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1794758582255,
+      "tag": "0015_event_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1794761685469,
+      "tag": "0016_event_theme",
+      "breakpoints": true
     }
   ]
-}
+}

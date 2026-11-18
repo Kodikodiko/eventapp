@@ -13,12 +13,15 @@ export function ProgramGrid({
   timeLabel,
   timeHeader,
   className,
+  timeClassName,
 }: {
   streams: GridStream[];
   items: GridItem[];
   timeLabel: (iso: string) => string;
   timeHeader: string;
   className?: string;
+  /** zusätzliche Klassen für die Zeitspalte (z. B. Eventfarbe) */
+  timeClassName?: string;
 }) {
   const count = Math.max(1, streams.length);
   const slots = [...new Set(items.map((i) => i.startsAt))].sort();
@@ -28,7 +31,10 @@ export function ProgramGrid({
       <div
         role="table"
         className="grid gap-2 print:gap-1"
-        style={{ gridTemplateColumns: `4.5rem repeat(${count}, minmax(${count > 1 ? '9rem' : '0'}, 1fr))`, minWidth: count > 2 ? `${4.5 + count * 9.5}rem` : undefined }}
+        style={{
+          gridTemplateColumns: `4.5rem repeat(${count}, minmax(${count > 1 ? '9rem' : '0'}, 1fr))`,
+          minWidth: count > 2 ? `${4.5 + count * 9.5}rem` : undefined,
+        }}
       >
         <div role="columnheader" className="text-xs font-semibold text-muted-foreground" style={{ gridColumn: 1, gridRow: 1 }}>
           {timeHeader}
@@ -39,7 +45,7 @@ export function ProgramGrid({
           </div>
         ))}
         {slots.map((slot) => (
-          <div key={slot} className="pt-2 text-sm font-medium tabular-nums" style={{ gridColumn: 1, gridRow: row.get(slot) }}>
+          <div key={slot} className={cn('pt-2 text-sm font-medium tabular-nums', timeClassName)} style={{ gridColumn: 1, gridRow: row.get(slot) }}>
             {timeLabel(slot)}
           </div>
         ))}

@@ -1,23 +1,26 @@
 /**
  * Zeitgesteuerte Abläufe einmal ausführen: abgelaufene Reservierungen freigeben, Wartelisten-Angebote
  * weitergeben/verschicken, fehlende Rechnungen zu Online-Zahlungen nachholen, Zahlungserinnerungen senden,
- * überfällige Sponsoren markieren. Aufruf: npm run jobs (produktiv per systemd-Timer alle 5 Minuten).
+ * überfällige Sponsoren markieren, einmal am Tag die Löschfristen anwenden. Aufruf: npm run jobs (produktiv per systemd-Timer alle 5 Minuten).
  * Ausgabe nur Zahlen, keine Personendaten.
  */
 import { loadEnv } from './lib/env';
 import { backupDirFromEnv, databasePathFromEnv, openDatabase } from '../src/server/db/core';
+import { invoiceDir } from '../src/server/invoices/storage';
 import { runJobs } from '../src/server/services/automation';
+import { formatRetentionSummary } from '../src/server/services/retention';
 
 async function main() {
   loadEnv();
   const db = openDatabase({ path: databasePathFromEnv(), backupDir: backupDirFromEnv() });
   try {
-    const s = await runJobs(db);
+    const s = await runJobs(db, undefined, new Date(), { retention: { backupDir: backupDirFromEnv(), invoiceDir: invoiceDir() } });
     console.log(
       `[jobs] ${new Date().toISOString()} Reservierungen freigegeben: ${s.expiredReservations}, Angebote verfallen: ${s.expiredOffers}, ` +
         `Angebote verschickt: ${s.offered}, Rechnungen nachgeholt: ${s.invoicesIssued}, Zahlungserinnerungen: ${s.remindersSent}, ` +
         `Sponsoren überfällig: ${s.overdueSponsors}, E-Mail-Fehler: ${s.mailFailures}`
     );
+    if (s.retention) console.log(`[jobs] Löschlauf: ${formatRetentionSummary(s.retention)}`);
     if (s.mailFailures > 0) process.exitCode = 1;
   } finally {
     db.$client.close();

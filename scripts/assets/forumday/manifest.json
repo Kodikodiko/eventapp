@@ -1,0 +1,393 @@
+{
+  "source_page": "https://insights.squer.io/pmi-austria-forum-day-2026?eventId=382",
+  "downloaded": "2026-11-15",
+  "missing": [
+    {
+      "speaker": "Dirk Withake",
+      "reason": "kein Foto auf der Seite (nur in der Agenda erwähnt)"
+    }
+  ],
+  "files": [
+    {
+      "file": "speaker-walch.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Kathleen%20Walch_PMI.png?width=600",
+      "bytes": 196732,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Kathleen Walch"
+    },
+    {
+      "file": "speaker-pincot.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026-LenkaPincot.jpg?width=600",
+      "bytes": 30244,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Lenka Pincot"
+    },
+    {
+      "file": "speaker-nieto-rodriguez.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Antonio_Niete-Rodriguez.jpeg?width=600",
+      "bytes": 33345,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Antonio Nieto-Rodriguez"
+    },
+    {
+      "file": "speaker-easton.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Stuart_Easton_Transparent%20Choice.png?width=600",
+      "bytes": 147302,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Stuart Easton"
+    },
+    {
+      "file": "speaker-schachl.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Andreas_Schachl_Responsible%20Annotation%20Services.png?width=600",
+      "bytes": 166698,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Andreas Schachl"
+    },
+    {
+      "file": "speaker-hantsch.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/MaximilianHantsch_Frequentis.png?width=600",
+      "bytes": 183861,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Maximilian Hantsch"
+    },
+    {
+      "file": "speaker-dehais.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Joachim_Dehais_Swiss%20General%20Archives.png?width=600",
+      "bytes": 171707,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Joachim Dehais"
+    },
+    {
+      "file": "speaker-vetrano.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Lorenzo_Vetrano_Alten%20Switzerland.png?width=600",
+      "bytes": 183610,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Lorenzo Vetrano"
+    },
+    {
+      "file": "speaker-guettel.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/WolfgangGuettel_Speaker.png?width=600",
+      "bytes": 180443,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Wolfgang Güttel"
+    },
+    {
+      "file": "speaker-hendling.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DanielHendling_Hendling.png?width=600",
+      "bytes": 237987,
+      "width": 600,
+      "height": 600,
+      "format": "PNG",
+      "speaker": "Daniel Hendling"
+    },
+    {
+      "file": "speaker-lassance.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026-DennisLassance.jpg?width=600",
+      "bytes": 47137,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Dennis Lassance"
+    },
+    {
+      "file": "speaker-rabl.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026-Wolfgang_Rabl.jpg?width=600",
+      "bytes": 37030,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Wolfgang Rabl"
+    },
+    {
+      "file": "speaker-engelhardt.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026-Mark_Engelhart.jpg?width=600",
+      "bytes": 36892,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Mark Engelhart"
+    },
+    {
+      "file": "speaker-bosin.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026---Markus-Bosin.jpg?width=600",
+      "bytes": 36370,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Markus Bosin"
+    },
+    {
+      "file": "speaker-wana.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Oliver-Wana.png?width=600",
+      "bytes": 25217,
+      "width": 600,
+      "height": 600,
+      "format": "JPEG",
+      "speaker": "Oliver Wana"
+    },
+    {
+      "file": "sponsor-frequentis.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Frequentis.png?width=600",
+      "bytes": 20294,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-botforce.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Botforce_02.png?width=600",
+      "bytes": 28304,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-squer.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/SQUER.png?width=600",
+      "bytes": 2496,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-next-level-consulting.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Next%20Level%20Consulting.png?width=600",
+      "bytes": 17978,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-planisware.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Planisware.png?width=600",
+      "bytes": 22775,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-bfi-wien.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/BFI%20Wien.png?width=600",
+      "bytes": 26049,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-dynact.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Dynact.png?width=600",
+      "bytes": 9929,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-hendling.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Hendling.png?width=600",
+      "bytes": 20455,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "sponsor-drucker-forum.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/Sponsors/Peter%20Drucker.png?width=600",
+      "bytes": 21468,
+      "width": 444,
+      "height": 250,
+      "format": "PNG"
+    },
+    {
+      "file": "gallery-01.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC03170.jpeg?width=1600",
+      "bytes": 128254,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-02.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02774.jpeg?width=1600",
+      "bytes": 105032,
+      "width": 1280,
+      "height": 854,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-03.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02702.jpeg?width=1600",
+      "bytes": 161487,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-04.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02695.jpeg?width=1600",
+      "bytes": 148863,
+      "width": 1280,
+      "height": 854,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-05.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02796.jpeg?width=1600",
+      "bytes": 103770,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-06.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02850.jpeg?width=1600",
+      "bytes": 168985,
+      "width": 1280,
+      "height": 854,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-07.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02050.jpeg?width=1600",
+      "bytes": 102086,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-08.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02587.jpeg?width=1600",
+      "bytes": 114071,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG",
+      "note": "DSC02587.jpeg; DSC02587_square.png als Duplikat weggelassen"
+    },
+    {
+      "file": "gallery-09.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02479.jpeg?width=1600",
+      "bytes": 151232,
+      "width": 1280,
+      "height": 853,
+      "format": "JPEG"
+    },
+    {
+      "file": "gallery-10.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC03087.jpeg?width=1600",
+      "bytes": 179324,
+      "width": 1280,
+      "height": 854,
+      "format": "JPEG"
+    },
+    {
+      "file": "workshop.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/PMI-Forum-Day-2026-Workshop1-2.png?width=1600",
+      "bytes": 347743,
+      "width": 600,
+      "height": 600,
+      "format": "PNG"
+    },
+    {
+      "file": "hero.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/Images/Events/PMI%20Forum%20Day/DSC02850.jpeg?width=1600",
+      "bytes": 168985,
+      "width": 1280,
+      "height": 854,
+      "format": "JPEG",
+      "note": "Kopfbereich-Hintergrund (Banner, Overlay rgba(70,29,163,0.5)); identisch mit gallery-06"
+    },
+    {
+      "file": "footer-bg.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/PMI-Footer-Background.webp?width=1600",
+      "bytes": 267173,
+      "width": 1600,
+      "height": 811,
+      "format": "JPEG",
+      "note": "hs-fs-Konvertierung als JPEG; Original siehe footer-bg.webp"
+    },
+    {
+      "file": "reasons-bg.jpg",
+      "source": "https://insights.squer.io/hs-fs/hubfs/PMI-Reasons-Background-2.webp?width=1600",
+      "bytes": 81852,
+      "width": 1600,
+      "height": 1065,
+      "format": "JPEG",
+      "note": "hs-fs-Konvertierung als JPEG; Original siehe reasons-bg.webp"
+    },
+    {
+      "file": "og-image.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/PMI%20Austria%20Forun%20Day%202026.png?width=1600",
+      "bytes": 952100,
+      "width": 1200,
+      "height": 675,
+      "format": "PNG",
+      "note": "og:image 'PMI Austria Forun Day 2026.png' (1200x675)"
+    },
+    {
+      "file": "logo-pmi-austria.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/PMI_Austria_Sized-V2.png?width=600",
+      "bytes": 9042,
+      "width": 384,
+      "height": 237,
+      "format": "PNG"
+    },
+    {
+      "file": "icon-1.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/1b.png?width=600",
+      "bytes": 62227,
+      "width": 401,
+      "height": 401,
+      "format": "PNG"
+    },
+    {
+      "file": "icon-2.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/2b.png?width=600",
+      "bytes": 90594,
+      "width": 401,
+      "height": 401,
+      "format": "PNG"
+    },
+    {
+      "file": "icon-3.png",
+      "source": "https://insights.squer.io/hs-fs/hubfs/3b.png?width=600",
+      "bytes": 71215,
+      "width": 401,
+      "height": 401,
+      "format": "PNG"
+    },
+    {
+      "file": "footer-bg.webp",
+      "source": "https://insights.squer.io/hubfs/PMI-Footer-Background.webp",
+      "bytes": 224002,
+      "width": 1920,
+      "height": 974,
+      "format": "WEBP"
+    },
+    {
+      "file": "reasons-bg.webp",
+      "source": "https://insights.squer.io/hubfs/PMI-Reasons-Background-2.webp",
+      "bytes": 33164,
+      "width": 1920,
+      "height": 1278,
+      "format": "WEBP",
+      "note": "Hintergrund Abschnitt 'Reasons to attend' (Nutzen-Icons)"
+    }
+  ]
+}

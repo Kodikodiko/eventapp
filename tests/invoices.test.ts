@@ -103,7 +103,6 @@ function setup(options: { organizer?: Partial<OrganizerInput> | null; capacity?:
       billingCompany: method === 'invoice' ? 'Firma GmbH' : null,
       billingAddress: method === 'invoice' ? 'Gasse 2\n1010 Wien' : null,
       photoConsent: false,
-      newsletter: false,
       termsDocumentId: terms.id,
       privacyDocumentId: privacy.id,
       expectedPriceCents: 20000,

@@ -1,7 +1,7 @@
 /**
  * Tests schreiben nie in die lokalen Datenordner: E-Mails und Rechnungs-PDFs landen in einem temporären Ordner
  * (einzelne Tests dürfen INVOICE_DIR selbst setzen). Ebenso Belege zu Ausgaben (RECEIPT_DIR)
- * und Hintergrundbilder der Teilnahmebestätigungen (CERTIFICATE_DIR).
+ * Hintergrundbilder der Teilnahmebestätigungen (CERTIFICATE_DIR) und Bilder der Eventseite (MEDIA_DIR).
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -12,4 +12,5 @@ process.env.MAIL_OUTBOX_DIR = path.join(base, 'mail-outbox');
 process.env.INVOICE_DIR = path.join(base, 'invoices');
 process.env.RECEIPT_DIR = path.join(base, 'receipts');
 process.env.CERTIFICATE_DIR = path.join(base, 'certificates');
+process.env.MEDIA_DIR = path.join(base, 'media');
 process.env.MAIL_TRANSPORT = 'file';

@@ -1,0 +1,17 @@
+flowchart TD
+  S((Start)) --> T[Release-Tag oder monatlicher Neubau]
+  T --> B[GitHub Actions baut Image]
+  B --> TV{Trivy: kritische CVE?}
+  TV -- ja --> F[Abbruch, Abhängigkeit aktualisieren] --> B
+  TV -- nein --> P[Push nach GHCR privat, feste Version z. B. 1.2.0]
+  P --> C[Server: Version in docker-compose.yml eintragen]
+  C --> PU[docker compose pull]
+  PU --> UP[docker compose up -d]
+  UP --> BK[App: automatische DB-Sicherung vor Migration]
+  BK --> MG[Migrationen ausführen]
+  MG --> H{Healthcheck /api/health ok?}
+  H -- ja --> E((Fertig))
+  H -- nein --> R[vorige Version eintragen, docker compose up -d]
+  R --> RD{Migration gelaufen?}
+  RD -- ja --> RS[Sicherung ...-vor-migration.db zurückspielen] --> E2((Alter Stand läuft))
+  RD -- nein --> E2

@@ -1,13 +1,16 @@
 /**
  * Öffentliche Sicht auf Events: nur nicht archivierte Events, nur Angaben, die öffentlich sein dürfen
- * (Speaker nur mit bestätigtem Beitrag, Sponsoren nur mit Firmennamen, keine Teilnehmerdaten).
+ * (Speaker nur mit bestätigtem Beitrag samt Rolle, Kurzbio und Foto; Sponsoren mit Firmennamen, Logo und Website;
+ * keine Teilnehmerdaten).
  */
-import { and, asc, desc, eq, gte, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, isNull, lt } from 'drizzle-orm';
+import type { LocalizedText } from '@/lib/localized';
 import type { PublicPaymentMethod } from '@/lib/validation/public-registration';
 import type { Db } from '@/server/db/core';
 import { events, legalDocuments, people, sessions, speakers, sponsorPackages, sponsors } from '@/server/db/schema';
 import type { Tx } from './audit';
 import { getEventStats, registrationState, type EventRow, type RegistrationState } from './events';
+import { coSpeakersOf } from './program';
 
 export type PublicAvailability = {
   /** open = Anmeldung möglich; unavailable = Event nicht fertig eingerichtet (AGB, Datenschutz oder Zahlungsart fehlt) */
@@ -74,6 +77,18 @@ export function listPublicEvents(db: Db, now = new Date()): EventRow[] {
     .all();
 }
 
+/** Vergangene Events der letzten zwölf Monate (nicht archiviert), das jüngste zuerst. */
+export function listPastPublicEvents(db: Db, now = new Date()): EventRow[] {
+  const since = new Date(now);
+  since.setFullYear(since.getFullYear() - 1);
+  return db
+    .select()
+    .from(events)
+    .where(and(isNull(events.archivedAt), lt(events.endsAt, now.toISOString()), gte(events.endsAt, since.toISOString())))
+    .orderBy(desc(events.startsAt))
+    .all();
+}
+
 export function getPublicEventBySlug(db: Db, slug: string): EventRow | undefined {
   const event = db.select().from(events).where(eq(events.slug, slug)).get();
   return event && !event.archivedAt ? event : undefined;
@@ -90,12 +105,15 @@ export type PublicSession = {
   /** letzter Stream des Bereichs (gleich `stream`, wenn der Punkt nur in einem Stream liegt) */
   streamTo: number;
   speakerName: string | null;
+  /** weitere Speaker (nur bestätigte, nicht anonymisierte) */
+  coSpeakerNames: string[];
   /** nur wenn die Folien des Events veröffentlicht sind */
   slidesUrl: string | null;
 };
 
 export function listPublicSessions(db: Db, eventId: number): PublicSession[] {
   const slidesPublic = db.select({ v: events.slidesPublic }).from(events).where(eq(events.id, eventId)).get()?.v ?? false;
+  const co = coSpeakersOf(db, eventId);
   return db
     .select({
       id: sessions.id,
@@ -124,37 +142,56 @@ export function listPublicSessions(db: Db, eventId: number): PublicSession[] {
         ...s,
         streamTo: streamTo ?? s.stream,
         speakerName: visible ? `${firstName} ${lastName}` : null,
+        coSpeakerNames: (co.get(s.id) ?? []).filter((c) => c.visible).map((c) => c.name),
         slidesUrl: visible && slidesPublic ? slidesUrl : null,
       };
     });
 }
 
-export function listPublicSpeakers(db: Db, eventId: number): { name: string; company: string | null }[] {
+export type PublicSpeaker = { id: number; name: string; company: string | null; role: string | null; bio: LocalizedText | null; photoPath: string | null };
+
+export function listPublicSpeakers(db: Db, eventId: number): PublicSpeaker[] {
   return db
-    .select({ firstName: people.firstName, lastName: people.lastName, company: people.company })
+    .select({
+      id: speakers.id,
+      firstName: people.firstName,
+      lastName: people.lastName,
+      company: people.company,
+      role: speakers.role,
+      bio: speakers.bio,
+      photoPath: speakers.photoPath,
+    })
     .from(speakers)
     .innerJoin(people, eq(people.id, speakers.personId))
     .where(and(eq(speakers.eventId, eventId), eq(speakers.proposalStatus, 'confirmed'), isNull(people.anonymizedAt)))
     .orderBy(asc(people.lastName), asc(people.firstName))
     .all()
-    .map((s) => ({ name: `${s.firstName} ${s.lastName}`, company: s.company }));
+    .map(({ firstName, lastName, ...s }) => ({ ...s, name: `${firstName} ${lastName}` }));
 }
 
 /** Sponsoren gruppiert nach Paket (Reihenfolge der Pakete), ohne Paket am Ende. */
 export function listPublicSponsors(db: Db, eventId: number) {
   const rows = db
-    .select({ companyName: sponsors.companyName, packageId: sponsorPackages.id, packageName: sponsorPackages.name, sortOrder: sponsorPackages.sortOrder })
+    .select({
+      companyName: sponsors.companyName,
+      logoPath: sponsors.logoPath,
+      website: sponsors.website,
+      packageId: sponsorPackages.id,
+      packageName: sponsorPackages.name,
+      sortOrder: sponsorPackages.sortOrder,
+    })
     .from(sponsors)
     .leftJoin(sponsorPackages, eq(sponsorPackages.id, sponsors.packageId))
     .where(eq(sponsors.eventId, eventId))
     .all();
-  const groups = new Map<number | null, { packageName: EventRow['name'] | null; sortOrder: number; companies: string[] }>();
+  type Company = { name: string; logoPath: string | null; website: string | null };
+  const groups = new Map<number | null, { packageName: EventRow['name'] | null; sortOrder: number; companies: Company[] }>();
   for (const r of rows) {
     const g = groups.get(r.packageId) ?? { packageName: r.packageName, sortOrder: r.sortOrder ?? Number.MAX_SAFE_INTEGER, companies: [] };
-    g.companies.push(r.companyName);
+    g.companies.push({ name: r.companyName, logoPath: r.logoPath, website: r.website });
     groups.set(r.packageId, g);
   }
   return [...groups.values()]
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((g) => ({ ...g, companies: g.companies.sort((a, b) => a.localeCompare(b, 'de')) }));
+    .map((g) => ({ ...g, companies: g.companies.sort((a, b) => a.name.localeCompare(b.name, 'de')) }));
 }

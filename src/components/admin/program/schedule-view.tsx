@@ -130,7 +130,9 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, strea
                     {s.location && ` · ${s.location}`}
                     {streams.length > 1 && ` · ${streamRange(s)}`}
                   </p>
-                  {s.speakerName && <p className="mt-1 text-sm">{s.speakerName}</p>}
+                  {(s.speakerName || s.coSpeakerNames.length > 0) && (
+                    <p className="mt-1 text-sm">{[s.speakerName, ...s.coSpeakerNames].filter(Boolean).join(', ')}</p>
+                  )}
                   <Badge variant="secondary" className="mt-2">
                     {t(`tag.${s.tag}`)}
                   </Badge>
@@ -158,8 +160,19 @@ export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, strea
                   stream: String(dialog.row.stream),
                   streamTo: String(streamEnd(dialog.row)),
                   speakerId: dialog.row.speakerId ? String(dialog.row.speakerId) : '',
+                  coSpeakerIds: dialog.row.coSpeakerIds.map(String),
                 }
-              : { title: { de: '', en: '' }, startsAt: `${firstDay}T09:00`, endsAt: `${firstDay}T09:45`, location: '', tag: 'talk', stream: '1', streamTo: '1', speakerId: '' }
+              : {
+                  title: { de: '', en: '' },
+                  startsAt: `${firstDay}T09:00`,
+                  endsAt: `${firstDay}T09:45`,
+                  location: '',
+                  tag: 'talk',
+                  stream: '1',
+                  streamTo: '1',
+                  speakerId: '',
+                  coSpeakerIds: [],
+                }
           }
           save={(values) => (dialog.mode === 'edit' ? updateSessionAction(dialog.row.id, values) : createSessionAction(eventId, values))}
           onClose={() => setDialog(null)}
@@ -200,6 +213,8 @@ function SessionDialog({ title, speakers, streams, defaultValues, save, onClose 
     formState: { errors },
   } = form;
   const from = Number(useWatch({ control: form.control, name: 'stream' }));
+  const mainSpeaker = useWatch({ control: form.control, name: 'speakerId' });
+  const coSpeakers = speakers.filter((s) => String(s.id) !== mainSpeaker);
   const allStreams = () => {
     form.setValue('stream', '1', { shouldDirty: true });
     form.setValue('streamTo', String(streams.length), { shouldDirty: true });
@@ -253,6 +268,20 @@ function SessionDialog({ title, speakers, streams, defaultValues, save, onClose 
                     ))}
                   </select>
                 </Field>
+                {coSpeakers.length > 0 && (
+                  <fieldset className="space-y-1.5 sm:col-span-2">
+                    <legend className="text-sm font-medium">{t('coSpeakers')}</legend>
+                    <div className="grid max-h-36 gap-1 overflow-y-auto rounded-md border p-2 sm:grid-cols-2">
+                      {coSpeakers.map((s) => (
+                        <label key={s.id} className="flex items-center gap-2 text-sm">
+                          <input type="checkbox" className="size-4" value={String(s.id)} {...register('coSpeakerIds')} />
+                          {s.name}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{t('coSpeakersHint')}</p>
+                  </fieldset>
+                )}
                 {streams.length > 1 && (
                   <>
                     <Field id="s-stream" label={t('stream')} hint={t('streamHint')} error={fieldError(errors, 'stream')}>
