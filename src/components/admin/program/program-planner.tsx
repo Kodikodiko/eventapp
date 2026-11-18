@@ -66,7 +66,13 @@ export function ProgramPlanner({ eventId, eventStartsAt, sessions, speakers, str
   const [dialog, setDialog] = useState<{ mode: 'create'; startsAt?: string; stream?: number } | { mode: 'edit'; row: SessionRow } | null>(null);
   const [showStreams, setShowStreams] = useState(false);
   const [hoverSpeaker, setHoverSpeaker] = useState<number | null>(null);
-  const [drag, setDrag] = useState<Drag | null>(null);
+  const [drag, setDragState] = useState<Drag | null>(null);
+  // aktueller Ziehzustand auch für Ereignisse vor dem nächsten Rendern (pointerup direkt nach pointermove)
+  const dragRef = useRef<Drag | null>(null);
+  const setDrag = (next: Drag | null) => {
+    dragRef.current = next;
+    setDragState(next);
+  };
   const [removeRow, setRemoveRow] = useState<SessionRow | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -124,6 +130,7 @@ export function ProgramPlanner({ eventId, eventStartsAt, sessions, speakers, str
     setDrag({ id: s.id, startX: e.clientX, startY: e.clientY, dy: 0, dStream: 0, moved: false, colWidth: col });
   }
   function onPointerMove(e: React.PointerEvent, s: SessionRow) {
+    const drag = dragRef.current;
     if (!drag || drag.id !== s.id) return;
     const dyMin = Math.round((e.clientY - drag.startY) / PX / SNAP) * SNAP;
     const span = streamEnd(s) - s.stream;
@@ -132,8 +139,8 @@ export function ProgramPlanner({ eventId, eventStartsAt, sessions, speakers, str
     if (dyMin !== drag.dy || dStream !== drag.dStream || moved !== drag.moved) setDrag({ ...drag, dy: dyMin, dStream, moved });
   }
   function onPointerUp(s: SessionRow) {
-    if (!drag || drag.id !== s.id) return;
-    const d = drag;
+    const d = dragRef.current;
+    if (!d || d.id !== s.id) return;
     setDrag(null);
     if (!d.moved) {
       setDialog({ mode: 'edit', row: s });
