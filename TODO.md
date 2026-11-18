@@ -82,6 +82,7 @@ Umgesetzt als Entwurf auf dem lokalen Branch `ui-redesign` (Commits `73e45c4`, `
 - [ ] **UI3 – Admin-Seiten entlang der Hauptprozesse überarbeiten** (Analyse läuft, Schwerpunkt Teilnehmerliste).
 - [ ] **UI4 – Check-in am Eventtag** (neu, 18.11.2026): Einlass vom Handy oder Tablet – Suche nach Name/Firma, QR-Code auf dem Ticket scannen, als anwesend markieren, Nachmeldung vor Ort, Live-Zähler; Anwesenheit als Grundlage für die Teilnahmebestätigung.
 - [ ] **UI5 – Hilfe prozessorientiert** (später): klassisch Seiten und Felder erklären, zusätzlich entlang der Hauptprozesse führen (Anmeldungen betreuen, Rechnungen und Mahnungen, Speaker, Programm, Sponsoren, Event anlegen und veröffentlichen, Nachbereitung).
+- [ ] **UI6 – Alte Oberfläche entfernen – NUR auf ausdrücklichen Auftrag.** Bis dahin bleibt sie über den Schalter „Neue Oberfläche“ (Kopfzeile im Admin, Cookie `eventflow-ui`) wählbar; Git-Marke `ui-alt` zeigt auf den Stand davor. Betroffene Dateien: `admin-sidebar-alt.tsx`, `components/public/event-page-alt.tsx` und weitere `*-alt`-Varianten.
 
 ## Hosting (Docker hinter nginx beim Sysadmin, Plan seit 12.11.2026 – zurückgestellt am 13.11.2026)
 
