@@ -4,7 +4,6 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { localized } from '@/lib/localized';
 import { requestDb } from '@/server/db';
-import { getUiVersion } from '@/server/ui-version';
 import { defaultNavEventId, navEvents } from '@/server/services/admin-overview';
 import { LogoutButton } from './logout-button';
 import { AdminFrame } from './shell/admin-frame';
@@ -55,7 +54,7 @@ export async function AdminShell({ locale, user, fullAccess, children }: Props) 
   }));
 
   return (
-    <AdminFrame events={events} defaultEventId={defaultNavEventId(list)} user={user} uiVersion={await getUiVersion()}>
+    <AdminFrame events={events} defaultEventId={defaultNavEventId(list)} user={user}>
       {children}
     </AdminFrame>
   );

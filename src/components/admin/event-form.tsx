@@ -21,14 +21,12 @@ type Props = {
   readOnly?: boolean;
   /** USt-Modus aus den globalen Einstellungen (Vorgabe für „wie global“) */
   globalVatMode: 'small_business' | 'standard';
-  /** neue Oberfläche: Speichern-Leiste unten, sobald etwas geändert wurde */
-  stickySave?: boolean;
 };
 
 const selectClass =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
 
-export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMode, stickySave = false }: Props) {
+export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMode }: Props) {
   const t = useTranslations('eventForm');
   const router = useRouter();
   const handle = useActionFeedback();
@@ -233,7 +231,8 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
           </Card>
         </fieldset>
 
-        {!readOnly && stickySave && mode === 'edit' && (isDirty || Object.keys(errors).length > 0) && (
+        {/* Bearbeiten: Speichern-Leiste unten, sobald etwas geändert wurde */}
+        {!readOnly && mode === 'edit' && (isDirty || Object.keys(errors).length > 0) && (
           <div
             role="region"
             aria-label={t('unsaved')}
@@ -248,10 +247,10 @@ export function EventForm({ mode, eventId, defaultValues, readOnly, globalVatMod
             </Button>
           </div>
         )}
-        {!readOnly && !(stickySave && mode === 'edit') && (
+        {!readOnly && mode === 'create' && (
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={pending || (mode === 'edit' && !isDirty)}>
-              {pending ? t('saving') : mode === 'create' ? t('create') : t('save')}
+            <Button type="submit" disabled={pending}>
+              {pending ? t('saving') : t('create')}
             </Button>
             {Object.keys(errors).length > 0 && <p className="text-sm text-destructive">{t('fixErrors')}</p>}
           </div>

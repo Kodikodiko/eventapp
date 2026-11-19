@@ -40,7 +40,7 @@ type Props = {
 };
 
 /**
- * Schnell-Anmeldung (neue Oberfläche): erst Person suchen (auch aus früheren Events) und mit Enter übernehmen,
+ * Schnell-Anmeldung: erst Person suchen (auch aus früheren Events) und mit Enter übernehmen,
  * dann Ticket wählen statt Preis tippen; „Anlegen & nächste“ erfasst mehrere Personen am Stück.
  * Speichert über dieselbe Aktion wie der bisherige Dialog.
  */

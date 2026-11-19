@@ -51,7 +51,7 @@ function formValues(s: SessionRow, startsAt = s.startsAt, endsAt = s.endsAt, str
 const overlaps = (a: SessionRow, b: SessionRow) => a.startsAt < b.endsAt && b.startsAt < a.endsAt;
 
 /**
- * Programm & Speaker (neue Oberfläche, UI-Redesign 18.11.2026): Speaker-Leiste links, Programm auf echter Zeitachse rechts.
+ * Programm & Speaker (UI-Redesign 18.11.2026): Speaker-Leiste links, Programm auf echter Zeitachse rechts.
  * Ziehen verschiebt einen Programmpunkt (Zeit in 5-Minuten-Schritten, Stream seitlich), Klicken öffnet den bekannten Dialog.
  * Überschneidungen (gleicher Speaker oder gleicher Stream) stehen oben.
  */

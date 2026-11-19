@@ -33,7 +33,7 @@ type Props = {
 };
 
 /**
- * Teilnehmerliste (neue Oberfläche): Status als Reiter mit Zählern, alle übrigen Filter als sichtbare Knöpfe
+ * Teilnehmerliste: Status als Reiter mit Zählern, alle übrigen Filter als sichtbare Knöpfe
  * mit Anzahl je Wert, Suche mit „/“, Gruppierung und Export in einer Zeile.
  */
 export function AttendeesToolbar({ tabs, onSaveView, filter, setFilter, roles, counts, groupBy, onGroupBy, exportHref, exportDisabled }: Props) {

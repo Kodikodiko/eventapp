@@ -73,7 +73,7 @@ function daysOverdue(dueAt: string | null): number {
 }
 
 /**
- * Rechnungen (neue Oberfläche, UI-Redesign 18.11.2026): Kacheln mit Summen sind die Filter, Start bei „Handlungsbedarf“,
+ * Rechnungen (UI-Redesign 18.11.2026): Kacheln mit Summen sind die Filter, Start bei „Handlungsbedarf“,
  * Gutschriften hängen an ihrer Rechnung, Sammelaktionen für überfällige und offene Rechnungen.
  */
 export function InvoicesView({ rows: allRows, organizerIncomplete, mailToFile, initialQuery = '', initialState }: Props) {
@@ -531,7 +531,7 @@ export function PaymentDialog({ row, onClose }: { row: InvoiceListRow; onClose: 
   );
 }
 
-export function CancelInvoiceDialog({ row, onClose }: { row: InvoiceListRow; onClose: () => void }) {
+function CancelInvoiceDialog({ row, onClose }: { row: InvoiceListRow; onClose: () => void }) {
   const t = useTranslations('invoices');
   const router = useRouter();
   const handle = useActionFeedback();

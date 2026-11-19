@@ -1,32 +1,20 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, ChevronRight, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useMemo, useState, useTransition } from 'react';
+import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useState, useTransition } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Link, useRouter } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import type { ActionResult } from '@/lib/action-result';
-import { TIME_ZONE, utcToViennaInput, viennaDate } from '@/lib/dates';
 import { localized } from '@/lib/localized';
-import { MAX_STREAMS, streamEnd, type StreamInfo } from '@/lib/streams';
+import { MAX_STREAMS, type StreamInfo } from '@/lib/streams';
 import { SESSION_TAG_KEYS, sessionFormSchema, streamFormSchema, type SessionFormValues, type StreamFormValues } from '@/lib/validation/program';
-import {
-  addStreamAction,
-  createSessionAction,
-  deleteSessionAction,
-  deleteStreamAction,
-  moveStreamAction,
-  renameStreamAction,
-  updateSessionAction,
-} from '@/server/actions/program';
-import type { SessionRow } from '@/server/services/program';
-import { ProgramGrid } from '@/components/program/program-grid';
+import { addStreamAction, deleteStreamAction, moveStreamAction, renameStreamAction } from '@/server/actions/program';
 import { ConfirmDialog } from '../confirm-dialog';
 import { Field, fieldError, LocalizedFields } from '../form-fields';
 import { useActionFeedback } from '../use-action-feedback';
@@ -36,163 +24,6 @@ const selectClass =
 
 type SpeakerOption = { id: number; name: string };
 
-type Props = {
-  eventId: number;
-  eventStartsAt: string;
-  sessions: SessionRow[];
-  speakers: SpeakerOption[];
-  streams: StreamInfo[];
-  readOnly: boolean;
-};
-
-/** Programmpunkte nach Tag gruppieren (Reihenfolge nach Beginn). */
-function groupByDay(sessions: SessionRow[]) {
-  const days = new Map<string, SessionRow[]>();
-  for (const s of sessions) days.set(viennaDate(s.startsAt), [...(days.get(viennaDate(s.startsAt)) ?? []), s]);
-  return [...days.entries()].map(([day, items]) => ({ day, items }));
-}
-
-export function ScheduleView({ eventId, eventStartsAt, sessions, speakers, streams, readOnly }: Props) {
-  const t = useTranslations('schedule');
-  const locale = useLocale() as Locale;
-  const format = useFormatter();
-  const router = useRouter();
-  const handle = useActionFeedback();
-  const [, startTransition] = useTransition();
-  const [dialog, setDialog] = useState<{ mode: 'create' } | { mode: 'edit' | 'delete'; row: SessionRow } | null>(null);
-  const days = useMemo(() => groupByDay(sessions), [sessions]);
-  const streamLabel = (n: number) => localized(streams[n - 1]?.name, locale) || t('streamN', { n });
-  const streamRange = (s: SessionRow) => {
-    const to = streamEnd(s);
-    if (streams.length > 1 && s.stream === 1 && to >= streams.length) return t('allStreams');
-    return to > s.stream ? `${streamLabel(s.stream)} – ${streamLabel(to)}` : streamLabel(s.stream);
-  };
-  const time = (iso: string) => format.dateTime(new Date(iso), { timeStyle: 'short', timeZone: TIME_ZONE });
-  const firstDay = viennaDate(eventStartsAt);
-
-  function remove(row: SessionRow) {
-    startTransition(async () => {
-      if (handle(await deleteSessionAction(row.id), { success: t('deleted') })) router.refresh();
-    });
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/events/${eventId}/schedule/print`}>
-            <Printer aria-hidden className="size-4" />
-            {t('print')}
-          </Link>
-        </Button>
-        {!readOnly && (
-          <Button size="sm" onClick={() => setDialog({ mode: 'create' })}>
-            <Plus aria-hidden className="size-4" />
-            {t('add')}
-          </Button>
-        )}
-      </div>
-
-      {days.length === 0 && <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">{t('empty')}</p>}
-
-      <StreamsPanel eventId={eventId} streams={streams} readOnly={readOnly} />
-
-      {days.map(({ day, items }) => (
-        <section key={day} className="space-y-3">
-          <h3 className="font-semibold">{format.dateTime(new Date(`${day}T12:00:00Z`), { dateStyle: 'full', timeZone: TIME_ZONE })}</h3>
-          <ProgramGrid
-            streams={streams.map((st) => ({ position: st.position, label: streamLabel(st.position) }))}
-            timeLabel={time}
-            timeHeader={t('time')}
-            items={items.map((s) => ({
-              id: s.id,
-              startsAt: s.startsAt,
-              stream: s.stream,
-              streamTo: streamEnd(s),
-              className: s.tag === 'break' ? 'border-dashed bg-muted/40' : 'bg-card',
-              content: (
-                <>
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-medium">{localized(s.title, locale)}</h4>
-                    {!readOnly && (
-                      <div className="flex shrink-0">
-                        <Button variant="ghost" size="icon" className="size-7" aria-label={t('editNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'edit', row: s })}>
-                          <Pencil aria-hidden className="size-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="size-7" aria-label={t('deleteNamed', { title: localized(s.title, locale) })} onClick={() => setDialog({ mode: 'delete', row: s })}>
-                          <Trash2 aria-hidden className="size-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {time(s.startsAt)}–{time(s.endsAt)}
-                    {s.location && ` · ${s.location}`}
-                    {streams.length > 1 && ` · ${streamRange(s)}`}
-                  </p>
-                  {(s.speakerName || s.coSpeakerNames.length > 0) && (
-                    <p className="mt-1 text-sm">{[s.speakerName, ...s.coSpeakerNames].filter(Boolean).join(', ')}</p>
-                  )}
-                  <Badge variant="secondary" className="mt-2">
-                    {t(`tag.${s.tag}`)}
-                  </Badge>
-                </>
-              ),
-            }))}
-          />
-        </section>
-      ))}
-
-      {dialog && dialog.mode !== 'delete' && (
-        <SessionDialog
-          key={dialog.mode === 'edit' ? `edit-${dialog.row.id}` : 'create'}
-          title={dialog.mode === 'edit' ? t('editTitle') : t('addTitle')}
-          speakers={speakers}
-          streams={streams.map((st) => ({ position: st.position, label: streamLabel(st.position) }))}
-          defaultValues={
-            dialog.mode === 'edit'
-              ? {
-                  title: { de: dialog.row.title.de, en: dialog.row.title.en ?? '' },
-                  startsAt: utcToViennaInput(dialog.row.startsAt),
-                  endsAt: utcToViennaInput(dialog.row.endsAt),
-                  location: dialog.row.location,
-                  tag: dialog.row.tag,
-                  stream: String(dialog.row.stream),
-                  streamTo: String(streamEnd(dialog.row)),
-                  speakerId: dialog.row.speakerId ? String(dialog.row.speakerId) : '',
-                  coSpeakerIds: dialog.row.coSpeakerIds.map(String),
-                }
-              : {
-                  title: { de: '', en: '' },
-                  startsAt: `${firstDay}T09:00`,
-                  endsAt: `${firstDay}T09:45`,
-                  location: '',
-                  tag: 'talk',
-                  stream: '1',
-                  streamTo: '1',
-                  speakerId: '',
-                  coSpeakerIds: [],
-                }
-          }
-          save={(values) => (dialog.mode === 'edit' ? updateSessionAction(dialog.row.id, values) : createSessionAction(eventId, values))}
-          onClose={() => setDialog(null)}
-        />
-      )}
-      {dialog?.mode === 'delete' && (
-        <ConfirmDialog
-          open
-          onOpenChange={(o) => !o && setDialog(null)}
-          title={t('deleteTitle', { title: localized(dialog.row.title, locale) })}
-          description={t('deleteHint')}
-          confirmLabel={t('delete')}
-          destructive
-          onConfirm={() => remove(dialog.row)}
-        />
-      )}
-    </div>
-  );
-}
-
 type DialogProps = {
   title: string;
   speakers: SpeakerOption[];
@@ -200,7 +31,7 @@ type DialogProps = {
   defaultValues: SessionFormValues;
   save: (values: SessionFormValues) => Promise<ActionResult<unknown>>;
   onClose: () => void;
-  /** optional: „Löschen“ im Dialog anbieten (Programmplaner der neuen Oberfläche) */
+  /** optional: „Löschen“ im Dialog anbieten (Programmplaner) */
   onDelete?: () => void;
 };
 

@@ -9,10 +9,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
-import type { UiVersion } from '@/lib/ui-version';
 import { AdminSidebar, useCurrentEvent } from './admin-sidebar';
-import { AdminSidebarAlt } from './admin-sidebar-alt';
-import { UiToggle } from './ui-toggle';
 import { CommandSearch, type PageTarget } from './command-search';
 import type { ShellEvent, ShellUser } from './nav-types';
 
@@ -42,12 +39,10 @@ const collapseStore = {
   },
 };
 
-type Props = { events: ShellEvent[]; defaultEventId: number | null; user: ShellUser; uiVersion: UiVersion; children: React.ReactNode };
+type Props = { events: ShellEvent[]; defaultEventId: number | null; user: ShellUser; children: React.ReactNode };
 
 /** Admin-Rahmen: Seitenleiste (einklappbar, mobil als Menü), Kopfzeile mit Schnellsuche und Event-Aktionen. */
-export function AdminFrame({ events, defaultEventId, user, uiVersion, children }: Props) {
-  // alte Seitenleiste bleibt wählbar, bis sie ausdrücklich entfernt wird
-  const Sidebar = uiVersion === 'alt' ? AdminSidebarAlt : AdminSidebar;
+export function AdminFrame({ events, defaultEventId, user, children }: Props) {
   const t = useTranslations('adminNav');
   const locale = useLocale();
   const { toast } = useToast();
@@ -127,14 +122,14 @@ export function AdminFrame({ events, defaultEventId, user, uiVersion, children }
             collapsed ? 'w-[72px]' : 'w-[248px]'
           )}
         >
-          <Sidebar events={events} defaultEventId={defaultEventId} user={user} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+          <AdminSidebar events={events} defaultEventId={defaultEventId} user={user} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
         </aside>
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent side="left" className="w-[280px] border-none p-0 [&>button]:text-white">
             <SheetTitle className="sr-only">{t('label')}</SheetTitle>
             <SheetDescription className="sr-only">{t('label')}</SheetDescription>
-            <Sidebar events={events} defaultEventId={defaultEventId} user={user} collapsed={false} onNavigate={() => setMobileOpen(false)} />
+            <AdminSidebar events={events} defaultEventId={defaultEventId} user={user} collapsed={false} onNavigate={() => setMobileOpen(false)} />
           </SheetContent>
         </Sheet>
 
@@ -152,9 +147,8 @@ export function AdminFrame({ events, defaultEventId, user, uiVersion, children }
               <span className="truncate">{t('searchPlaceholder')}</span>
               <kbd className="ml-auto hidden rounded border border-input px-1.5 font-sans text-xs sm:inline">{t('searchShortcut')}</kbd>
             </button>
-            <UiToggle value={uiVersion} className="ml-auto" />
             {current && !current.archived && (
-              <div className="flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2">
                 <Button variant="outline" onClick={copyLink} className="hidden md:inline-flex" title={t('copyLink')}>
                   <Link2 aria-hidden />
                   <span className="hidden xl:inline">{t('copyLink')}</span>
