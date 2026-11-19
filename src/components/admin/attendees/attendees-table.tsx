@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { bulkAddRoleAction } from '@/server/actions/admin';
 import { issueRegistrationInvoiceAction } from '@/server/actions/invoices';
 import { confirmWaitlistedAction, setPaymentStatusAction } from '@/server/actions/registrations';
+import type { SeatUsage } from '@/lib/seat-usage';
 import type { RegistrationListRow } from '@/server/services/registrations';
 import { ConfirmDialog } from '../confirm-dialog';
 import { useActionFeedback } from '../use-action-feedback';
@@ -49,6 +50,7 @@ import {
   RegistrationRowMenu,
   type RowDialog,
 } from './registration-row-actions';
+import { SeatUsageBar } from './seat-usage-bar';
 import { paymentTone, Pill, statusTone } from './status-pill';
 
 export type RoleOption = { key: string; label: string };
@@ -58,6 +60,7 @@ type Props = {
   rows: RegistrationListRow[];
   roles: RoleOption[];
   seatsFree: number;
+  seatUsage: SeatUsage;
   readOnly: boolean;
   prices: PriceOptions;
   /** aus der URL: Ansicht, geöffnete Anmeldung, Dialog „Neue Anmeldung“ */
@@ -171,11 +174,10 @@ const isTyping = (el: EventTarget | null) => el instanceof HTMLElement && Boolea
 const today = () => new Date().toISOString().slice(0, 10);
 
 /**
- * Teilnehmerliste (neue Oberfläche, UI-Redesign 18.11.2026): kompakte Zeilen, sichtbare Filter, Schnellaktionen in der Zeile,
+ * Teilnehmerliste (UI-Redesign 18.11.2026): kompakte Zeilen, sichtbare Filter, Schnellaktionen in der Zeile,
  * Detail als Seitenleiste über der Liste (J/K blättern), schwebende Massenleiste und Schnell-Anmeldung.
- * Alle Änderungen laufen über dieselben Aktionen und Dialoge wie in der alten Oberfläche.
  */
-export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, prices, initialView, openId, openCreate, intentKey = '' }: Props) {
+export function AttendeesTable({ eventId, rows, roles, seatsFree, seatUsage, readOnly, prices, initialView, openId, openCreate, intentKey = '' }: Props) {
   const t = useTranslations('attendees');
   const locale = useLocale() as Locale;
   const format = useFormatter();
@@ -579,6 +581,11 @@ export function AttendeesTable({ eventId, rows, roles, seatsFree, readOnly, pric
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
+      <SeatUsageBar
+        usage={seatUsage}
+        settingsHref={readOnly ? null : `/admin/events/${eventId}/settings#capacity`}
+        onShowWaitlist={() => selectTab(BUILT_IN[3])}
+      />
       <AttendeesToolbar
         tabs={tabs}
         onSaveView={saveView}

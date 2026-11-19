@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restkapazität Entwürfe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+<style>
+/* Entwurf: Anzeige der Restkapazität. Farben = Tokens aus src/app/globals.css (helles Theme der neuen Oberfläche). */
+:root {
+  color-scheme: light;
+  --ink: #15172B; --ink-2: #3B3E57; --ink-3: #5B5F78;
+  --bg: #F7F6F2; --paper: #FFFFFF; --line: #E4E1D9; --muted: #EEECE6;
+  --primary: #3A2B8F; --primary-soft: #EEEAFC; --spk: #26495A; --org: #8F84D6;
+  --ok: #1F7A4D; --ok-bg: #E6F4EC;
+  --warn: #B45309; --warn-bg: #FDF0DD;
+  --bad: #B3261E; --bad-bg: #FBE7E5;
+  --side: #15172B; --side-fg: #C9CBDB;
+  --display: 'Plus Jakarta Sans', 'IBM Plex Sans', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: #E3E1DA; color: var(--ink); font: 14px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; cursor: pointer; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Werkzeugleiste ---------- */
+.tool { background: var(--ink); color: #fff; padding: 14px 16px; }
+.tool-in { max-width: 1240px; margin: 0 auto; display: grid; gap: 10px; }
+.tool-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.tool-title { font: 700 15px/1.2 var(--display); margin-right: auto; }
+.tool-title small { display: block; font: 400 12px/1.4 var(--body); color: #B9BBD3; margin-top: 2px; }
+.seg { display: flex; flex-wrap: wrap; gap: 3px; background: #23264A; padding: 3px; border-radius: 9px; }
+.seg button { border: 0; background: transparent; color: #B9BBD3; padding: 6px 11px; border-radius: 7px; font-size: 13px; font-weight: 500; }
+.seg button[aria-pressed="true"] { background: #fff; color: var(--ink); }
+.seg-label { font-size: 12px; color: #B9BBD3; }
+.grp { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.note { font-size: 13px; color: #D9DAE8; max-width: 100ch; }
+.note b { color: #FFE36E; font-weight: 600; }
+
+/* ---------- Bühne ---------- */
+.stage { padding: 22px 16px 60px; }
+.frame { margin: 0 auto; max-width: 1240px; background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 12px 32px -8px rgba(21,23,43,.25); display: grid; grid-template-columns: 56px 1fr; min-height: 640px; }
+.stage.phone .frame { max-width: 390px; grid-template-columns: 1fr; border: 8px solid var(--ink); border-radius: 30px; min-height: 0; }
+.side { background: var(--side); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; }
+.side i { width: 30px; height: 30px; border-radius: 8px; background: #23264A; display: block; }
+.side i.on { background: var(--primary); }
+.stage.phone .side { display: none; }
+.main { min-width: 0; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.search { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 420px; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; color: var(--ink-3); background: var(--bg); font-size: 13px; }
+.burger { display: none; width: 34px; height: 34px; border-radius: 8px; background: var(--side); flex: none; }
+.stage.phone .burger { display: block; }
+.stage.phone .topbar { padding: 10px 14px; }
+.content { padding: 26px 32px 32px; max-width: 1180px; }
+.stage.phone .content { padding: 18px 14px 24px; }
+
+/* ---------- Seitenkopf + Teilnehmerliste ---------- */
+.crumb { color: var(--ink-3); font-size: 13px; }
+.head { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; justify-content: space-between; }
+.head h1 { font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+.stage.phone .head h1 { font-size: 22px; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-top: 18px; align-items: center; }
+.stage.phone .tabs { overflow-x: auto; scrollbar-width: none; }
+.tab { padding: 10px 12px; white-space: nowrap; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; display: inline-flex; gap: 6px; align-items: center; }
+.tab.on { color: var(--ink); font-weight: 600; border-color: var(--primary); }
+.cnt { font-size: 11px; font-weight: 600; background: var(--muted); border-radius: 99px; padding: 1px 7px; }
+.tab.on .cnt { background: var(--primary); color: #fff; }
+.tabs .spacer { flex: 1; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.input { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 7px 12px; color: var(--ink-3); min-width: 220px; }
+.chip { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 7px 12px; font-weight: 500; }
+.stage.phone .toolbar .chip:nth-child(n+3) { display: none; }
+.stage.phone .input { min-width: 0; flex: 1; }
+.table { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.table table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 10px 14px; background: #FBFAF7; border-bottom: 1px solid var(--line); }
+.table td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table td small { display: block; color: var(--ink-3); font-size: 12px; }
+.role { display: inline-block; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: 12px; color: var(--ink-2); }
+.st { display: inline-block; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; background: var(--ok-bg); color: var(--ok); }
+.st.x { background: var(--muted); color: var(--ink-3); }
+.st.w { background: var(--warn-bg); color: var(--warn); }
+.tfoot { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; color: var(--ink-3); font-size: 12px; flex-wrap: wrap; }
+.r, .table th.r { text-align: right; }
+.cards { display: none; }
+.stage.phone .table table { display: none; }
+.stage.phone .cards { display: block; }
+.card-row { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.card-row b { display: block; }
+.card-row .st { align-self: flex-start; }
+.card-row small { color: var(--ink-3); font-size: 12px; }
+
+/* ---------- Bausteine Kapazität ---------- */
+.tone-ok { --tone: var(--ok); --tone-bg: var(--ok-bg); }
+.tone-few { --tone: var(--warn); --tone-bg: var(--warn-bg); }
+.tone-full { --tone: var(--bad); --tone-bg: var(--bad-bg); }
+.tone-over { --tone: var(--bad); --tone-bg: var(--bad-bg); }
+.bar { position: relative; height: 8px; border-radius: 99px; background: var(--muted); display: flex; overflow: hidden; }
+.bar span { height: 100%; }
+.bar .p { background: var(--primary); }
+.bar .s { background: var(--spk); }
+.bar .o { background: var(--org); }
+.bar .h { background: repeating-linear-gradient(135deg, var(--primary) 0 3px, #B9B1EA 3px 6px); }
+.bar .x { background: repeating-linear-gradient(135deg, var(--bad) 0 3px, #F2B8B3 3px 6px); }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: var(--tone-bg); color: var(--tone); border-radius: 99px; padding: 3px 10px; font-weight: 600; font-size: 12px; white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.lg { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--ink-2); }
+.lg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.lg b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.lnk { color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.lnk:hover { text-decoration: underline; }
+
+/* A: kompakt im Kopf */
+.a-cap { min-width: 260px; display: grid; gap: 6px; justify-items: end; }
+.a-cap .big { font: 700 15px/1.2 var(--display); display: flex; gap: 8px; align-items: center; }
+.a-cap .bar { width: 260px; }
+.a-cap small { color: var(--ink-3); font-size: 12px; }
+.stage.phone .a-cap { min-width: 0; width: 100%; justify-items: stretch; }
+.stage.phone .a-cap .bar { width: 100%; }
+
+/* B: Belegungsleiste */
+.b-card { margin-top: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 8px 24px; align-items: center; }
+.b-free { display: grid; gap: 2px; padding-right: 24px; border-right: 1px solid var(--line); }
+.b-free strong { font: 800 30px/1 var(--display); color: var(--tone); font-variant-numeric: tabular-nums; }
+.b-free span { font-size: 12px; color: var(--ink-3); }
+.b-mid { display: grid; gap: 10px; min-width: 0; }
+.b-mid .bar { height: 12px; }
+.b-scale { position: relative; }
+.b-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); border-radius: 2px; }
+.b-mark::after { content: attr(data-l); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--ink-2); white-space: nowrap; }
+.b-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; }
+.b-side { display: grid; gap: 6px; justify-items: end; font-size: 13px; }
+.stage.phone .b-card { grid-template-columns: 1fr; padding: 14px; }
+.stage.phone .b-free { border-right: 0; padding-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 10px; display: flex; align-items: baseline; gap: 8px; }
+.stage.phone .b-side { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+
+/* C: Kacheln */
+.c-grid { margin-top: 16px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.c-tile { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; text-align: left; }
+.c-tile:hover { border-color: var(--ink-3); }
+.c-tile span { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.c-tile strong { font: 800 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.c-tile strong em { font: 600 14px var(--body); color: var(--ink-3); font-style: normal; }
+.c-tile small { font-size: 12px; color: var(--ink-3); }
+.c-tile.hero { background: var(--tone-bg); border-color: transparent; }
+.c-tile.hero strong { color: var(--tone); }
+.stage.phone .c-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+
+/* D: im Reiter + Fußzeile */
+.d-wrap { position: relative; }
+.d-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 99px; padding: 4px 12px 4px 4px; font-weight: 600; font-size: 13px; margin: 4px 0; white-space: nowrap; }
+.ring { width: 26px; height: 26px; flex: none; }
+.d-pop { position: absolute; right: 0; top: calc(100% + 6px); width: 300px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 32px -12px rgba(21,23,43,.35); padding: 14px; display: none; gap: 10px; z-index: 5; }
+.d-pop.open { display: grid; }
+.d-pop dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+.d-pop dt { color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.d-pop dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.d-pop hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; grid-column: 1 / -1; }
+.stage.phone .d-tabcap { display: none; }
+.d-mobile { display: none; }
+.stage.phone .d-mobile { display: flex; margin-top: 10px; }
+.stage.phone .d-pop { left: 0; right: auto; width: 100%; }
+
+/* ---------- Weitere Stellen ---------- */
+.other { display: grid; gap: 22px; }
+.other h2 { font-size: 15px; font-weight: 700; }
+.other .why { color: var(--ink-3); font-size: 13px; margin-top: 2px; max-width: 80ch; }
+.blk { display: grid; gap: 10px; }
+.kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; max-width: 320px; }
+.kpi > span { font-size: 13px; color: var(--ink-3); font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.kpi strong { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; }
+.kpi strong em { font: 600 15px var(--body); color: var(--ink-3); font-style: normal; }
+.kpi small { color: var(--ink-3); font-size: 13px; }
+.cmp { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.cmp > div { display: grid; gap: 6px; }
+.cmp .tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.ev-t td:nth-child(4) { min-width: 170px; }
+.ev-cap { display: grid; gap: 4px; }
+.ev-cap .t { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.ev-cap .bar { height: 6px; }
+.pub { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 1fr 300px; max-width: 860px; }
+.pub-hero { background: radial-gradient(120% 140% at 85% 0%, #5B22C0 0%, #271053 60%, #170A33 100%); color: #fff; padding: 26px; display: grid; gap: 8px; align-content: start; }
+.pub-hero .eb { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #8FD8F5; font-weight: 600; }
+.pub-hero h3 { font-size: 24px; }
+.pub-hero p { color: #D6CCF0; font-size: 13px; }
+.pub-box { padding: 20px; display: grid; gap: 12px; align-content: start; }
+.pub-box .price { font: 800 22px/1 var(--display); }
+.cta { display: block; text-align: center; background: #C2410C; color: #fff; border-radius: 9px; padding: 11px 14px; font-weight: 600; text-decoration: none; }
+.cta.wl { background: #271053; }
+.pub-msg { font-size: 13px; display: flex; gap: 8px; align-items: center; color: var(--tone); font-weight: 600; }
+.pub-msg.calm { color: var(--ink-3); font-weight: 500; }
+.stage.phone .pub { grid-template-columns: 1fr; }
+.stage.phone .ev-t th:nth-child(2), .stage.phone .ev-t td:nth-child(2), .stage.phone .ev-t th:nth-child(3), .stage.phone .ev-t td:nth-child(3) { display: none; }
+.rule { background: var(--paper); border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--ink-2); }
+.rule b { color: var(--ink); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="tool">
+  <div class="tool-in">
+    <div class="tool-row">
+      <div class="tool-title">Restkapazität · Entwürfe<small>Teilnehmerliste und weitere Stellen · Daten sind Beispiele</small></div>
+      <div class="seg" role="group" aria-label="Ansicht">
+        <button data-dev="desk" aria-pressed="true">Desktop</button>
+        <button data-dev="phone" aria-pressed="false">Handy</button>
+      </div>
+    </div>
+    <div class="tool-row">
+      <div class="grp"><span class="seg-label">Entwurf</span>
+      <div class="seg" role="group" aria-label="Entwurf">
+        <button data-v="A" aria-pressed="false">A · Kompakt im Kopf</button>
+        <button data-v="B" aria-pressed="true">B · Belegungsleiste</button>
+        <button data-v="C" aria-pressed="false">C · Kacheln</button>
+        <button data-v="D" aria-pressed="false">D · Ring im Reiter</button>
+      </div></div>
+      <div class="grp"><span class="seg-label">Belegung</span>
+      <div class="seg" role="group" aria-label="Szenario">
+        <button data-s="normal" aria-pressed="true">Viel frei</button>
+        <button data-s="few" aria-pressed="false">Fast voll</button>
+        <button data-s="full" aria-pressed="false">Voll + Warteliste</button>
+        <button data-s="over" aria-pressed="false">Überbucht</button>
+      </div></div>
+      <div class="grp"><span class="seg-label">Seite</span>
+      <div class="seg" role="group" aria-label="Seite">
+        <button data-p="list" aria-pressed="true">Teilnehmerliste</button>
+        <button data-p="other" aria-pressed="false">Weitere Stellen</button>
+      </div></div>
+    </div>
+    <p class="note" id="note"></p>
+  </div>
+</header>
+
+<main class="stage" id="stage">
+  <div class="frame">
+    <nav class="side" aria-hidden="true"><i></i><i></i><i class="on"></i><i></i><i></i><i></i></nav>
+    <div class="main">
+      <div class="topbar"><span class="burger" aria-hidden="true"></span><div class="search">Person, Rechnungsnummer oder Event suchen …</div></div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Kapazitätsregel (wie getEventStats): belegt = bestätigt (inkl. Speaker/Organisation) + gültige Reservierungen + offene Wartelisten-Angebote. Storniert zählt nicht.
+const S = {
+  normal: { cap: 40, part: 4, spk: 2, org: 1, res: 0, offer: 0, wait: 0, canc: 3 },
+  few:    { cap: 40, part: 29, spk: 4, org: 2, res: 1, offer: 1, wait: 0, canc: 4 },
+  full:   { cap: 40, part: 32, spk: 5, org: 2, res: 0, offer: 1, wait: 5, canc: 4 },
+  over:   { cap: 40, part: 34, spk: 5, org: 3, res: 0, offer: 0, wait: 3, canc: 4 },
+};
+const NOTES = {
+  A: '<b>A</b> · Eine Zeile rechts neben dem Titel: freie Plätze groß, Balken, darunter belegt/reserviert. Kostet keinen Platz, Aufschlüsselung nur als Text.',
+  B: '<b>B · Empfehlung</b> · Eigene Leiste über den Reitern: freie Plätze groß, Balken nach Rolle (Teilnehmende, Speaker, Organisation, reserviert). Zeigt auf einen Blick, warum belegt ist, und Überbuchung ragt sichtbar über die Kapazitätsmarke hinaus.',
+  C: '<b>C</b> · Vier Kacheln (Frei, Belegt, Reserviert/Angebote, Warteliste). Klick auf eine Kachel filtert die Liste. Braucht am meisten Höhe.',
+  D: '<b>D</b> · Minimal: Ring mit freien Plätzen rechts in der Reiterleiste, Details per Klick (hier aufgeklappt). Zusätzlich in der Fußzeile der Tabelle.',
+};
+let st = { v: 'B', s: 'normal', dev: 'desk', p: 'list', pop: true };
+
+function calc(d) {
+  const conf = d.part + d.spk + d.org;
+  const taken = conf + d.res + d.offer;
+  const free = Math.max(0, d.cap - taken);
+  const over = Math.max(0, taken - d.cap);
+  const pct = d.cap ? Math.round(taken / d.cap * 100) : 0;
+  const tone = over > 0 ? 'over' : free === 0 ? 'full' : (free <= 10 || free / d.cap <= .1) ? 'few' : 'ok';
+  return { ...d, conf, taken, free, over, pct, tone };
+}
+const plural = (n, one, many) => n === 1 ? one : many;
+function headline(c) {
+  if (c.tone === 'over') return `${c.over} über Kapazität`;
+  if (c.tone === 'full') return 'Ausgebucht';
+  return `${c.free} ${plural(c.free, 'Platz', 'Plätze')} frei`;
+}
+function bar(c, cls = '') {
+  const base = Math.max(c.cap, c.taken);
+  const w = (n) => (n / base * 100).toFixed(2) + '%';
+  const hold = c.res + c.offer;
+  let html = `<div class="bar ${cls}" role="img" aria-label="${c.taken} von ${c.cap} Plätzen belegt">`;
+  if (c.over > 0) {
+    // bis zur Kapazität normal, Überhang schraffiert rot
+    let left = c.cap; const seg = (n, k) => { const x = Math.min(n, left); left -= x; return x > 0 ? `<span class="${k}" style="width:${w(x)}"></span>` : ''; };
+    html += seg(c.part, 'p') + seg(c.spk, 's') + seg(c.org, 'o') + seg(hold, 'h');
+    html += `<span class="x" style="width:${w(c.over)}"></span>`;
+  } else {
+    html += `<span class="p" style="width:${w(c.part)}"></span><span class="s" style="width:${w(c.spk)}"></span><span class="o" style="width:${w(c.org)}"></span><span class="h" style="width:${w(hold)}"></span>`;
+  }
+  return html + '</div>';
+}
+function ring(c, size = 26) {
+  const r = 10, C = 2 * Math.PI * r, f = Math.min(1, c.taken / c.cap);
+  const col = { ok: 'var(--primary)', few: 'var(--warn)', full: 'var(--bad)', over: 'var(--bad)' }[c.tone];
+  return `<svg class="ring" viewBox="0 0 26 26" width="${size}" height="${size}" aria-hidden="true"><circle cx="13" cy="13" r="${r}" fill="none" stroke="var(--muted)" stroke-width="4"/><circle cx="13" cy="13" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(C * f).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 13 13)"/></svg>`;
+}
+function legend(c) {
+  const items = [['var(--primary)', 'Teilnehmende', c.part], ['var(--spk)', 'Speaker', c.spk], ['var(--org)', 'Organisation', c.org]];
+  if (c.res + c.offer) items.push(['repeating-linear-gradient(135deg,var(--primary) 0 2px,#B9B1EA 2px 4px)', 'Reserviert / Angebot', c.res + c.offer]);
+  if (c.over) items.push(['repeating-linear-gradient(135deg,var(--bad) 0 2px,#F2B8B3 2px 4px)', 'Überbucht', c.over]);
+  else items.push(['var(--muted)', 'Frei', c.free]);
+  return items.map(([col, l, n]) => `<span class="lg"><i style="background:${col}"></i>${l} <b>${n}</b></span>`).join('');
+}
+function waitInfo(c) {
+  if (!c.wait && !c.offer) return '<span style="color:var(--ink-3)">Keine Warteliste</span>';
+  const parts = [];
+  if (c.wait) parts.push(`${c.wait} auf der Warteliste`);
+  if (c.offer) parts.push(`${c.offer} ${plural(c.offer, 'Angebot', 'Angebote')} offen`);
+  return `<a class="lnk" href="#">${parts.join(' · ')} →</a>`;
+}
+
+/* ---------- Teilnehmerliste ---------- */
+const ROWS = [
+  ['orga, stefan', 'wfewfwf@wwe.com', '–', ['Organisation'], 'Bestätigt', 'Kostenlos', '€ 0,00'],
+  ['wurdi, hudri', 'wgwew@sdfg.com', '–', ['Teilnehmer:in'], 'Bestätigt', 'Bezahlt', '€ 10,00'],
+  ['speaker, mister', 'wfeef@sdv.com', '–', ['Speaker'], 'Bestätigt', 'Kostenlos', '€ 0,00'],
+  ['speakerin, missus', 'adqw@wew.com', '–', ['Speaker'], 'Bestätigt', 'Kostenlos', '€ 0,00'],
+  ['vierter tester, test4', 'svsdvds@gsvdmx.at', '–', ['Teilnehmer:in'], 'Bestätigt', 'Bezahlt', '€ 10,00'],
+  ['sprecher1, speaker1', 'wwgww@svw.com', 'abc', ['Teilnehmer:in', 'Speaker'], 'Bestätigt', 'Bezahlt', '€ 10,00'],
+  ['zweiter test, test2', 'thatisme2222@gmx.at', '–', ['Teilnehmer:in'], 'Storniert', 'Erstattet', '€ 10,00'],
+];
+function capBlock(c) {
+  const t = 'tone-' + c.tone;
+  if (st.v === 'A') {
+    return `<div class="a-cap ${t}">
+      <div class="big"><span class="pill"><span class="dot"></span>${headline(c)}</span><span class="num" style="color:var(--ink-2);font:500 13px var(--body)">${c.taken} / ${c.cap} belegt</span></div>
+      ${bar(c)}
+      <small class="num">${c.conf} bestätigt (davon ${c.spk} Speaker) · ${c.res + c.offer} reserviert · ${c.wait} Warteliste</small>
+    </div>`;
+  }
+  return '';
+}
+function belowHead(c) {
+  const t = 'tone-' + c.tone;
+  if (st.v === 'B') {
+    const markLeft = (c.cap / Math.max(c.cap, c.taken) * 100).toFixed(2);
+    return `<section class="b-card ${t}" aria-label="Belegung">
+      <div class="b-free"><strong>${c.tone === 'over' ? '+' + c.over : c.free}</strong><span>${c.tone === 'over' ? 'über Kapazität' : c.free === 0 ? 'Ausgebucht' : plural(c.free, 'Platz frei', 'Plätze frei')}</span></div>
+      <div class="b-mid">
+        <div class="b-scale">${bar(c)}${c.over ? `<span class="b-mark" style="left:calc(${markLeft}% - 1px)" data-l="Kapazität ${c.cap}"></span>` : ''}</div>
+        <div class="b-legend">${legend(c)}</div>
+      </div>
+      <div class="b-side"><span class="num"><b>${c.taken}</b> von ${c.cap} belegt</span>${waitInfo(c)}<a class="lnk" href="#" style="font-weight:500;color:var(--ink-3)">Kapazität ändern</a></div>
+    </section>`;
+  }
+  if (st.v === 'C') {
+    return `<div class="c-grid">
+      <button class="c-tile hero ${t}"><span>${c.tone === 'over' ? 'Überbucht' : 'Frei'}</span><strong>${c.tone === 'over' ? '+' + c.over : c.free}</strong><small>${c.tone === 'over' ? 'mehr bestätigt als Plätze' : c.free === 0 ? 'Neue Anmeldungen → Warteliste' : 'von ' + c.cap + ' Plätzen'}</small></button>
+      <button class="c-tile"><span>Belegt</span><strong>${c.taken}<em> / ${c.cap}</em></strong>${bar(c)}<small>davon ${c.spk} Speaker, ${c.org} Organisation</small></button>
+      <button class="c-tile"><span>Reserviert / Angebote</span><strong>${c.res + c.offer}</strong><small>${c.res} Zahlung offen · ${c.offer} Angebot</small></button>
+      <button class="c-tile"><span>Warteliste</span><strong>${c.wait}</strong><small>${c.wait ? 'Wartende anzeigen →' : 'niemand wartet'}</small></button>
+    </div>`;
+  }
+  if (st.v === 'D') {
+    return `<div class="d-mobile">${dButton(c)}</div>`;
+  }
+  return '';
+}
+function dButton(c) {
+  const t = 'tone-' + c.tone;
+  const label = c.tone === 'over' ? `${c.over} überbucht` : c.free === 0 ? 'Ausgebucht' : `${c.free} frei`;
+  return `<div class="d-wrap ${t}"><button class="d-btn" data-pop aria-expanded="${st.pop}">${ring(c)}<span style="color:var(--tone)">${label}</span><span style="color:var(--ink-3);font-weight:500" class="num">· ${c.taken}/${c.cap}</span></button>
+    <div class="d-pop ${st.pop ? 'open' : ''}">
+      ${bar(c)}
+      <dl>
+        <dt><i class="lg"><i style="background:var(--primary)"></i></i>Teilnehmende</dt><dd>${c.part}</dd>
+        <dt><i class="lg"><i style="background:var(--spk)"></i></i>Speaker</dt><dd>${c.spk}</dd>
+        <dt><i class="lg"><i style="background:var(--org)"></i></i>Organisation</dt><dd>${c.org}</dd>
+        <dt>Reserviert / Angebot</dt><dd>${c.res + c.offer}</dd>
+        <hr><dt><b>Belegt</b></dt><dd>${c.taken} / ${c.cap}</dd>
+        <dt>Warteliste</dt><dd>${c.wait}</dd>
+        <dt style="color:var(--ink-3)">Storniert (zählt nicht)</dt><dd style="color:var(--ink-3)">${c.canc}</dd>
+      </dl>
+      <a class="lnk" href="#">Kapazität ändern</a>
+    </div></div>`;
+}
+function renderList(c) {
+  const all = c.conf + c.res + c.wait + c.offer + c.canc;
+  const tabs = [['Alle', all, 1], ['Bestätigt', c.conf], ['Zahlung offen', c.res], ['Warteliste', c.wait + c.offer], ['Storniert', c.canc]];
+  const rows = ROWS.map(r => `<tr><td><b>${r[0]}</b><small>${r[1]}</small></td><td>${r[2]}</td><td>${r[3].map(x => `<span class="role">${x}</span>`).join(' ')}</td><td><span class="st ${r[4] === 'Storniert' ? 'x' : ''}">${r[4]}</span></td><td>${r[5]}</td><td class="r num">${r[6]}</td></tr>`).join('');
+  const cards = ROWS.slice(0, 5).map(r => `<div class="card-row"><div><b>${r[0]}</b><small>${r[3].join(', ')} · ${r[5]}</small></div><span class="st ${r[4] === 'Storniert' ? 'x' : ''}">${r[4]}</span></div>`).join('');
+  const footCap = st.v === 'D' ? `<span class="num">${all} Anmeldungen · <b style="color:var(--ink-2)">${c.taken} von ${c.cap} Plätzen belegt</b>${c.free ? ' · ' + c.free + ' frei' : ''}</span>` : `<span class="num">${Math.min(all, ROWS.length)} von ${all} Anmeldungen</span>`;
+  return `
+    <div class="crumb">test1</div>
+    <div class="head"><h1>Teilnehmende</h1>${capBlock(c)}</div>
+    ${belowHead(c)}
+    <div class="tabs">${tabs.map(([l, n, on]) => `<span class="tab ${on ? 'on' : ''}">${l} <span class="cnt num">${n}</span></span>`).join('')}<span class="spacer"></span>${st.v === 'D' ? `<span class="d-tabcap">${dButton(c)}</span>` : ''}</div>
+    <div class="toolbar"><span class="input">Name, E-Mail, Firma …</span><span class="chip">Rollen ▾</span><span class="chip">Zahlung ▾</span><span class="chip">Ticket ▾</span><span class="chip">Excel-Export</span></div>
+    <div class="table">
+      <table><thead><tr><th>Name</th><th>Firma</th><th>Rollen</th><th>Status</th><th>Zahlung</th><th class="r">Preis</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="cards">${cards}</div>
+      <div class="tfoot">${footCap}<span>J/K blättern · Enter öffnen · N neue Anmeldung</span></div>
+    </div>`;
+}
+
+/* ---------- Weitere Stellen ---------- */
+function renderOther(c) {
+  const t = 'tone-' + c.tone;
+  const usage = Math.min(100, c.pct);
+  const evRows = [
+    ['test1', '20.11.2026', 'Wien', c],
+    ['Forum Day 2026', '12.03.2027', 'Wien', calc({ cap: 250, part: 151, spk: 16, org: 4, res: 6, offer: 0, wait: 0, canc: 7 })],
+    ['Masterclass', '13.03.2027', 'Wien', calc({ cap: 24, part: 21, spk: 1, org: 0, res: 0, offer: 0, wait: 0, canc: 1 })],
+  ];
+  const pubMsg = c.tone === 'over' || c.tone === 'full' || c.wait > 0
+    ? `<div class="pub-msg ${t}"><span class="dot"></span>Ausgebucht · Anmeldung zur Warteliste möglich</div>`
+    : c.tone === 'few'
+      ? `<div class="pub-msg ${t}"><span class="dot"></span>Nur noch ${c.free} ${plural(c.free, 'Platz', 'Plätze')} frei</div>`
+      : `<div class="pub-msg calm">Plätze verfügbar</div>`;
+  const cta = c.tone === 'over' || c.tone === 'full' || c.wait > 0 ? '<a class="cta wl" href="#">Auf die Warteliste</a>' : '<a class="cta" href="#">Jetzt anmelden</a>';
+  return `<div class="other">
+    <div class="rule"><b>Zählregel überall gleich:</b> belegt = bestätigt (inkl. Speaker und Organisation) + Reservierungen mit offener Zahlung + offene Wartelisten-Angebote. Stornierte zählen nicht. Bei Überbuchung wird „frei“ nie negativ, stattdessen „X über Kapazität“.</div>
+
+    <section class="blk">
+      <div><h2>1 · Cockpit des Events (Kachel „Belegung“, gibt es schon)</h2><p class="why">Heute: „7 / 40“ und Balken. Vorschlag: gleiche Farblogik wie in der Liste, freie Plätze als Hinweis-Pille, Balken nach Rolle, Überbuchung rot statt bei 100 % abgeschnitten.</p></div>
+      <div class="cmp">
+        <div><span class="tag">heute</span><div class="kpi"><span>Belegung</span><strong class="num">${c.taken}<em> / ${c.cap}</em></strong><div class="bar"><span class="p" style="width:${usage}%"></span></div><small class="num">${c.free} frei · ${c.res + c.offer} reserviert</small></div></div>
+        <div><span class="tag">neu</span><div class="kpi ${t}"><span>Belegung <span class="pill"><span class="dot"></span>${headline(c)}</span></span><strong class="num">${c.taken}<em> / ${c.cap}</em></strong>${bar(c)}<small class="num">${c.spk} Speaker · ${c.res + c.offer} reserviert · ${c.wait} Warteliste</small></div></div>
+      </div>
+    </section>
+
+    <section class="blk">
+      <div><h2>2 · Eventliste und Startseite</h2><p class="why">Heute nur „belegt / Kapazität“ als Zahl. Vorschlag: kleiner Balken mit „X frei“, damit fast volle Events in der Liste auffallen.</p></div>
+      <div class="table"><table class="ev-t"><thead><tr><th>Event</th><th>Datum</th><th>Ort</th><th>Belegung</th><th class="r">Warteliste</th></tr></thead><tbody>
+        ${evRows.map(([n, d, o, e]) => `<tr><td><b style="color:var(--primary)">${n}</b></td><td>${d}</td><td>${o}</td><td><div class="ev-cap tone-${e.tone}"><div class="t"><span class="num">${e.taken} / ${e.cap}</span><span style="color:var(--tone);font-weight:600">${headline(e)}</span></div>${bar(e)}</div></td><td class="r num">${e.wait}</td></tr>`).join('')}
+      </tbody></table></div>
+    </section>
+
+    <section class="blk">
+      <div><h2>3 · Öffentliche Eventseite</h2><p class="why">Heute erscheint „Nur noch X Plätze frei“ ab 10 freien Plätzen. Vorschlag: genaue Zahl nur bei knapper Lage zeigen (≤ 10 oder ≤ 10 %), sonst ruhig „Plätze verfügbar“. Sobald jemand auf der Warteliste steht, gilt das Event öffentlich als ausgebucht (so ist es schon im Code), der Knopf wird „Auf die Warteliste“.</p></div>
+      <div class="pub">
+        <div class="pub-hero"><span class="eb">Konferenz · Wien</span><h3>test1</h3><p>20. November 2026 · 09:00–17:00</p></div>
+        <div class="pub-box ${t}"><span style="font-size:12px;color:var(--ink-3)">Ticket ab</span><span class="price">€ 10,00</span>${pubMsg}${cta}</div>
+      </div>
+    </section>
+
+    <section class="blk">
+      <div><h2>4 · Händische Anmeldung und „Bestätigen“ aus der Warteliste</h2><p class="why">Im Dialog steht die Restkapazität direkt über dem Status, damit klar ist, ob gerade überbucht wird. Den Haken „Überbuchen“ gibt es schon, er bekommt nur die Zahl dazu.</p></div>
+      <div class="kpi ${t}" style="max-width:420px"><span>Status der neuen Anmeldung</span><div class="pill" style="justify-self:start"><span class="dot"></span>${c.tone === 'over' ? `Schon ${c.over} über Kapazität` : c.free ? `Noch ${c.free} ${plural(c.free, 'Platz', 'Plätze')} frei` : 'Kein Platz mehr frei'}</div><small>${c.free ? 'Wird als „Bestätigt“ angelegt.' : 'Wird auf die Warteliste gesetzt, außer „Trotzdem bestätigen (überbuchen)“ ist angehakt.'}</small></div>
+    </section>
+  </div>`;
+}
+
+function render() {
+  const c = calc(S[st.s]);
+  document.getElementById('stage').className = 'stage' + (st.dev === 'phone' ? ' phone' : '');
+  document.getElementById('content').innerHTML = st.p === 'list' ? renderList(c) : renderOther(c);
+  document.getElementById('note').innerHTML = st.p === 'list' ? NOTES[st.v] : 'Weitere Stellen, an denen die Restkapazität hilft. Gezeigt mit der Farblogik aus Entwurf B; mit „Belegung“ oben umschalten.';
+  document.querySelectorAll('[data-v],[data-s],[data-dev],[data-p]').forEach(b => {
+    const k = b.dataset.v ? 'v' : b.dataset.s ? 's' : b.dataset.dev ? 'dev' : 'p';
+    b.setAttribute('aria-pressed', String(b.dataset[k === 'dev' ? 'dev' : k] === st[k]));
+  });
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.v) st.v = b.dataset.v;
+  else if (b.dataset.s) st.s = b.dataset.s;
+  else if (b.dataset.dev) st.dev = b.dataset.dev;
+  else if (b.dataset.p) st.p = b.dataset.p;
+  else if ('pop' in b.dataset) st.pop = !st.pop;
+  else return;
+  render();
+});
+const q = new URLSearchParams(location.search);
+for (const k of ['v', 's', 'dev', 'p']) if (q.get(k)) st[k] = q.get(k);
+render();
+</script>
+</body>
+</html>

@@ -1,12 +1,11 @@
 import { AttendeesTable } from '@/components/admin/attendees/attendees-table';
-import { AttendeesTableAlt } from '@/components/admin/attendees/attendees-table-alt';
 import { localized } from '@/lib/localized';
 import { centsToInput } from '@/lib/money';
+import { seatUsage } from '@/lib/seat-usage';
 import { initAdminPage, loadEvent, type EventParams } from '@/server/admin-pages';
 import { getEventStats } from '@/server/services/events';
 import { listPriceCategories } from '@/server/services/pricing';
 import { listRegistrations, listRoles } from '@/server/services/registrations';
-import { getUiVersion } from '@/server/ui-version';
 
 type Props = EventParams & { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -20,15 +19,13 @@ export default async function AttendeesPage({ params, searchParams }: Props) {
   const roles = listRoles(db).map((r) => ({ key: r.key, label: localized(r.label, locale) }));
   const stats = getEventStats(db, event);
   const openId = Number(one('r'));
-  // alte Teilnehmerliste bleibt über den Umschalter wählbar
-  const Table = (await getUiVersion()) === 'alt' ? AttendeesTableAlt : AttendeesTable;
-
   return (
-    <Table
+    <AttendeesTable
       eventId={event.id}
       rows={rows}
       roles={roles}
       seatsFree={stats.seatsFree}
+      seatUsage={seatUsage(rows, stats, event.capacity)}
       readOnly={Boolean(event.archivedAt)}
       prices={{
         normal: centsToInput(event.priceNormalCents),
