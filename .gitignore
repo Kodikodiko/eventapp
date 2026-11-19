@@ -49,3 +49,8 @@ next-env.d.ts
 
 # lokale Werkzeuge (z. B. Stripe-CLI)
 *.exe
+
+# lokale Ablagen und Werkzeug-Einstellungen
+/*.pdf
+/*.odt
+/.claude/
