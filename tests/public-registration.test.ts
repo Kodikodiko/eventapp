@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ServiceError } from '@/lib/action-result';
 import { publicRegistrationSchema, toPublicRegistrationInput, type PublicRegistrationInput } from '@/lib/validation/public-registration';
 import { openDatabase, type Db } from '@/server/db/core';
-import { auditLog, consents, people, registrationRoles, registrations } from '@/server/db/schema';
+import { auditLog, consents, people, registrationRoles, registrations, roles } from '@/server/db/schema';
 import { createEvent, getEvent, getEventStats, setEventArchived, updateEvent, type EventRow } from '@/server/services/events';
 import { publishLegalVersion } from '@/server/services/legal';
 import { replaceMembers } from '@/server/services/members';
@@ -221,5 +221,28 @@ describe('Anfragebegrenzung', () => {
     expect(takeToken('k', limit, 1001)).toBe(true);
     expect(clientIp(new Headers({ 'x-forwarded-for': '203.0.113.5, 10.0.0.1' }))).toBe('203.0.113.5');
     expect(clientIp(new Headers())).toBe('unknown');
+  });
+});
+
+describe('Speaker kauft ein Ticket', () => {
+  it('ersetzt die reine Speaker-Anmeldung; die neue Anmeldung hat Teilnehmer und Speaker, auch bei vollem Event', () => {
+    const { db, event, reg } = setup({ capacity: 1 });
+    createSpeaker(db, actor, event.id, { firstName: 'Eva', lastName: 'Gruber', email: 'eva@example.org', company: null, locale: 'de', proposalStatus: 'confirmed', slidesStatus: 'missing' });
+    const [placeholder] = db.select().from(registrations).where(eq(registrations.eventId, event.id)).all();
+    const r = reg();
+    expect(r.status).toBe('confirmed');
+    const rows = db.select().from(registrations).where(eq(registrations.eventId, event.id)).all();
+    expect(rows.find((x) => x.id === placeholder.id)!.status).toBe('cancelled');
+    const fresh = rows.find((x) => x.id !== placeholder.id)!;
+    expect(fresh.priceCents).toBe(20000);
+    const keys = db
+      .select({ key: roles.key })
+      .from(registrationRoles)
+      .innerJoin(roles, eq(roles.id, registrationRoles.roleId))
+      .where(eq(registrationRoles.registrationId, fresh.id))
+      .all()
+      .map((x) => x.key)
+      .sort();
+    expect(keys).toEqual(['attendee', 'speaker']);
   });
 });

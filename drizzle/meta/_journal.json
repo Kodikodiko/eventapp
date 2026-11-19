@@ -120,6 +120,13 @@
       "when": 1794761685469,
       "tag": "0016_event_theme",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1795122000000,
+      "tag": "0017_speaker_roles",
+      "breakpoints": true
     }
   ]
 }

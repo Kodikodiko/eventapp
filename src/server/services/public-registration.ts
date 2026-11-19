@@ -25,6 +25,7 @@ import type { EventRow } from './events';
 import { findValidMember } from './members';
 import { checkDiscountCode } from './pricing';
 import { getAvailability } from './public-events';
+import { applySpeakerRoleToRegistration, releaseSpeakerOnlyRegistration } from './speaker-role';
 
 export const STRIPE_RESERVATION_MINUTES = 30;
 
@@ -132,6 +133,9 @@ export function registerPublic(
     (tx) => {
       const event = tx.select().from(events).where(eq(events.id, eventId)).get();
       if (!event || event.archivedAt) throw new ServiceError('NOT_FOUND');
+      // Speaker mit reiner Speaker-Anmeldung: Ticketkauf ersetzt sie (ihr Platz wird vorher frei)
+      const known = tx.select({ id: people.id }).from(people).where(eq(people.email, input.email)).get();
+      if (known) releaseSpeakerOnlyRegistration(tx, SYSTEM, eventId, known.id, 'ersetzt durch Ticketkauf');
       const availability = getAvailability(tx, event, options.stripeEnabled, now);
       if (availability.state !== 'open') throw new ServiceError('CONFLICT', { _form: 'registrationClosed' });
       if (availability.termsDocumentId !== input.termsDocumentId || availability.privacyDocumentId !== input.privacyDocumentId) {
@@ -202,6 +206,7 @@ export function registerPublic(
 
       const attendee = tx.select({ id: roles.id }).from(roles).where(eq(roles.key, 'attendee')).get();
       if (attendee) tx.insert(registrationRoles).values({ registrationId: reg.id, roleId: attendee.id }).run();
+      applySpeakerRoleToRegistration(tx, reg.id, eventId, personId);
 
       const consentRows: (typeof consents.$inferInsert)[] = [
         { personId, kind: 'terms', documentId: input.termsDocumentId, eventId, grantedAt: nowIso, source: 'public' },

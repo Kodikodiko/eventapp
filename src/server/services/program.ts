@@ -15,6 +15,7 @@ import { events, eventStreams, people, sessions, sessionSpeakers, speakers } fro
 import { removeMediaImage } from '@/server/media/storage';
 import { writeAudit, type Actor, type Tx } from './audit';
 import { updatePerson, upsertPerson } from './people';
+import { ensureSpeakerRegistration, releaseSpeakerOnlyRegistration } from './speaker-role';
 
 export type SpeakerRow = {
   id: number;
@@ -109,6 +110,7 @@ export function createSpeaker(db: Db, actor: Actor, eventId: number, input: Spea
       .returning()
       .all();
     writeAudit(tx, actor, { action: 'speaker.created', entity: 'speaker', entityId: row.id, eventId, summary: 'Speaker hinzugefügt' });
+    ensureSpeakerRegistration(tx, actor, eventId, personId);
     return row.id;
   });
 }
@@ -147,6 +149,7 @@ export function removeSpeaker(db: Db, actor: Actor, id: number): void {
     loadWritableEvent(tx, sp.eventId);
     tx.update(sessions).set({ speakerId: null }).where(eq(sessions.speakerId, id)).run();
     tx.delete(speakers).where(eq(speakers.id, id)).run();
+    releaseSpeakerOnlyRegistration(tx, actor, sp.eventId, sp.personId, 'Speaker entfernt');
     writeAudit(tx, actor, { action: 'speaker.removed', entity: 'speaker', entityId: id, eventId: sp.eventId, summary: 'Speaker aus dem Event entfernt' });
     return sp.photoPath;
   });

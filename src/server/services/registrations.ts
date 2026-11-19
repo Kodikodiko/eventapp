@@ -23,6 +23,7 @@ import { activeInvoiceOf, activeInvoicesByRegistration } from './invoices';
 import { updatePerson, upsertPerson } from './people';
 import { requireActiveCategory } from './pricing';
 import { cancelRegistration, refundableByRegistration } from './refunds';
+import { applySpeakerRoleToRegistration, releaseSpeakerOnlyRegistration } from './speaker-role';
 
 export type RegistrationListRow = {
   id: number;
@@ -171,6 +172,7 @@ export function createRegistrationByAdmin(
       const event = loadWritableEvent(tx, eventId);
       const roleIds = resolveRoleIds(tx, input.roles);
       const personId = upsertPerson(tx, input);
+      releaseSpeakerOnlyRegistration(tx, actor, eventId, personId, 'ersetzt durch Anmeldung im Admin');
       const active = tx
         .select({ id: registrations.id })
         .from(registrations)
@@ -201,6 +203,7 @@ export function createRegistrationByAdmin(
         .returning()
         .all();
       setRoles(tx, reg.id, roleIds);
+      applySpeakerRoleToRegistration(tx, reg.id, eventId, personId);
       writeAudit(tx, actor, {
         action: 'registration.created',
         entity: 'registration',

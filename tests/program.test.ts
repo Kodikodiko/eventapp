@@ -1,11 +1,15 @@
+import path from 'node:path';
+import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { ServiceError } from '@/lib/action-result';
 import type { SessionInput, SpeakerInput } from '@/lib/validation/program';
 import { sessionFormSchema, toSessionInput } from '@/lib/validation/program';
 import { openDatabase, type Db } from '@/server/db/core';
-import { people } from '@/server/db/schema';
-import { createEvent, setEventArchived, setSlidesPublic } from '@/server/services/events';
+import { loadMigrations } from '@/server/db/migrate';
+import { people, registrationRoles, registrations, roles } from '@/server/db/schema';
+import { createEvent, getEvent, getEventStats, setEventArchived, setSlidesPublic } from '@/server/services/events';
 import { listPublicSessions } from '@/server/services/public-events';
+import { addRoleToRegistrations, createRegistrationByAdmin } from '@/server/services/registrations';
 import {
   addStream,
   createSession,
@@ -246,5 +250,112 @@ describe('Streams', () => {
     deleteStream(db, actor, event.id, 1);
     expect(ranges(db, event.id)).toEqual(['Keynote:1-1', 'in C:1-1']);
     expect(codeOf(() => deleteStream(db, actor, event.id, 1))).toEqual({ code: 'CONFLICT', fields: { _form: 'lastStream' } });
+  });
+});
+
+const roleKeys = (db: Db, registrationId: number) =>
+  db
+    .select({ key: roles.key })
+    .from(registrationRoles)
+    .innerJoin(roles, eq(roles.id, registrationRoles.roleId))
+    .where(eq(registrationRoles.registrationId, registrationId))
+    .all()
+    .map((r) => r.key)
+    .sort();
+const regsOf = (db: Db, eventId: number) => db.select().from(registrations).where(eq(registrations.eventId, eventId)).all();
+
+describe('Speaker und ihre Anmeldung', () => {
+  const regInput = (email: string, roleList = ['attendee'], priceCents = 0) => ({
+    firstName: 'Eva',
+    lastName: 'Reed',
+    email,
+    company: null,
+    locale: 'en' as const,
+    roles: roleList,
+    ticketType: 'normal' as const,
+    priceCents,
+    billingCompany: null,
+    billingAddress: null,
+    status: 'confirmed' as const,
+    overbook: false,
+  });
+  it('Speaker ohne Anmeldung bekommt eine kostenlose, bestätigte Speaker-Anmeldung, die einen Platz belegt', () => {
+    const { db, event } = setup();
+    createSpeaker(db, actor, event.id, speaker('eva@example.org'));
+    const [reg] = regsOf(db, event.id);
+    expect(reg).toMatchObject({ status: 'confirmed', priceCents: 0, paymentMethod: 'free', paymentStatus: 'not_required' });
+    expect(roleKeys(db, reg.id)).toEqual(['speaker']);
+    expect(getEventStats(db, getEvent(db, event.id)!).confirmed).toBe(1);
+  });
+
+  it('vorhandene Anmeldung bekommt die Rolle speaker dazu (nur im selben Event), keine zweite Anmeldung', () => {
+    const { db, event, other } = setup();
+    const reg = createRegistrationByAdmin(db, actor, event.id, regInput('eva@example.org'));
+    const otherReg = createRegistrationByAdmin(db, actor, other.id, regInput('eva@example.org'));
+    createSpeaker(db, actor, event.id, speaker('eva@example.org'));
+    expect(regsOf(db, event.id)).toHaveLength(1);
+    expect(roleKeys(db, reg)).toEqual(['attendee', 'speaker']);
+    expect(roleKeys(db, otherReg)).toEqual(['attendee']);
+  });
+
+  it('Zuteilung als Teilnehmer im Admin ersetzt die Speaker-Anmeldung; die neue behält die Rolle speaker', () => {
+    const { db, event } = setup();
+    createSpeaker(db, actor, event.id, speaker('eva@example.org'));
+    const [placeholder] = regsOf(db, event.id);
+    const reg = createRegistrationByAdmin(db, actor, event.id, regInput('eva@example.org', ['attendee'], 14900));
+    expect(roleKeys(db, reg)).toEqual(['attendee', 'speaker']);
+    const old = regsOf(db, event.id).find((r) => r.id === placeholder.id)!;
+    expect(old.status).toBe('cancelled');
+    expect(getEventStats(db, getEvent(db, event.id)!).confirmed).toBe(1);
+  });
+
+  it('Speaker entfernen storniert nur eine reine Speaker-Anmeldung', () => {
+    const { db, event } = setup();
+    const a = createSpeaker(db, actor, event.id, speaker('eva@example.org'));
+    const b = createSpeaker(db, actor, event.id, speaker('tom@example.org'));
+    const tomReg = regsOf(db, event.id).find((r) => r.id !== regsOf(db, event.id)[0].id)!;
+    addRoleToRegistrations(db, actor, [tomReg.id], 'attendee');
+    removeSpeaker(db, actor, a);
+    removeSpeaker(db, actor, b);
+    const regs = regsOf(db, event.id);
+    expect(regs.find((r) => r.id !== tomReg.id)!.status).toBe('cancelled');
+    expect(regs.find((r) => r.id === tomReg.id)!.status).toBe('confirmed');
+    expect(roleKeys(db, tomReg.id)).toEqual(['attendee', 'speaker']);
+  });
+});
+
+describe('Migration 0017: bestehende Speaker nachziehen', () => {
+  it('legt fehlende Speaker-Anmeldungen an und ergänzt die Rolle, idempotent, archivierte Events bleiben unverändert', () => {
+    const { db, event, other } = setup();
+    const third = createEvent(db, actor, {
+      slug: 'drittes', name: { de: 'drittes' }, description: null, location: '',
+      startsAt: '2027-05-12T06:00:00.000Z', endsAt: '2027-05-12T16:00:00.000Z', registrationOpensAt: null, registrationClosesAt: null,
+      capacity: 10, priceNormalCents: 0, priceMemberCents: 0, ticketVatRateBp: 2000, allowStripe: false, allowInvoice: false,
+      refundMode: 'automatic', cancellationRules: [],
+    });
+    const reg = createRegistrationByAdmin(db, actor, event.id, {
+      firstName: 'Eva', lastName: 'Reed', email: 'eva@example.org', company: null, locale: 'en', roles: ['attendee'],
+      ticketType: 'normal', priceCents: 0, billingCompany: null, billingAddress: null, status: 'confirmed', overbook: false,
+    });
+    createSpeaker(db, actor, event.id, speaker('eva@example.org'));
+    createSpeaker(db, actor, other.id, speaker('eva@example.org'));
+    createSpeaker(db, actor, third.id, speaker('tom@example.org'));
+    // Altzustand herstellen: keine Speaker-Rollen, keine Speaker-Anmeldungen
+    const speakerRole = db.select().from(roles).where(eq(roles.key, 'speaker')).get()!;
+    db.delete(registrationRoles).where(eq(registrationRoles.roleId, speakerRole.id)).run();
+    db.delete(registrations).where(sql`${registrations.id} <> ${reg}`).run();
+    setEventArchived(db, actor, other.id, true);
+
+    const migration = loadMigrations(path.join(process.cwd(), 'drizzle')).find((m) => m.id === '0017_speaker_roles')!;
+    const run = () => migration.statements.forEach((sqlText) => db.run(sql.raw(sqlText)));
+    run();
+    run();
+    expect(roleKeys(db, reg)).toEqual(['attendee', 'speaker']);
+    expect(regsOf(db, other.id)).toHaveLength(0);
+    const thirdRegs = regsOf(db, third.id);
+    expect(thirdRegs).toHaveLength(1);
+    expect(thirdRegs[0]).toMatchObject({ status: 'confirmed', priceCents: 0, paymentMethod: 'free' });
+    expect(thirdRegs[0].qrToken).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(roleKeys(db, thirdRegs[0].id)).toEqual(['speaker']);
   });
 });
