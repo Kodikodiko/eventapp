@@ -46,7 +46,6 @@
     "chooseEvent": "Choose event …",
     "members": "Member list",
     "audit": "Audit log",
-    "sectionEvent": "Event",
     "sectionOrg": "Organisation",
     "cockpit": "Cockpit",
     "attendees": "Attendees",
@@ -103,8 +102,6 @@
     "sectionProgram": "Programme & presence",
     "publicEventPage": "Public event page",
     "organizationToggle": "Expand or collapse organisation",
-    "uiToggle": "New interface",
-    "uiToggleHint": "Switch between the new and the old interface (applies to this browser)",
     "checkin": "Check-in"
   },
   "security": {
@@ -455,10 +452,29 @@
   },
   "attendees": {
     "title": "Attendees",
+    "seats": {
+      "label": "Capacity",
+      "attendee": "Attendees",
+      "speaker": "Speakers",
+      "orga": "Organizers",
+      "other": "Other",
+      "held": "Reserved / offer",
+      "freeLegend": "Free",
+      "overLegend": "Overbooked",
+      "freeCaption": "{count, plural, one {seat free} other {seats free}}",
+      "fullCaption": "Sold out",
+      "overCaption": "over capacity",
+      "barLabel": "{taken} of {capacity} seats taken",
+      "capacityMark": "Capacity {capacity}",
+      "taken": "<b>{taken}</b> of {capacity} taken",
+      "waiting": "{count} on the waitlist",
+      "offered": "{count, plural, one {# offer open} other {# offers open}}",
+      "noWaitlist": "No waitlist",
+      "changeCapacity": "Change capacity"
+    },
     "search": "Search",
     "searchPlaceholder": "Name, email, company …",
     "filter": "Filter",
-    "filterRoles": "Roles (any must match)",
     "filterStatus": "Status (one must match)",
     "clear": "Clear filters",
     "add": "Add registration",
@@ -577,7 +593,6 @@
     "saveViewConfirm": "Save",
     "deleteView": "Delete view “{name}”",
     "viewSaved": "View “{name}” saved",
-    "filterAdd": "Filter",
     "filterPayment": "Payment",
     "filterMethod": "Payment method",
     "filterTicket": "Ticket",
@@ -588,7 +603,6 @@
       "method": "Method: {value}",
       "ticket": "Ticket: {value}"
     },
-    "removeFilter": "Remove filter “{label}”",
     "selectAll": "Select all visible",
     "selectRow": "Select {name}",
     "selected": "{count} selected",
@@ -602,14 +616,11 @@
     "bulkInvoicesHint": "Only confirmed, paid registrations without an invoice. Each invoice gets the next sequential number and is sent as PDF by e-mail.",
     "bulkInvoicesConfirm": "Create and send",
     "bulkInvoicesDone": "{ok, plural, one {# invoice created} other {# invoices created}}",
-    "bulkInvoicesFailed": "{failed} failed – see Invoices for details",
     "bulkRole": "Assign role",
     "bulkRoleDone": "{count, plural, =0 {All already had the role} one {Role added to # registration} other {Role added to # registrations}}",
     "bulkExport": "Export",
     "bulkClear": "Clear selection",
-    "keysHint": "Keyboard: ↑ ↓ move · Enter opens · Space selects · Esc closes",
     "paymentOverdue": "Overdue",
-    "noInvoice": "no invoice",
     "openDetails": "Open details for {name}",
     "detail": {
       "label": "Details for {name}",
@@ -621,7 +632,6 @@
       "ticket": "Ticket",
       "memberNumber": "Member number",
       "paymentMethod": "Payment method",
-      "billing": "Billing address",
       "source": "Source",
       "sourcePublic": "public form",
       "sourceAdmin": "admin area",
@@ -746,8 +756,6 @@
     "refundNothingPaid": "No payment has been recorded for this registration yet – only paid amounts can be refunded. Set the payment status to “Paid” first; the refund then continues here.",
     "roleTagFilter": "Show only registrations with role “{role}”",
     "roleTagRemove": "Remove filter “{role}”",
-    "roleCountsLabel": "Roles",
-    "shownCount": "{visible} of {total} shown",
     "groupBy": "Group:",
     "groupByOption": {
       "none": "no grouping",
@@ -1100,7 +1108,6 @@
     "colAmount": "Amount",
     "colDue": "Due",
     "colState": "Status",
-    "colSent": "Sent",
     "colActions": "Actions",
     "creditFor": "Credit note for {number}",
     "kind": {
@@ -1495,9 +1502,36 @@
     }
   },
   "checkout": {
-    "paid": {
-      "title": "Payment received",
-      "text": "Thank you! Your registration for {event} is confirmed."
+    "paidPage": {
+      "eyebrow": "Payment received · Registration confirmed",
+      "title": "See you at {event}!",
+      "lead": "Thank you! Your seat is confirmed. Your confirmation and invoice will arrive by email in a few minutes.",
+      "addToCalendar": "Add to calendar",
+      "toProgram": "View programme",
+      "toEvent": "Back to the event",
+      "nextTitle": "What happens next",
+      "myRegistrations": "My registrations",
+      "questions": "Questions? {email}",
+      "steps": {
+        "paid": {
+          "when": "Done",
+          "title": "Payment received"
+        },
+        "mail": {
+          "when": "In a few minutes",
+          "title": "Confirmation and invoice",
+          "text": "Sent by email to the address you registered with."
+        },
+        "manage": {
+          "when": "Until the event",
+          "title": "Manage your registration",
+          "text": "Change your details or cancel under “My registrations”"
+        },
+        "day": {
+          "title": "On the day",
+          "text": "Just give your name at check-in."
+        }
+      }
     },
     "processing": {
       "title": "Confirming payment …",

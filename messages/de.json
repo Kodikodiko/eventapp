@@ -46,7 +46,6 @@
     "chooseEvent": "Event wählen …",
     "members": "Mitgliederliste",
     "audit": "Protokoll",
-    "sectionEvent": "Event",
     "sectionOrg": "Organisation",
     "cockpit": "Cockpit",
     "attendees": "Teilnehmende",
@@ -103,8 +102,6 @@
     "sectionProgram": "Programm & Auftritt",
     "publicEventPage": "Öffentliche Eventseite",
     "organizationToggle": "Organisation ein- oder ausklappen",
-    "uiToggle": "Neue Oberfläche",
-    "uiToggleHint": "Zwischen neuer und alter Oberfläche umschalten (gilt für diesen Browser)",
     "checkin": "Check-in"
   },
   "security": {
@@ -455,10 +452,29 @@
   },
   "attendees": {
     "title": "Teilnehmende",
+    "seats": {
+      "label": "Belegung",
+      "attendee": "Teilnehmende",
+      "speaker": "Speaker",
+      "orga": "Organisation",
+      "other": "Sonstige",
+      "held": "Reserviert / Angebot",
+      "freeLegend": "Frei",
+      "overLegend": "Überbucht",
+      "freeCaption": "{count, plural, one {Platz frei} other {Plätze frei}}",
+      "fullCaption": "Ausgebucht",
+      "overCaption": "über Kapazität",
+      "barLabel": "{taken} von {capacity} Plätzen belegt",
+      "capacityMark": "Kapazität {capacity}",
+      "taken": "<b>{taken}</b> von {capacity} belegt",
+      "waiting": "{count} auf der Warteliste",
+      "offered": "{count, plural, one {# Angebot offen} other {# Angebote offen}}",
+      "noWaitlist": "Keine Warteliste",
+      "changeCapacity": "Kapazität ändern"
+    },
     "search": "Suche",
     "searchPlaceholder": "Name, E-Mail, Firma …",
     "filter": "Filter",
-    "filterRoles": "Rollen (eine muss zutreffen)",
     "filterStatus": "Status (einer muss zutreffen)",
     "clear": "Filter löschen",
     "add": "Anmeldung hinzufügen",
@@ -577,7 +593,6 @@
     "saveViewConfirm": "Speichern",
     "deleteView": "Ansicht „{name}“ löschen",
     "viewSaved": "Ansicht „{name}“ gespeichert",
-    "filterAdd": "Filter",
     "filterPayment": "Zahlung",
     "filterMethod": "Zahlungsart",
     "filterTicket": "Ticket",
@@ -588,7 +603,6 @@
       "method": "Zahlungsart: {value}",
       "ticket": "Ticket: {value}"
     },
-    "removeFilter": "Filter „{label}“ entfernen",
     "selectAll": "Alle sichtbaren auswählen",
     "selectRow": "{name} auswählen",
     "selected": "{count} ausgewählt",
@@ -602,14 +616,11 @@
     "bulkInvoicesHint": "Nur bestätigte, kostenpflichtige Anmeldungen ohne Rechnung. Jede Rechnung erhält die nächste fortlaufende Nummer und wird als PDF per E-Mail versendet.",
     "bulkInvoicesConfirm": "Erstellen und senden",
     "bulkInvoicesDone": "{ok, plural, one {# Rechnung erstellt} other {# Rechnungen erstellt}}",
-    "bulkInvoicesFailed": "{failed, plural, one {# fehlgeschlagen} other {# fehlgeschlagen}} – Details im Bereich Rechnungen",
     "bulkRole": "Rolle zuweisen",
     "bulkRoleDone": "{count, plural, =0 {Alle hatten die Rolle bereits} one {Rolle bei # Anmeldung ergänzt} other {Rolle bei # Anmeldungen ergänzt}}",
     "bulkExport": "Exportieren",
     "bulkClear": "Auswahl aufheben",
-    "keysHint": "Tastatur: ↑ ↓ blättern · Enter öffnet · Leertaste wählt aus · Esc schließt",
     "paymentOverdue": "Überfällig",
-    "noInvoice": "keine Rechnung",
     "openDetails": "Details zu {name} öffnen",
     "detail": {
       "label": "Details zu {name}",
@@ -621,7 +632,6 @@
       "ticket": "Ticket",
       "memberNumber": "Mitgliedsnummer",
       "paymentMethod": "Zahlungsart",
-      "billing": "Rechnungsadresse",
       "source": "Quelle",
       "sourcePublic": "öffentliches Formular",
       "sourceAdmin": "Admin-Bereich",
@@ -746,8 +756,6 @@
     "refundNothingPaid": "Für diese Anmeldung ist noch kein Zahlungseingang verbucht – erstattet werden kann nur, was bezahlt wurde. Setzen Sie zuerst den Zahlungsstatus auf „Bezahlt“; danach geht es hier mit der Erstattung weiter.",
     "roleTagFilter": "Nur Anmeldungen mit Rolle „{role}“ zeigen",
     "roleTagRemove": "Filter „{role}“ aufheben",
-    "roleCountsLabel": "Rollen",
-    "shownCount": "{visible} von {total} angezeigt",
     "groupBy": "Gruppieren:",
     "groupByOption": {
       "none": "keine Gruppierung",
@@ -1100,7 +1108,6 @@
     "colAmount": "Betrag",
     "colDue": "Fällig",
     "colState": "Status",
-    "colSent": "Versendet",
     "colActions": "Aktionen",
     "creditFor": "Gutschrift zu {number}",
     "kind": {
@@ -1495,9 +1502,36 @@
     }
   },
   "checkout": {
-    "paid": {
-      "title": "Zahlung erhalten",
-      "text": "Danke! Ihre Anmeldung für {event} ist bestätigt."
+    "paidPage": {
+      "eyebrow": "Zahlung erhalten · Anmeldung bestätigt",
+      "title": "Wir sehen uns bei {event}!",
+      "lead": "Danke! Ihr Platz ist fix. Bestätigung und Rechnung kommen in wenigen Minuten per E-Mail.",
+      "addToCalendar": "In Kalender speichern",
+      "toProgram": "Programm ansehen",
+      "toEvent": "Zur Veranstaltung",
+      "nextTitle": "So geht es weiter",
+      "myRegistrations": "Meine Anmeldungen",
+      "questions": "Fragen? {email}",
+      "steps": {
+        "paid": {
+          "when": "Erledigt",
+          "title": "Zahlung erhalten"
+        },
+        "mail": {
+          "when": "In wenigen Minuten",
+          "title": "Bestätigung und Rechnung",
+          "text": "Kommen per E-Mail an die Adresse aus Ihrer Anmeldung."
+        },
+        "manage": {
+          "when": "Bis zum Event",
+          "title": "Anmeldung verwalten",
+          "text": "Daten ändern oder stornieren unter „Meine Anmeldungen“"
+        },
+        "day": {
+          "title": "Am Eventtag",
+          "text": "Beim Check-in einfach Ihren Namen nennen."
+        }
+      }
     },
     "processing": {
       "title": "Zahlung wird bestätigt …",

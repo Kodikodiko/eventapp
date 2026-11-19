@@ -1,0 +1,417 @@
+<title>Bestätigungsseite Entwürfe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+<style>
+/* Layout: Entwurfs-Umschalter oben, darunter die Seite wie im echten öffentlichen Layout (Kopfzeile + Inhalt), wahlweise in Handybreite.
+   Bewusst nur helles Theme: so sieht die öffentliche Seite heute aus. Eventfarben = Theme des Events (hier Forum Day). */
+:root {
+  color-scheme: light;
+  --ink: #15172B; --ink-2: #3B3E57; --ink-3: #6B6E85;
+  --canvas: #F6F4EF; --paper: #FFFFFF; --line: #E4E2DC;
+  --ev: #4F17A8; --ev-deep: #271053; --ev-soft: #EFE9FA; --ev-accent: #1EAEE9;
+  --ok: #1F7A4D; --ok-bg: #E6F4EC;
+  --display: 'Plus Jakarta Sans', 'IBM Plex Sans', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: #E9E7E1; color: var(--ink); font: 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: inherit; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ev-accent); outline-offset: 2px; }
+
+/* ---------- Entwurfs-Werkzeugleiste ---------- */
+.tool { background: var(--ink); color: #fff; padding-block: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.tool-in { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.tool-title { font: 700 15px/1.2 var(--display); }
+.tool-title small { display: block; font: 400 12px/1.4 var(--body); color: #B9BBD3; margin-top: 2px; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; background: #23264A; padding: 4px; border-radius: 10px; }
+.seg button { border: 0; background: transparent; color: #B9BBD3; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; }
+.seg button[aria-pressed="true"] { background: #fff; color: var(--ink); }
+.note { max-width: 1180px; margin: 0 auto; padding-top: 10px; font-size: 13px; color: #D9DAE8; }
+.note b { color: #FFE36E; font-weight: 600; }
+
+/* ---------- Bühne (Rahmen für Desktop/Handy) ---------- */
+.stage { padding-block: 24px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.frame { margin: 0 auto; max-width: 1180px; background: var(--canvas); border-radius: 12px; overflow: hidden; box-shadow: 0 12px 32px -8px rgba(21,23,43,.22); transition: max-width .3s; }
+.stage.phone .frame { max-width: 390px; border-radius: 28px; border: 8px solid var(--ink); }
+.site-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 28px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.site-head strong { font: 700 17px/1.2 var(--display); }
+.site-nav { display: flex; gap: 18px; align-items: center; font-size: 14px; }
+.site-nav .lang { background: var(--ev-deep); color: #fff; padding: 3px 8px; border-radius: 5px; font-weight: 600; font-size: 12px; }
+.stage.phone .site-nav span:not(.lang) { display: none; }
+.stage.phone .site-head { padding: 12px 16px; }
+
+[data-v] { display: none; }
+[data-v].on { display: block; }
+
+/* ---------- gemeinsame Bausteine ---------- */
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 9px; padding: 11px 16px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid transparent; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn-ev { background: var(--ev); color: #fff; }
+.btn-ev:hover { background: var(--ev-deep); }
+.btn-line { background: var(--paper); border-color: var(--line); color: var(--ink); }
+.btn-line:hover { border-color: var(--ink-3); }
+.btn-ghost-light { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.28); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.stage.phone .btn-row .btn { flex: 1 1 100%; justify-content: center; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Häkchen-Animation */
+.check circle { stroke-dasharray: 160; stroke-dashoffset: 160; animation: draw .6s ease-out forwards; }
+.check path { stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .35s .5s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.pop { animation: pop .5s .1s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes pop { from { transform: scale(.6); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .check circle, .check path { animation: none; stroke-dashoffset: 0; } .pop { animation: none; } }
+
+/* ================= A: Ticket ================= */
+.a-band { background: var(--ev-deep); color: #fff; padding: 40px 28px 110px; text-align: center; }
+.a-band .check { width: 64px; height: 64px; }
+.a-band h1 { font-size: clamp(26px, 4vw, 36px); margin-top: 14px; }
+.a-band p { color: #D6CCF0; margin-top: 6px; }
+.a-wrap { max-width: 760px; margin: -80px auto 0; padding: 0 20px 48px; display: grid; gap: 24px; }
+.ticket { display: grid; grid-template-columns: 1fr 210px; background: var(--paper); border-radius: 16px; box-shadow: 0 14px 34px -14px rgba(39,16,83,.35); position: relative; }
+.ticket-main { padding: 26px 28px; min-width: 0; border-right: 2px dashed var(--line); }
+.ticket-main h2 { font-size: 22px; line-height: 1.25; }
+.ticket-main .eyebrow { color: var(--ev); }
+.t-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px 20px; margin-top: 18px; }
+.t-grid dt { font-size: 12px; color: var(--ink-3); }
+.t-grid dd { margin: 2px 0 0; font-weight: 500; }
+.ticket-stub { padding: 26px 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; }
+.ticket-stub .ref { font: 700 20px/1 var(--display); letter-spacing: .04em; }
+.ticket-stub small { font-size: 12px; color: var(--ink-3); }
+.paid-stamp { border: 2px solid var(--ok); color: var(--ok); border-radius: 8px; padding: 4px 10px; font-weight: 700; font-size: 13px; letter-spacing: .06em; transform: rotate(-6deg); }
+.ticket::before, .ticket::after { content: ""; position: absolute; right: 199px; width: 22px; height: 22px; border-radius: 50%; background: var(--canvas); }
+.ticket::before { top: -11px; } .ticket::after { bottom: -11px; }
+.a-next { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; display: grid; gap: 16px; }
+.a-next h3 { font-size: 16px; }
+.mail-hint { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--ink-2); }
+.mail-hint svg { width: 22px; height: 22px; color: var(--ev); flex: none; margin-top: 1px; }
+.stage.phone .ticket { grid-template-columns: 1fr; }
+.stage.phone .ticket-main { border-right: 0; border-bottom: 2px dashed var(--line); padding: 22px 20px; }
+.stage.phone .ticket::before, .stage.phone .ticket::after { right: auto; top: auto; bottom: 118px; }
+.stage.phone .ticket::before { left: -11px; } .stage.phone .ticket::after { right: -11px; }
+.stage.phone .t-grid { grid-template-columns: 1fr; }
+.stage.phone .a-band { padding: 32px 18px 100px; }
+.stage.phone .a-wrap { padding: 0 14px 36px; }
+
+/* ================= B: Bühne ================= */
+.b-hero { background: radial-gradient(120% 140% at 85% 0%, #5B22C0 0%, var(--ev-deep) 55%, #170A33 100%); color: #fff; padding: 56px 28px 64px; position: relative; overflow: hidden; }
+.b-hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 22px 22px; pointer-events: none; }
+.b-in { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+.b-badge { width: 112px; height: 112px; border-radius: 50%; background: rgba(30,174,233,.16); display: grid; place-items: center; box-shadow: 0 0 0 10px rgba(30,174,233,.07); }
+.b-badge .check { width: 76px; height: 76px; }
+.b-hero .eyebrow { color: var(--ev-accent); }
+.b-hero h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.05; margin-top: 8px; font-weight: 800; }
+.b-hero .lead { color: #D6CCF0; margin-top: 12px; font-size: 18px; max-width: 46ch; }
+.b-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; font-size: 15px; color: #fff; }
+.b-meta span { display: inline-flex; gap: 8px; align-items: center; }
+.b-meta svg { width: 17px; height: 17px; color: var(--ev-accent); }
+.b-hero .btn-row { margin-top: 24px; }
+.b-hero .btn-ev { background: #fff; color: var(--ev-deep); }
+.b-body { max-width: 980px; margin: 0 auto; padding: 44px 28px 56px; display: grid; gap: 22px; }
+.b-body h2 { font-size: 24px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+.steps li { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.steps .when { font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.steps li.done { background: var(--ok-bg); border-color: #BFE3CE; }
+.steps li.done .when { color: var(--ok); }
+.steps h3 { font-size: 16px; }
+.steps p { font-size: 14px; color: var(--ink-2); }
+.b-foot { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 18px; }
+.stage.phone .b-in { grid-template-columns: 1fr; gap: 18px; }
+.stage.phone .b-badge { width: 84px; height: 84px; } .stage.phone .b-badge .check { width: 56px; height: 56px; }
+.stage.phone .b-hero { padding: 36px 18px 40px; }
+.stage.phone .b-body { padding: 28px 16px 40px; }
+.stage.phone .steps { grid-template-columns: 1fr; }
+
+/* ================= C: Kompakt ================= */
+.c-wrap { padding: 48px 20px 64px; }
+.c-card { max-width: 560px; margin: 0 auto; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.c-top { padding: 32px 32px 24px; display: grid; justify-items: center; text-align: center; gap: 10px; }
+.c-top .check { width: 58px; height: 58px; }
+.c-top h1 { font-size: 26px; }
+.c-top p { color: var(--ink-2); }
+.c-sum { margin: 0; padding: 4px 32px; border-top: 1px solid var(--line); }
+.c-sum div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.c-sum div:last-child { border-bottom: 0; }
+.c-sum dt { color: var(--ink-3); font-size: 14px; }
+.c-sum dd { margin: 0; font-weight: 500; min-width: 0; }
+.c-mail { background: var(--ev-soft); padding: 16px 32px; display: flex; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.c-mail svg { width: 20px; height: 20px; color: var(--ev); flex: none; margin-top: 1px; }
+.c-act { padding: 22px 32px 28px; display: grid; gap: 14px; }
+.c-act .btn-row .btn { flex: 1 1 0; justify-content: center; }
+.c-act .back { font-size: 14px; color: var(--ink-3); text-align: center; }
+.stage.phone .c-wrap { padding: 24px 12px 40px; }
+.stage.phone .c-top, .stage.phone .c-act { padding-left: 20px; padding-right: 20px; }
+.stage.phone .c-sum, .stage.phone .c-mail { padding-left: 20px; padding-right: 20px; }
+.stage.phone .c-sum div { grid-template-columns: 1fr; gap: 2px; }
+
+/* ================= D: Feier ================= */
+.d-wrap { position: relative; overflow: hidden; }
+.d-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.d-hero { text-align: center; padding: 56px 24px 36px; display: grid; justify-items: center; gap: 12px; }
+.d-hero .eyebrow { color: var(--ev); background: var(--ev-soft); padding: 5px 12px; border-radius: 99px; }
+.d-hero h1 { font-size: clamp(32px, 5.5vw, 56px); font-weight: 800; line-height: 1.05; color: var(--ev-deep); }
+.d-hero h1 em { font-style: normal; color: var(--ev); }
+.d-hero p { color: var(--ink-2); max-width: 52ch; font-size: 17px; }
+.count { display: flex; gap: 10px; margin-top: 10px; }
+.count div { background: var(--ev-deep); color: #fff; border-radius: 12px; min-width: 84px; padding: 12px 10px 10px; display: grid; justify-items: center; }
+.count b { font: 800 34px/1 var(--display); font-variant-numeric: tabular-nums; }
+.count small { font-size: 12px; color: #C9BDEB; margin-top: 4px; }
+.d-grid { max-width: 980px; margin: 0 auto; padding: 8px 24px 56px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; position: relative; z-index: 1; }
+.d-box { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.d-box h3 { font-size: 17px; }
+.d-facts { display: grid; gap: 10px; font-size: 15px; }
+.d-facts span { display: flex; gap: 10px; align-items: flex-start; }
+.d-facts svg { width: 18px; height: 18px; color: var(--ev); flex: none; margin-top: 3px; }
+.keys { display: grid; gap: 10px; }
+.key { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+.key i { width: 44px; height: 44px; border-radius: 50%; background: var(--ev-soft); color: var(--ev); display: grid; place-items: center; font: 700 14px/1 var(--display); font-style: normal; }
+.key b { display: block; font-size: 15px; }
+.key small { color: var(--ink-3); font-size: 13px; }
+.share { display: flex; gap: 8px; align-items: center; background: var(--canvas); border-radius: 9px; padding: 8px 8px 8px 12px; font-size: 13px; color: var(--ink-2); }
+.share code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--body); }
+.share button { border: 0; background: var(--ev); color: #fff; border-radius: 7px; padding: 6px 10px; font-size: 13px; font-weight: 600; }
+.stage.phone .d-grid { grid-template-columns: 1fr; padding: 4px 14px 36px; }
+.stage.phone .d-hero { padding: 36px 16px 24px; }
+.stage.phone .count div { min-width: 0; flex: 1; }
+</style>
+
+<div class="tool">
+  <div class="tool-in">
+    <div class="tool-title">Bestätigungsseite nach Zahlung · 4 Entwürfe
+      <small>Beispieldaten Forum Day 2026 · Farben kommen vom Theme des Events</small></div>
+    <div class="seg" role="group" aria-label="Entwurf">
+      <button type="button" data-pick="a" aria-pressed="true">A · Ticket</button>
+      <button type="button" data-pick="b" aria-pressed="false">B · Bühne</button>
+      <button type="button" data-pick="c" aria-pressed="false">C · Kompakt</button>
+      <button type="button" data-pick="d" aria-pressed="false">D · Feier</button>
+      <button type="button" data-pick="now" aria-pressed="false">Heute</button>
+    </div>
+    <div class="seg" role="group" aria-label="Ansicht">
+      <button type="button" data-size="desk" aria-pressed="true">Desktop</button>
+      <button type="button" data-size="phone" aria-pressed="false">Handy</button>
+    </div>
+  </div>
+  <p class="note" id="note"></p>
+</div>
+
+<div class="stage" id="stage">
+<div class="frame">
+  <header class="site-head">
+    <strong>Demo Veranstaltungsverein</strong>
+    <nav class="site-nav"><span>Veranstaltungen</span><span>Meine Anmeldungen</span><span class="lang">DE</span></nav>
+  </header>
+
+  <!-- ===== A: Ticket ===== -->
+  <section data-v="a" class="on">
+    <div class="a-band">
+      <svg class="check pop" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="25" stroke="#1EAEE9" stroke-width="4"/><path d="M21 33l7 7 15-16" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>Sie sind angemeldet, Anna!</h1>
+      <p>Ihre Zahlung ist eingegangen. Hier ist Ihr Platz.</p>
+    </div>
+    <div class="a-wrap">
+      <article class="ticket" aria-label="Ihre Anmeldung">
+        <div class="ticket-main">
+          <p class="eyebrow">Ticket · Standard (Mitglied)</p>
+          <h2>PMI Austria Forum Day 2026</h2>
+          <dl class="t-grid">
+            <div><dt>Datum</dt><dd>Dienstag, 3. November 2026</dd></div>
+            <div><dt>Uhrzeit</dt><dd class="num">09:00 – 19:30 Uhr</dd></div>
+            <div><dt>Ort</dt><dd>Hochschule für Wirtschaft &amp; Gesellschaft des BFI Wien, Wohlmutstraße 22, 1020 Wien</dd></div>
+            <div><dt>Teilnehmerin</dt><dd>Anna Berger</dd></div>
+          </dl>
+        </div>
+        <div class="ticket-stub">
+          <span class="paid-stamp">BEZAHLT</span>
+          <span class="ref num">FD26-0142</span>
+          <small>€ 290,00 · per Karte<br>Beim Einlass genügt Ihr Name.</small>
+        </div>
+      </article>
+      <div class="a-next">
+        <div class="mail-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <p>Bestätigung und Rechnung (PDF) senden wir in den nächsten Minuten an <b>anna.berger@example.at</b>.</p>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-ev" href="#a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M12 13v5M9.5 15.5h5"/></svg>In Kalender speichern</a>
+          <a class="btn btn-line" href="#a">Meine Anmeldungen</a>
+          <a class="btn btn-line" href="#a">Zum Programm</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== B: Bühne ===== -->
+  <section data-v="b">
+    <div class="b-hero">
+      <div class="b-in">
+        <div class="b-badge pop"><svg class="check" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="25" stroke="#1EAEE9" stroke-width="4"/><path d="M21 33l7 7 15-16" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <p class="eyebrow">Zahlung erhalten · Anmeldung bestätigt</p>
+          <h1>Wir sehen uns beim Forum Day 2026!</h1>
+          <p class="lead">Danke, Anna. Ihr Platz ist fix. Alles Weitere kommt per E-Mail.</p>
+          <div class="b-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Di, 3. November 2026</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>09:00 – 19:30</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>BFI Wien, Wohlmutstraße 22</span>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-ev" href="#b">In Kalender speichern</a>
+            <a class="btn btn-ghost-light" href="#b">Programm ansehen</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="b-body">
+      <h2>So geht es weiter</h2>
+      <ol class="steps">
+        <li class="done"><span class="when">Erledigt</span><h3>Zahlung erhalten</h3><p class="num">€ 290,00 per Karte · Ref. FD26-0142</p></li>
+        <li><span class="when">In wenigen Minuten</span><h3>Bestätigung &amp; Rechnung</h3><p>Kommen per E-Mail an anna.berger@example.at.</p></li>
+        <li><span class="when">Bis zum Event</span><h3>Anmeldung verwalten</h3><p>Daten ändern oder stornieren unter „Meine Anmeldungen“.</p></li>
+        <li><span class="when">3. November</span><h3>Einlass ab 08:30</h3><p>Name am Check-in nennen, Badge abholen.</p></li>
+      </ol>
+      <div class="b-foot"><a href="#b">Meine Anmeldungen</a><a href="#b">Zur Veranstaltung</a><span>Fragen? office@demo-verein.at</span></div>
+    </div>
+  </section>
+
+  <!-- ===== C: Kompakt ===== -->
+  <section data-v="c">
+    <div class="c-wrap">
+      <div class="c-card">
+        <div class="c-top">
+          <svg class="check" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="25" fill="#E6F4EC" stroke="#1F7A4D" stroke-width="4"/><path d="M21 33l7 7 15-16" stroke="#1F7A4D" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h1>Zahlung erhalten</h1>
+          <p>Danke, Anna! Ihre Anmeldung ist bestätigt.</p>
+        </div>
+        <dl class="c-sum">
+          <div><dt>Veranstaltung</dt><dd>PMI Austria Forum Day 2026</dd></div>
+          <div><dt>Wann</dt><dd>Di, 3. November 2026 · 09:00 – 19:30</dd></div>
+          <div><dt>Wo</dt><dd>BFI Wien, Wohlmutstraße 22, 1020 Wien</dd></div>
+          <div><dt>Bezahlt</dt><dd class="num">€ 290,00 · Ref. FD26-0142</dd></div>
+        </dl>
+        <div class="c-mail">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <p>Bestätigung und Rechnung kommen in wenigen Minuten per E-Mail an anna.berger@example.at.</p>
+        </div>
+        <div class="c-act">
+          <div class="btn-row">
+            <a class="btn btn-ev" href="#c">In Kalender speichern</a>
+            <a class="btn btn-line" href="#c">Meine Anmeldungen</a>
+          </div>
+          <a class="back" href="#c">← Zur Veranstaltung</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== D: Feier ===== -->
+  <section data-v="d">
+    <div class="d-wrap" id="dwrap">
+      <canvas id="confetti" aria-hidden="true"></canvas>
+      <div class="d-hero">
+        <span class="eyebrow">Zahlung erhalten</span>
+        <h1>Sie sind <em>dabei!</em></h1>
+        <p>Danke, Anna. Ihr Platz beim PMI Austria Forum Day 2026 ist bestätigt. Bestätigung und Rechnung kommen gleich per E-Mail.</p>
+        <div class="count" aria-label="Noch 14 Tage bis zum Event">
+          <div><b>14</b><small>Tage</small></div><div><b>11</b><small>Stunden</small></div><div><b>32</b><small>Minuten</small></div>
+        </div>
+      </div>
+      <div class="d-grid">
+        <div class="d-box">
+          <h3>Ihr Termin</h3>
+          <div class="d-facts">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Dienstag, 3. November 2026, 09:00 – 19:30</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Hochschule für Wirtschaft &amp; Gesellschaft des BFI Wien, Wohlmutstraße 22, 1020 Wien</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>€ 290,00 bezahlt · Ref. FD26-0142</span>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-ev" href="#d">In Kalender speichern</a>
+            <a class="btn btn-line" href="#d">Meine Anmeldungen</a>
+          </div>
+        </div>
+        <div class="d-box">
+          <h3>Darauf können Sie sich freuen</h3>
+          <div class="keys">
+            <div class="key"><i>AN</i><div><b>Antonio Nieto-Rodriguez</b><small>Keynote · The Project-Driven Organization</small></div></div>
+            <div class="key"><i>LP</i><div><b>Lenka Pincot</b><small>Keynote · Power-Up with M.O.R.E</small></div></div>
+            <div class="key"><i>KW</i><div><b>Kathleen Walch</b><small>Keynote · AI and Lifelong Learning</small></div></div>
+          </div>
+          <div class="share"><code>demo-verein.at/events/forum-day-2026</code><button type="button" id="copy">Link kopieren</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Heute ===== -->
+  <section data-v="now">
+    <div style="padding:40px 20px 64px">
+      <div style="max-width:576px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px;display:grid;gap:14px">
+        <h1 style="font-size:24px">Zahlung erhalten</h1>
+        <p>Danke! Ihre Anmeldung für PMI Austria Forum Day 2026 ist bestätigt.</p>
+        <p style="font-size:14px;color:var(--ink-3)">PMI Austria Forum Day 2026 · € 290,00</p>
+        <p><a href="#now" style="font-size:14px">← Zur Veranstaltung</a></p>
+      </div>
+    </div>
+  </section>
+</div>
+</div>
+
+<script>
+const notes = {
+  a: '<b>A · Ticket:</b> Die Anmeldung als Eintrittskarte mit Referenznummer und „Bezahlt“-Stempel. Fühlt sich nach Ticketkauf an, gut zum Screenshot machen. Mittlerer Aufwand.',
+  b: '<b>B · Bühne:</b> Großer Kopfbereich in den Eventfarben wie auf der Eventseite, darunter „So geht es weiter“ in vier Schritten. Am meisten „Wow“, passt optisch am besten zur neuen Eventseite. Mittlerer Aufwand.',
+  c: '<b>C · Kompakt:</b> Die heutige Karte, aufgeräumt: Häkchen-Animation, Eckdaten als Liste, E-Mail-Hinweis, zwei klare Knöpfe. Ruhig und seriös, kleinster Aufwand.',
+  d: '<b>D · Feier:</b> Konfetti beim Laden, Countdown bis zum Event und die Keynotes als Vorfreude, dazu Link zum Weitersagen. Am verspieltesten. Etwas mehr Aufwand.',
+  now: '<b>Heute:</b> So sieht die Seite derzeit aus (zum Vergleich).'
+};
+const stage = document.getElementById('stage');
+const note = document.getElementById('note');
+let current = 'a';
+function show(v) {
+  current = v;
+  document.querySelectorAll('[data-v]').forEach(s => s.classList.toggle('on', s.dataset.v === v));
+  document.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === v)));
+  note.innerHTML = notes[v];
+  // Animationen neu starten
+  document.querySelectorAll('[data-v="' + v + '"] .check, [data-v="' + v + '"] .pop').forEach(el => { el.style.animation = 'none'; el.getBoundingClientRect(); el.style.animation = ''; el.querySelectorAll('circle,path').forEach(p => { p.style.animation = 'none'; p.getBoundingClientRect(); p.style.animation = ''; }); });
+  if (v === 'd') confetti();
+}
+document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => { show(b.dataset.pick); try { history.replaceState(null, '', '#' + b.dataset.pick); } catch (e) {} }));
+document.querySelectorAll('[data-size]').forEach(b => b.addEventListener('click', () => {
+  stage.classList.toggle('phone', b.dataset.size === 'phone');
+  document.querySelectorAll('[data-size]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  if (current === 'd') confetti();
+}));
+document.querySelectorAll('.frame a[href^="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+document.getElementById('copy').addEventListener('click', e => {
+  const btn = e.currentTarget;
+  const done = () => { btn.textContent = 'Kopiert'; setTimeout(() => btn.textContent = 'Link kopieren', 1500); };
+  try { navigator.clipboard.writeText('https://demo-verein.at/events/forum-day-2026').then(done, done); } catch (err) { done(); }
+});
+
+let raf;
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.getElementById('confetti'), w = document.getElementById('dwrap');
+  const dpr = devicePixelRatio || 1;
+  c.width = w.clientWidth * dpr; c.height = w.clientHeight * dpr;
+  const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+  const W = w.clientWidth, cols = ['#4F17A8', '#1EAEE9', '#271053', '#FFC94D', '#7C4DDB'];
+  const parts = Array.from({ length: 140 }, () => ({ x: W / 2 + (Math.random() - .5) * 80, y: 120, vx: (Math.random() - .5) * 11, vy: -Math.random() * 11 - 4, r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, s: 5 + Math.random() * 6, c: cols[(Math.random() * cols.length) | 0] }));
+  cancelAnimationFrame(raf);
+  let t = 0;
+  (function step() {
+    ctx.clearRect(0, 0, W, w.clientHeight);
+    parts.forEach(p => { p.vy += .28; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - t / 160); ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+    if (++t < 170) raf = requestAnimationFrame(step); else ctx.clearRect(0, 0, W, w.clientHeight);
+  })();
+}
+const start = (location.hash || '').slice(1);
+show(notes[start] ? start : 'a');
+</script>

@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "data/**",
+    // Entwürfe/Mockups, kein App-Code
+    "docs/**",
   ]),
 ]);
 

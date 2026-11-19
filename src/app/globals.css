@@ -194,3 +194,39 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Bestätigungsseite nach Zahlung: Häkchen zeichnet sich, Kreis springt auf */
+@keyframes ef-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ef-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0.2;
+  }
+}
+.ef-check circle {
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation: ef-draw 0.6s ease-out forwards;
+}
+.ef-check path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: ef-draw 0.35s 0.5s ease-out forwards;
+}
+.ef-pop {
+  animation: ef-pop 0.5s 0.1s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ef-check circle,
+  .ef-check path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .ef-pop {
+    animation: none;
+  }
+}

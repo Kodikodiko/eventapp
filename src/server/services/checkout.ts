@@ -81,8 +81,13 @@ export async function beginCheckout(
 
 export type CheckoutView = {
   ref: string;
+  eventId: number;
   eventSlug: string;
   eventName: (typeof events.$inferSelect)['name'];
+  eventStartsAt: string;
+  eventEndsAt: string;
+  eventLocation: string;
+  eventTheme: (typeof events.$inferSelect)['theme'];
   registrationStatus: (typeof registrations.$inferSelect)['status'];
   paymentStatus: (typeof payments.$inferSelect)['status'];
   amountCents: number;
@@ -102,8 +107,13 @@ export function getCheckoutView(db: Db, ref: string): CheckoutView | undefined {
   if (!row) return undefined;
   return {
     ref,
+    eventId: row.event.id,
     eventSlug: row.event.slug,
     eventName: row.event.name,
+    eventStartsAt: row.event.startsAt,
+    eventEndsAt: row.event.endsAt,
+    eventLocation: row.event.location,
+    eventTheme: row.event.theme,
     registrationStatus: row.reg.status,
     paymentStatus: row.p.status,
     amountCents: row.p.amountCents,
